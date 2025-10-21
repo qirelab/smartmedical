@@ -26,12 +26,17 @@ export const customTheme = createTheme({
             fontSize: '48px',
         },
         h3: {
-            fontSize: '20px',
+            fontSize: '24px',
+        },
+        h4:{
+          fontSize: '20px',
         },
         body1: {
             fontSize: '16px',
         },
-        
+        body2: {
+          fontSize: '14px',
+        },
     }
 
 });
