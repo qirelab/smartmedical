@@ -1,10 +1,10 @@
-import { Box, Input } from '@mui/material';
+import { Box, Link } from '@mui/material';
 import theme from '@/theme/theme';
 
 export default function Home() {
   return (
     <Box>
-        <Input></Input>
+        <Link>dsdsdasda</Link>
     </Box>
   );
 }
