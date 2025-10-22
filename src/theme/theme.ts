@@ -1,6 +1,12 @@
 import { createTheme } from "@mui/material/styles";
+import components from './components';
+
 
 export const customTheme = createTheme({
+     components: {
+          ...components,
+     },
+     
     palette: {
       mode: 'light',
       primary: {
