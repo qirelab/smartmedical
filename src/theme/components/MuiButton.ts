@@ -23,8 +23,8 @@ const MuiButton : Components['MuiButton'] = {
                               borderColor: "#18A36C",
                               color: "#18A36C",
                               '&:hover': {
-                                   backgroundColor: '#18A36C',
-                                   color: "#FFFFFF",
+                                   backgroundColor: '#F1F1F1',
+                                   color: "#18A36C",
                               },            
                          }),
                     }

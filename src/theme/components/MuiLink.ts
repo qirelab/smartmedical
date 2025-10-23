@@ -4,7 +4,7 @@ const MuiLink : Components["MuiLink"] = {
 
      styleOverrides: {
           root: ({theme}) => ({
-               color: "#4A5565",
+               color: "#2E2E2E",
                textDecoration: 'none',
                '&:hover': {
                     color:"#18A36C",

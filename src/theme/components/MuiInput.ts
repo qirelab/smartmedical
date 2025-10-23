@@ -6,7 +6,7 @@ const MuiInput : Components['MuiOutlinedInput'] = {
      
      styleOverrides: {
        root: {
-         backgroundColor: "#FFFFF",
+         backgroundColor: "#F3F3F5",
          color: "",
          borderRadius: "10px",
          border: "1px solid #D1D5DC",
