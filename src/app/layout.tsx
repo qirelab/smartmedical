@@ -21,6 +21,7 @@ export default function RootLayout({
         <MenuProvider>
           <Router>
             <Header />
+            <SMHomePage></SMHomePage>
             {children}
             <Footer></Footer>
           </Router>
