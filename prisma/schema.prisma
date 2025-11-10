@@ -144,7 +144,7 @@ model Patient {
   email              String
   password           String
   name               String
-  phone              Int
+  phone              String
   registration_date  DateTime @db.Date
 
   @@map("patients")

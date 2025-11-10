@@ -2,6 +2,9 @@
   "name": "smartmedical",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +12,8 @@
     "lint": "eslint",
     "prisma:migrate": "npx dotenv-cli -e .env -- npx prisma migrate dev",
     "prisma:generate": "npx dotenv-cli -e .env -- npx prisma generate",
-    "prisma:studio": "npx dotenv-cli -e .env -- npx prisma studio"
+    "prisma:studio": "npx dotenv-cli -e .env -- npx prisma studio",
+    "prisma:seed": "npx dotenv-cli -e .env -- npx prisma db seed"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -44,6 +48,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
