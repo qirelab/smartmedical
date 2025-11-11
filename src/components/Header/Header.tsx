@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Phone, User, Menu, MapPin, Mail, X } from "lucide-react";
+import { Search, Phone, Menu, MapPin, Mail, X } from "lucide-react";
 import { Button } from "../common/SMButton/SMButton";
 import { Input } from "../common/SMInput/SMInput";
 import { useState, useEffect } from "react";
@@ -13,14 +13,15 @@ import SMMobileLogo from "@/icons/SMMobileLogo";
 import SMBurgerMenu from "../common/SMBurgerMenu/SMBurgerMenu";
 import navigationConfig from "@/config/navigation.json";
 import contactsConfig from "@/config/contacts.json";
+import { SMProfileButton } from "../common/SMProfileButton/SMProfileButton";
 
 export function Header() {
   const { isBurgerMenuOpen, setIsBurgerMenuOpen } = useMenu();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
 
   useEffect(() => {
     if (isBurgerMenuOpen) {
@@ -161,27 +162,7 @@ export function Header() {
 
             <div className="ml-auto flex items-center gap-2 lg:gap-4">
               <div className="hidden lg:block">
-                {isAuthenticated ? (
-                  <Button
-                    onClick={() => handleNavigation("/account")}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#18A36C] hover:bg-[#F4F4F4] flex items-center gap-2 px-2 lg:px-3 py-2 text-sm"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Мой кабинет</span>
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => setIsAuthModalOpen(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#18A36C] hover:bg-[#F4F4F4] flex items-center gap-2 px-2 lg:px-3 py-2 text-sm"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Мой кабинет</span>
-                  </Button>
-                )}
+                <SMProfileButton onAuthModalOpen={() => setIsAuthModalOpen(true)} />
               </div>
 
               <div className="lg:hidden">
@@ -209,12 +190,10 @@ export function Header() {
         onClose={() => setIsAuthModalOpen(false)}
         onLogin={(credentials) => {
           console.log("Login:", credentials);
-          setIsAuthenticated(true);
           setIsAuthModalOpen(false);
         }}
         onRegister={(userData) => {
           console.log("Register:", userData);
-          setIsAuthenticated(true);
           setIsAuthModalOpen(false);
         }}
         onForgotPassword={(email) => {
