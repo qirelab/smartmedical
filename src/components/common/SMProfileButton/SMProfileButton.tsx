@@ -8,19 +8,23 @@ import { User } from 'lucide-react';
 
 interface SMProfileButtonProps {
   className?: string;
+  onAuthModalOpen?: () => void;
 }
 
-export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className }) => {
+export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onAuthModalOpen }) => {
   const { data: session } = useSession();
   const router = useRouter();
 
   const handleClick = () => {
-
     if (!session) {
-      signIn('google', {
-        callbackUrl: '/account',
-        redirect: true,
-      });
+      if (onAuthModalOpen) {
+        onAuthModalOpen();
+      } else {
+        signIn('google', {
+          callbackUrl: '/account',
+          redirect: true,
+        });
+      }
     } else {
       router.push('/account');
     }

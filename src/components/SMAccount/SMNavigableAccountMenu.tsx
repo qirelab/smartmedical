@@ -5,6 +5,7 @@ import { Button } from '../common/SMButton/SMButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetClose } from '../common/SMSheet/SMSheet';
 import { useRouter } from '../SMRouter/SMRouter';
 import { useMenu } from '../SMMenuContext/SMMenuContext';
+import { signOut } from 'next-auth/react';
 
 interface MenuItem {
   id: string;
@@ -147,10 +148,13 @@ export function NavigableAccountMenu() {
     ? sectionFromUrl
     : null;
 
-  const handleItemClick = (item: MenuItem) => {
+  const handleItemClick = async (item: MenuItem) => {
     if (item.isAction && item.id === 'logout') {
-      navigate('/');
       setMobileMenuOpen(false);
+      await signOut({ 
+        callbackUrl: "/",
+        redirect: true 
+      });
       return;
     }
     

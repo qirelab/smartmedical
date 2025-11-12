@@ -14,11 +14,15 @@ import SMBurgerMenu from "../common/SMBurgerMenu/SMBurgerMenu";
 import navigationConfig from "@/config/navigation.json";
 import contactsConfig from "@/config/contacts.json";
 import { SMProfileButton } from "../common/SMProfileButton/SMProfileButton";
+import { signIn } from "next-auth/react";
+import { LoginData, RegisterData } from "../SMAuthModals/SMAuthModals.styles";
 
 export function Header() {
   const { isBurgerMenuOpen, setIsBurgerMenuOpen } = useMenu();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   
@@ -187,18 +191,98 @@ export function Header() {
 
       <AuthModals
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onLogin={(credentials) => {
-          console.log("Login:", credentials);
+        error={error}
+        isLoading={isLoading}
+        onErrorClear={() => setError(null)}
+        onClose={() => {
           setIsAuthModalOpen(false);
+          setError(null);
         }}
-        onRegister={(userData) => {
-          console.log("Register:", userData);
-          setIsAuthModalOpen(false);
+        onLogin={async (credentials: LoginData) => {
+          setIsLoading(true);
+          setError(null);
+          
+          try {
+            const result = await signIn("credentials", {
+              login: credentials.login,
+              password: credentials.password,
+              redirect: false,
+            });
+
+            if (result?.error) {
+              setError("Неверный логин или пароль");
+            } else if (result?.ok) {
+              setIsAuthModalOpen(false);
+              router.refresh();
+            }
+          } catch (err) {
+            setError("Ошибка при входе. Попробуйте позже.");
+            console.error("Login error:", err);
+          } finally {
+            setIsLoading(false);
+          }
         }}
-        onForgotPassword={(email) => {
-          console.log("Forgot password:", email);
-          setIsAuthModalOpen(false);
+        onRegister={async (userData: RegisterData) => {
+          setIsLoading(true);
+          setError(null);
+
+          try {
+            const response = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                lastName: userData.lastName,
+                firstName: userData.firstName,
+                middleName: userData.middleName,
+                email: userData.email,
+                phone: userData.phone,
+                password: userData.password,
+                confirmPassword: userData.confirmPassword,
+                login: userData.login,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              setError(data.error || "Ошибка при регистрации");
+              return;
+            }
+
+            // После успешной регистрации автоматически входим
+            const loginResult = await signIn("credentials", {
+              login: userData.login,
+              password: userData.password,
+              redirect: false,
+            });
+
+            if (loginResult?.ok) {
+              setIsAuthModalOpen(false);
+              router.refresh();
+            }
+          } catch (err) {
+            setError("Ошибка при регистрации. Попробуйте позже.");
+            console.error("Register error:", err);
+          } finally {
+            setIsLoading(false);
+          }
+        }}
+        onForgotPassword={async (email: string) => {
+          setIsLoading(true);
+          setError(null);
+
+          try {
+            // TODO: Реализовать API для восстановления пароля
+            console.log("Forgot password:", email);
+            setError("Функция восстановления пароля пока не реализована");
+          } catch (err) {
+            setError("Ошибка при восстановлении пароля. Попробуйте позже.");
+            console.error("Forgot password error:", err);
+          } finally {
+            setIsLoading(false);
+          }
         }}
       />
     </header>

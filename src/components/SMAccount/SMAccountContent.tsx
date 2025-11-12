@@ -36,9 +36,22 @@ import {
 } from "@/data/SMAccountData/SMAccountData";
 import { ImageWithFallback } from "../SMImage/ImageWithFallback";
 import { useRouter } from "../SMRouter/SMRouter";
+import { useSession, signOut } from "next-auth/react";
+
+interface UserData {
+  id: number;
+  login: string;
+  email: string;
+  name: string;
+  phone: string;
+  registration_date: string;
+}
 
 export function AccountContent() {
   const { navigate, currentRoute } = useRouter();
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const pathParts = currentRoute.replace(/^\/+|\/+$/g, '').split('/');
   
   let sectionFromUrl = '';
@@ -63,6 +76,16 @@ export function AccountContent() {
     "idle" | "success" | "error"
   >("idle");
 
+  // Обновляем email в настройках подписки, когда загружаются данные пользователя
+  useEffect(() => {
+    if (user?.email) {
+      setSubscriptionSettings(prev => ({
+        ...prev,
+        email: user.email,
+      }));
+    }
+  }, [user]);
+
   useEffect(() => {
     if (sectionFromUrl && ['subscriptions', 'materials', 'contact'].includes(sectionFromUrl)) {
       setActiveSection(sectionFromUrl);
@@ -70,6 +93,60 @@ export function AccountContent() {
       setActiveSection('');
     }
   }, [sectionFromUrl]);
+
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      fetchUserData();
+    } else if (status === "unauthenticated") {
+      setIsLoading(false);
+    }
+  }, [status, session]);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        console.error("Failed to fetch user data");
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Получаем имя пользователя из данных или используем mockUser как fallback
+  const getUserName = () => {
+    if (user?.name) {
+      const nameParts = user.name.split(" ");
+      return {
+        firstName: nameParts[1] || nameParts[0] || "",
+        lastName: nameParts[0] || "",
+        fullName: user.name,
+        name: user.name,
+        email: user.email,
+      };
+    }
+    return {
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+      fullName: mockUser.name,
+      name: mockUser.name,
+      email: mockUser.email,
+    };
+  };
+
+  const displayUser = getUserName();
+
+  const handleLogout = async () => {
+    await signOut({ 
+      callbackUrl: "/",
+      redirect: true 
+    });
+  };
 
   const handleSubscriptionSubmit = () => {
     console.log("Subscription settings:", subscriptionSettings);
@@ -383,7 +460,7 @@ export function AccountContent() {
                 id="name"
                 type="text"
                 placeholder="Введите ваше имя"
-                value={contactForm.name}
+                value={contactForm.name || displayUser.fullName || ""}
                 onChange={(e) =>
                   setContactForm({
                     ...contactForm,
@@ -476,14 +553,14 @@ export function AccountContent() {
               <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
                 <div className="w-20 h-20 lg:w-24 lg:h-24 bg-[#18A36C] rounded-full flex items-center justify-center">
                   <span className="text-3xl text-white">
-                    {mockUser.firstName?.[0] || ""}
-                    {mockUser.lastName?.[0] || ""}
+                    {displayUser.firstName?.[0] || ""}
+                    {displayUser.lastName?.[0] || ""}
                   </span>
                 </div>
 
                 <div className="text-center lg:text-left">
                   <h1 className="text-3xl lg:text-4xl text-gray-800 mb-2">
-                    Добро пожаловать, {mockUser.firstName}!
+                    Добро пожаловать, {displayUser.firstName || "Пользователь"}!
                   </h1>
                   <p className="text-gray-600 text-lg mb-6">
                     Ваш персональный медицинский помощник
@@ -673,18 +750,20 @@ export function AccountContent() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-[#18A36C] rounded-full flex items-center justify-center text-white text-xl">
-                {mockUser.firstName?.[0] || ""}
-                {mockUser.lastName?.[0] || ""}
+                {displayUser.firstName?.[0] || ""}
+                {displayUser.lastName?.[0] || ""}
               </div>
               <div>
                 <h3 className="text-xl text-gray-800 mb-1">
-                  {mockUser.name}
+                  {displayUser.fullName || displayUser.name || "Пользователь"}
                 </h3>
                 <p className="text-gray-600 mb-1">
-                  {mockUser.email}
+                  {displayUser.email || "Email не указан"}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Участник с 2025 года
+                  {user?.registration_date
+                    ? `Участник с ${new Date(user.registration_date).getFullYear()} года`
+                    : "Участник"}
                 </p>
               </div>
             </div>
@@ -697,7 +776,7 @@ export function AccountContent() {
                 Редактировать профиль
               </Button>
               <Button
-                onClick={() => navigate("/")}
+                onClick={handleLogout}
                 variant="outline"
                 className="text-red-600 border-red-300 hover:bg-red-50"
               >

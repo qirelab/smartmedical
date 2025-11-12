@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,11 @@ import {
   Shield,
   ArrowRight,
   LogIn,
+  AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { LoginData, RegisterData, AuthModalsProps } from "../SMAuthModals/SMAuthModals.styles";
+import { Alert, AlertDescription } from "../common/SMAlert/alert";
 
 type ModalType = "login" | "register" | "forgot-password";
 
@@ -32,12 +34,22 @@ export function AuthModals({
   onLogin,
   onRegister,
   onForgotPassword,
+  error,
+  isLoading = false,
+  onErrorClear,
 }: AuthModalsProps) {
   const [modalType, setModalType] =
     useState<ModalType>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
+
+  // Очистка ошибок при смене типа модального окна
+  useEffect(() => {
+    if (onErrorClear && error) {
+      onErrorClear();
+    }
+  }, [modalType]);
 
   const [loginData, setLoginData] = useState<LoginData>({
     login: "",
@@ -99,6 +111,10 @@ export function AuthModals({
   const handleModalChange = (type: ModalType) => {
     setModalType(type);
     resetForms();
+    // Очистка ошибок при смене типа модального окна
+    if (error) {
+      // Ошибки очищаются через родительский компонент
+    }
   };
 
   const renderLoginForm = () => (
@@ -128,6 +144,13 @@ export function AuthModals({
           Войдите в свой личный кабинет
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-5">
         <div className="space-y-2">
@@ -209,10 +232,11 @@ export function AuthModals({
       <div className="space-y-4">
         <Button
           onClick={handleSubmit}
-          className="w-full h-12 bg-[#18A36C] hover:bg-[#18A36C]/90 text-white rounded-lg transition-all duration-200"
+          disabled={isLoading}
+          className="w-full h-12 bg-[#18A36C] hover:bg-[#18A36C]/90 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Войти
-          <LogIn className="w-5 h-5 ml-[2.5px]" />
+          {isLoading ? "Вход..." : "Войти"}
+          {!isLoading && <LogIn className="w-5 h-5 ml-[2.5px]" />}
         </Button>
 
         <div className="flex justify-between items-center text-sm">
@@ -265,6 +289,13 @@ export function AuthModals({
           Создайте личный кабинет для удобного доступа к услугам
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4">
@@ -534,10 +565,10 @@ export function AuthModals({
         <Button
           onClick={handleSubmit}
           className="w-full h-12 bg-[#18A36C] hover:bg-[#18A36C]/90 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!registerData.agreeToTerms}
+          disabled={!registerData.agreeToTerms || isLoading}
         >
-          Зарегистрироваться
-          <ArrowRight className="w-5 h-5 ml-[2.5px]" />
+          {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+          {!isLoading && <ArrowRight className="w-5 h-5 ml-[2.5px]" />}
         </Button>
 
         <div className="text-center">
@@ -586,6 +617,13 @@ export function AuthModals({
         </p>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="forgotEmail" className="text-[#2E2E2E]">
           Почта
@@ -606,10 +644,11 @@ export function AuthModals({
       <div className="space-y-4">
         <Button
           onClick={handleSubmit}
-          className="w-full h-12 bg-[#18A36C] hover:bg-[#18A36C]/90 text-white rounded-lg transition-all duration-200"
+          disabled={isLoading}
+          className="w-full h-12 bg-[#18A36C] hover:bg-[#18A36C]/90 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Восстановить пароль
-          <Mail className="w-5 h-5 ml-[2.5px]" />
+          {isLoading ? "Отправка..." : "Восстановить пароль"}
+          {!isLoading && <Mail className="w-5 h-5 ml-[2.5px]" />}
         </Button>
 
         <div className="text-center">
