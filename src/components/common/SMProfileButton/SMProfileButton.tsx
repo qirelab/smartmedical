@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '../SMButton/SMButton';
 import { User } from 'lucide-react';
 
@@ -14,6 +14,7 @@ interface SMProfileButtonProps {
 export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onAuthModalOpen }) => {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClick = () => {
     if (!session) {
@@ -26,6 +27,10 @@ export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onA
         });
       }
     } else {
+      // Если пользователь уже на странице аккаунта, не делаем ничего
+      if (pathname?.startsWith('/account')) {
+        return;
+      }
       router.push('/account');
     }
   };

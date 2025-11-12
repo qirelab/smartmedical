@@ -176,18 +176,43 @@ export function NavigableAccountMenu() {
     });
   };
 
+  const handleHeaderClick = () => {
+    // Если находимся в подразделе, возвращаемся на главную страницу аккаунта
+    if (sectionFromUrl) {
+      navigate('/account');
+      setMobileMenuOpen(false);
+    }
+  };
+
   const MenuContent = ({ onItemClick: onItemClickProp }: { onItemClick?: (item: MenuItem) => void }) => (
     <div className="bg-white h-full flex flex-col shadow-lg">
       <div className="p-4 lg:p-6 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#18A36C] rounded-full flex items-center justify-center">
+        <button
+          onClick={handleHeaderClick}
+          className={`w-full flex items-center gap-3 transition-colors ${
+            sectionFromUrl 
+              ? 'cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2' 
+              : 'cursor-default'
+          }`}
+          disabled={!sectionFromUrl}
+        >
+          <div className="w-10 h-10 bg-[#18A36C] rounded-full flex items-center justify-center flex-shrink-0">
             <User className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <h2 className="text-lg lg:text-xl text-gray-800 mb-1">Личный кабинет</h2>
+          <div className="text-left flex-1">
+            <h2 className={`text-lg lg:text-xl mb-1 ${
+              sectionFromUrl 
+                ? 'text-[#18A36C] hover:text-[#18A36C]/80' 
+                : 'text-gray-800'
+            }`}>
+              Личный кабинет
+            </h2>
             <p className="text-xs lg:text-sm text-gray-600">Управление аккаунтом</p>
           </div>
-        </div>
+          {sectionFromUrl && (
+            <ChevronRight className="w-4 h-4 text-[#18A36C] flex-shrink-0" />
+          )}
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
