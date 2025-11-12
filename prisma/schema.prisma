@@ -9,9 +9,6 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-generator client_node {
-  provider = "prisma-client-js"
-}
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -147,7 +144,7 @@ model Patient {
   email              String
   password           String
   name               String
-  phone              Int
+  phone              String
   registration_date  DateTime @db.Date
 
   @@map("patients")
