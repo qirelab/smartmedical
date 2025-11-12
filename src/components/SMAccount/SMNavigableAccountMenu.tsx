@@ -3,6 +3,14 @@ import { useState } from 'react';
 import { ChevronRight, ChevronDown, Settings, FileText, MessageSquare, LogOut, Menu, X, User } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetClose } from '../common/SMSheet/SMSheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../common/SMDialog/SMDialog';
 import { useRouter } from '../SMRouter/SMRouter';
 import { useMenu } from '../SMMenuContext/SMMenuContext';
 import { signOut } from 'next-auth/react';
@@ -135,6 +143,7 @@ function MenuItemComponent({
 export function NavigableAccountMenu() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const { navigate, currentRoute } = useRouter();
   const { isBurgerMenuOpen } = useMenu();
 
@@ -151,15 +160,20 @@ export function NavigableAccountMenu() {
   const handleItemClick = async (item: MenuItem) => {
     if (item.isAction && item.id === 'logout') {
       setMobileMenuOpen(false);
-      await signOut({ 
-        callbackUrl: "/",
-        redirect: true 
-      });
+      setShowLogoutDialog(true);
       return;
     }
     
     navigate(`/account/${item.id}`);
     setMobileMenuOpen(false);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutDialog(false);
+    await signOut({ 
+      callbackUrl: "/",
+      redirect: true 
+    });
   };
 
   const MenuContent = ({ onItemClick: onItemClickProp }: { onItemClick?: (item: MenuItem) => void }) => (
@@ -226,6 +240,37 @@ export function NavigableAccountMenu() {
           </SheetContent>
         </Sheet>
       </div>
+
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-md border-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#2E2E2E]">
+              Подтверждение выхода
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 pt-2">
+              Вы уверены, что хотите выйти из аккаунта?
+              <br />
+              Вам потребуется войти снова для доступа к личному кабинету.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              className="w-full sm:w-auto border-gray-300 text-[#2E2E2E] hover:bg-gray-50"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleLogoutConfirm}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Выйти
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

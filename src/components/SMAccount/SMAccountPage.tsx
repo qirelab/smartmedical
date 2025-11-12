@@ -17,6 +17,14 @@ import {
 import { Button } from "../common/SMButton/SMButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../common/SMTabs/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../common/SMCard/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../common/SMDialog/SMDialog";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -35,6 +43,7 @@ export function SMAccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -72,7 +81,12 @@ export function SMAccountPage() {
     });
   };
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutDialog(false);
     await signOut({ 
       callbackUrl: "/",
       redirect: true 
@@ -363,7 +377,7 @@ export function SMAccountPage() {
                     Настройки уведомлений
                   </Button>
                   <Button
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                     variant="outline"
                     className="w-full justify-start border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500"
                   >
@@ -376,6 +390,37 @@ export function SMAccountPage() {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-md border-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#2E2E2E]">
+              Подтверждение выхода
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 pt-2">
+              Вы уверены, что хотите выйти из аккаунта?
+              <br />
+              Вам потребуется войти снова для доступа к личному кабинету.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              className="w-full sm:w-auto border-gray-300 text-[#2E2E2E] hover:bg-gray-50"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleLogoutConfirm}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Выйти
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

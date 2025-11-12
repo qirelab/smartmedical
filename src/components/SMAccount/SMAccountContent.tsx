@@ -19,6 +19,14 @@ import {
 import { Textarea } from "../common/SMTextarea/SMTextarea";
 import { Badge } from "../common/SMBadge/SMBadge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../common/SMDialog/SMDialog";
+import {
   CalendarDays,
   Mail,
   Settings2,
@@ -52,6 +60,7 @@ export function AccountContent() {
   const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const pathParts = currentRoute.replace(/^\/+|\/+$/g, '').split('/');
   
   let sectionFromUrl = '';
@@ -141,7 +150,12 @@ export function AccountContent() {
 
   const displayUser = getUserName();
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutDialog(false);
     await signOut({ 
       callbackUrl: "/",
       redirect: true 
@@ -776,7 +790,7 @@ export function AccountContent() {
                 Редактировать профиль
               </Button>
               <Button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 variant="outline"
                 className="text-red-600 border-red-300 hover:bg-red-50"
               >
@@ -787,6 +801,37 @@ export function AccountContent() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-md border-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#2E2E2E]">
+              Подтверждение выхода
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 pt-2">
+              Вы уверены, что хотите выйти из аккаунта?
+              <br />
+              Вам потребуется войти снова для доступа к личному кабинету.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              className="w-full sm:w-auto border-gray-300 text-[#2E2E2E] hover:bg-gray-50"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleLogoutConfirm}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Выйти
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
