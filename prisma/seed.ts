@@ -17,13 +17,15 @@ async function main() {
   // Categories
   const dentistry = await prisma.category.create({
     data: {
-      name: 'Стоматология'
+      name: 'Стоматология',
+      slug: 'stomatologiya'
     }
   });
 
   const cardiology = await prisma.category.create({
     data: {
-      name: 'Кардиология'
+      name: 'Кардиология',
+      slug: 'kardiologiya'
     }
   });
 
@@ -207,7 +209,7 @@ async function main() {
         email: 'patient1@example.com',
         password: 'password123',
         name: 'Смирнов Пётр',
-        phone: 79001234567,
+        phone: '+79001234567',
         registration_date: new Date('2024-01-15')
       },
       {
@@ -215,7 +217,7 @@ async function main() {
         email: 'patient2@example.com',
         password: 'password123',
         name: 'Иванова Мария',
-        phone: 79007654321,
+        phone: '+79007654321',
         registration_date: new Date('2024-02-10')
       }
     ]
