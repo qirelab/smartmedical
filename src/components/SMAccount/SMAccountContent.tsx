@@ -40,7 +40,6 @@ import {
 import {
   accountData,
   subscriptionCategories,
-  mockUser,
 } from "@/data/SMAccountData/SMAccountData";
 import { ImageWithFallback } from "../SMImage/ImageWithFallback";
 import { useRouter } from "../SMRouter/SMRouter";
@@ -127,24 +126,40 @@ export function AccountContent() {
     }
   };
 
-  // Получаем имя пользователя из данных или используем mockUser как fallback
+  // Получаем имя пользователя из данных пользователя
   const getUserName = () => {
-    if (user?.name) {
-      const nameParts = user.name.split(" ");
+    // Если пользователь загружен и есть имя
+    if (user?.name && user.name.trim()) {
+      const nameParts = user.name.trim().split(" ").filter(part => part.length > 0);
       return {
         firstName: nameParts[1] || nameParts[0] || "",
         lastName: nameParts[0] || "",
         fullName: user.name,
         name: user.name,
-        email: user.email,
+        email: user.email || "",
       };
     }
+    
+    // Если пользователь загружен, но имени нет - используем логин или email
+    if (user) {
+      const displayName = user.login || user.email || "Пользователь";
+      return {
+        firstName: displayName,
+        lastName: "",
+        fullName: displayName,
+        name: displayName,
+        email: user.email || "",
+      };
+    }
+    
+    // Если пользователь еще не загружен - возвращаем пустые значения
+    // (не используем моковые данные)
     return {
-      firstName: mockUser.firstName,
-      lastName: mockUser.lastName,
-      fullName: mockUser.name,
-      name: mockUser.name,
-      email: mockUser.email,
+      firstName: "",
+      lastName: "",
+      fullName: "",
+      name: "",
+      email: "",
     };
   };
 

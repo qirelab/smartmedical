@@ -213,6 +213,7 @@ export function Header() {
               setError("Неверный логин или пароль");
             } else if (result?.ok) {
               setIsAuthModalOpen(false);
+              router.push("/account");
               router.refresh();
             }
           } catch (err) {
@@ -260,6 +261,7 @@ export function Header() {
 
             if (loginResult?.ok) {
               setIsAuthModalOpen(false);
+              router.push("/account");
               router.refresh();
             }
           } catch (err) {
