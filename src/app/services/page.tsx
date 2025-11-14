@@ -13,20 +13,95 @@ import { ServicesContent } from '../../components/SMServices/SMServicesContent';
 import { useRouter } from "@/components/SMRouter/SMRouter";
 
 import { Star, Play, Award, Calendar, FileText, HelpCircle, MessageSquare } from 'lucide-react';
-import { getServiceData } from '@/data/SMServicesData/SMServicesData';
+import { getServiceData, ServiceData } from '@/data/SMServicesData/SMServicesData';
+import { useEffect, useState } from 'react';
+import { mapServiceFromDBToServiceData, ServiceFromDB } from '@/utils/serviceMapper';
 
 interface ServicePageProps {
   serviceId: string;
   categoryId: string;
 }
 
-
-
 export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
-  const serviceData = getServiceData(serviceId, categoryId);
+  const [serviceData, setServiceData] = useState<ServiceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchServiceData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Пытаемся получить услугу из API
+        const response = await fetch(`/api/services/by-category/${categoryId}/${serviceId}`);
+        
+        if (response.ok) {
+          const serviceFromDB: ServiceFromDB = await response.json();
+          const mappedData = mapServiceFromDBToServiceData(serviceFromDB);
+          setServiceData(mappedData);
+        } else if (response.status === 404) {
+          // Если услуга не найдена в БД, используем статический fallback
+          const fallbackData = getServiceData(serviceId, categoryId);
+          setServiceData(fallbackData);
+        } else {
+          throw new Error('Failed to fetch service');
+        }
+      } catch (err) {
+        console.error('Error fetching service:', err);
+        // В случае ошибки используем статический fallback
+        const fallbackData = getServiceData(serviceId, categoryId);
+        setServiceData(fallbackData);
+        setError('Не удалось загрузить данные из базы. Используются статические данные.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (serviceId && categoryId) {
+      fetchServiceData();
+    } else {
+      // Если нет serviceId или categoryId, используем fallback
+      setLoading(false);
+      const fallbackData = getServiceData(serviceId || '', categoryId || '');
+      setServiceData(fallbackData);
+    }
+  }, [serviceId, categoryId]);
+
+  // Показываем загрузку только если данные еще не загружены
+  if (loading && !serviceData) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#18A36C] mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Если данных нет после загрузки, показываем fallback
+  if (!serviceData) {
+    const fallbackData = getServiceData(serviceId || '', categoryId || '');
+    return (
+      <div className="min-h-screen bg-white">
+        <Breadcrumb items={fallbackData.breadcrumbs} />
+        <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
+          <p className="text-gray-600">Услуга не найдена</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
+      {error && (
+        <div className="max-w-6xl mx-auto px-4 pt-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-yellow-800">{error}</p>
+          </div>
+        </div>
+      )}
       <Breadcrumb items={serviceData.breadcrumbs} />
       
       <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
@@ -103,17 +178,30 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
                       </p>
                     </div>
                     
-                    <div className="relative">
-                      <div className="aspect-video bg-[#F4F4F4] rounded-lg flex items-center justify-center border-2 border-dashed border-[#CACACA]">
-                        <div className="text-center">
-                          <div className="w-16 h-16 bg-[#18A36C] rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Play className="w-8 h-8 text-white" />
-                          </div>
-                          <p className="text-[#2E2E2E] mb-2">Видео о процедуре</p>
-                          <p className="text-sm text-gray-600">Скоро будет добавлено</p>
+                    {serviceData.videoUrl ? (
+                      <div className="relative">
+                        <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                          <iframe
+                            src={serviceData.videoUrl}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="aspect-video bg-[#F4F4F4] rounded-lg flex items-center justify-center border-2 border-dashed border-[#CACACA]">
+                          <div className="text-center">
+                            <div className="w-16 h-16 bg-[#18A36C] rounded-full flex items-center justify-center mx-auto mb-3">
+                              <Play className="w-8 h-8 text-white" />
+                            </div>
+                            <p className="text-[#2E2E2E] mb-2">Видео о процедуре</p>
+                            <p className="text-sm text-gray-600">Скоро будет добавлено</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <h3 className="text-lg text-[#2E2E2E] mb-4">Фотографии</h3>

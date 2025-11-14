@@ -4,6 +4,7 @@ export interface ServiceData {
   description: string;
   image: string;
   price?: string;
+  videoUrl?: string;
   breadcrumbs: Array<{ label: string; path?: string }>;
   fullDescription: string;
   faq: Array<{ question: string; answer: string }>;
