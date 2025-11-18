@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Star, FileText, MessageSquare, HelpCircle, ExternalLink, Phone, Globe, MapPin, Mail, Calendar, Building2, Users, DollarSign, Clock, Briefcase, ArrowLeft } from 'lucide-react';
+import { Star, FileText, MessageSquare, HelpCircle, ExternalLink, Phone, Globe, MapPin, Mail, Calendar, Building2, Users, DollarSign, Clock, Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { Card } from '../common/SMCard/SMCard';
 import { Badge } from '../common/SMBadge/SMBadge';
@@ -18,9 +18,63 @@ interface ClinicPageProps {
 
 const REVIEWS_PER_PAGE = 10;
 
+type FaqFilter =
+  | {
+      category?: string;
+      limit?: number;
+    }
+  | null;
+
+interface FAQServiceFromDB {
+  id: number;
+  title: string;
+  subtitle: string;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  questionCount: number;
+  questions: Array<{
+    id: number;
+    question: string;
+    answer: string | null;
+  }>;
+}
+
+const FAQ_SOURCE_MAP: Record<string, FaqFilter> = {
+  faq: {},
+  'stomatology': { category: 'dentistry' },
+  'children-teeth': { category: 'pediatric-dentistry' },
+  'girls-hygiene': { category: 'gynecology' },
+  'boys-hygiene': null,
+  'girls-puberty': { category: 'gynecology' },
+  'culdocentesis': { category: 'gynecology' },
+  'polyp-removal': { category: 'gynecology' },
+  'ultrasound': { category: 'ultrasound' },
+  'womens-health': { category: 'gynecology' },
+  'curettage': { category: 'gynecology' },
+};
+
+function getQuestionWord(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) {
+    return 'вопрос';
+  }
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return 'вопроса';
+  }
+  return 'вопросов';
+}
+
 export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   const [activeTab, setActiveTab] = useState('info');
   const [currentPage, setCurrentPage] = useState(1);
+  const [faqServicesFromDB, setFaqServicesFromDB] = useState<FAQServiceFromDB[]>([]);
+  const [faqLoading, setFaqLoading] = useState(false);
+  const [faqError, setFaqError] = useState<string | null>(null);
   const { navigate, currentRoute } = useRouter();
 
   const clinicItem = getClinicItemById(itemId);
@@ -43,12 +97,226 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
     );
   }
 
+  const isFaqSection = categoryId === 'faq' || clinicItem.id === 'faq';
+
+  const faqFilterKey = useMemo(() => {
+    if (!isFaqSection) {
+      return null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(FAQ_SOURCE_MAP, itemId)) {
+      return itemId;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(FAQ_SOURCE_MAP, categoryId)) {
+      return categoryId;
+    }
+
+    return 'faq';
+  }, [categoryId, itemId, isFaqSection]);
+
+  const faqFilter = faqFilterKey ? FAQ_SOURCE_MAP[faqFilterKey] ?? null : null;
+  const canLoadFaqFromDB = isFaqSection && faqFilter !== null;
+
   const breadcrumbItems = [
     { label: 'Главная', href: '/' },
     { label: 'Клиника', href: '/clinic' },
     ...(categoryItem ? [{ label: categoryItem.title, href: `/clinic/${categoryId}` }] : []),
     { label: clinicItem.title, href: currentRoute }
   ];
+
+  useEffect(() => {
+    if (!canLoadFaqFromDB) {
+      setFaqServicesFromDB([]);
+      setFaqError(null);
+      setFaqLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let isCancelled = false;
+
+    async function loadFaq() {
+      try {
+        setFaqLoading(true);
+        setFaqError(null);
+        const params = new URLSearchParams();
+        if (faqFilter?.category) {
+          params.set('category', faqFilter.category);
+        }
+        if (faqFilter?.limit) {
+          params.set('limit', String(faqFilter.limit));
+        }
+        const queryString = params.toString();
+        const response = await fetch(`/api/questions${queryString ? `?${queryString}` : ''}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch FAQ from database');
+        }
+
+        const data = await response.json();
+        if (!isCancelled) {
+          setFaqServicesFromDB(data.services ?? []);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        console.error('Failed to load FAQ from database:', error);
+        if (!isCancelled) {
+          setFaqError('Не удалось загрузить FAQ из базы данных.');
+          setFaqServicesFromDB([]);
+        }
+      } finally {
+        if (!isCancelled) {
+          setFaqLoading(false);
+        }
+      }
+    }
+
+    loadFaq();
+
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
+  }, [canLoadFaqFromDB, faqFilter, isFaqSection]);
+
+  const renderStaticFaqCard = () => {
+    if (!clinicItem.faq || clinicItem.faq.length === 0) {
+      return null;
+    }
+
+    return (
+      <Card className="p-6 lg:p-8">
+        <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
+        <Accordion type="single" collapsible className="w-full">
+          {clinicItem.faq.map((item, index) => (
+            <AccordionItem key={`static-faq-${index}`} value={`static-faq-${index}`}>
+              <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="text-[#212121] leading-relaxed">
+                {item.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </Card>
+    );
+  };
+
+  const renderFaqFromDatabase = () => {
+    if (!isFaqSection) {
+      return null;
+    }
+
+    const hasDynamicFaq = faqServicesFromDB.length > 0;
+
+    return (
+      <Card className="p-6 lg:p-8">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-[#18A36C]">
+                FAQ из базы данных
+              </p>
+              <h2 className="text-xl text-[#2E2E2E]">Ответы наших специалистов</h2>
+            </div>
+            {faqLoading && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Загрузка
+              </div>
+            )}
+          </div>
+
+          {faqError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {faqError}
+            </div>
+          )}
+
+          {!canLoadFaqFromDB && (
+            <p className="text-sm text-gray-600">
+              Для выбранной темы пока нет связанных услуг в базе данных. Ниже
+              показаны подготовленные ответы специалистов.
+            </p>
+          )}
+
+          {hasDynamicFaq && (
+            <div className="space-y-6">
+              {faqServicesFromDB.map((service) => (
+                <div
+                  key={service.id}
+                  className="rounded-xl border border-[#E8E6E3] p-4 lg:p-6"
+                >
+                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-sm uppercase tracking-wide text-[#18A36C]">
+                        {service.category.name}
+                      </p>
+                      <h3 className="text-lg text-[#2E2E2E]">{service.title}</h3>
+                      <p className="text-sm text-gray-600">{service.subtitle}</p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="w-fit bg-[#18A36C]/10 text-[#18A36C]"
+                    >
+                      {service.questionCount} {getQuestionWord(service.questionCount)}
+                    </Badge>
+                  </div>
+                  <Accordion type="single" collapsible className="mt-4">
+                    {service.questions.map((question) => (
+                      <AccordionItem
+                        key={`${service.id}-${question.id}`}
+                        value={`${service.id}-${question.id}`}
+                      >
+                        <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
+                          {question.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-[#212121] leading-relaxed">
+                          {question.answer?.trim() || 'Ответ появится позже.'}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {canLoadFaqFromDB && !faqLoading && !hasDynamicFaq && !faqError && (
+            <p className="text-sm text-gray-600">
+              Для выбранного раздела пока нет вопросов в базе данных.
+            </p>
+          )}
+
+          {!hasDynamicFaq && clinicItem.faq && clinicItem.faq.length > 0 && (
+            <div className="border-t border-[#E8E6E3] pt-6">
+              <p className="mb-4 text-sm text-gray-500">
+                Ниже представлены подготовленные ответы специалистов.
+              </p>
+              <Accordion type="single" collapsible className="w-full">
+                {clinicItem.faq.map((item, index) => (
+                  <AccordionItem key={`fallback-${index}`} value={`fallback-${index}`}>
+                    <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-[#212121] leading-relaxed">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  };
 
   // Handle partners page
   if (itemId === 'medical-labs' || itemId === 'insurance' || itemId === 'dental-labs') {
@@ -755,23 +1023,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
         </div>
       )}
 
-      {clinicItem.faq && (
-        <Card className="p-6 lg:p-8">
-          <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
-          <Accordion type="single" collapsible className="w-full">
-            {clinicItem.faq.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
-                  {item.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-[#212121] leading-relaxed">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Card>
-      )}
+      {isFaqSection ? renderFaqFromDatabase() : renderStaticFaqCard()}
 
       <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
         <div className="text-center">
