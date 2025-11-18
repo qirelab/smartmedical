@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../../prisma/prismaClient";
+import { prisma } from "@/lib/prisma";
 import { getToken } from "next-auth/jwt";
 
 export async function GET(request: NextRequest) {
@@ -18,6 +18,13 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = parseInt(token.id as string);
+
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { error: "Неверный ID пользователя" },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.patient.findUnique({
       where: { id: userId },

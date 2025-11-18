@@ -115,9 +115,18 @@ export function AccountContent() {
       const response = await fetch("/api/auth/me");
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          console.error("Failed to fetch user data: user data is missing in response", data);
+        }
       } else {
-        console.error("Failed to fetch user data");
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Failed to fetch user data:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData.error || errorData.message || "Unknown error"
+        });
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
