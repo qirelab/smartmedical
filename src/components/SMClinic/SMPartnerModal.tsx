@@ -29,8 +29,8 @@ export function PartnerModal({ partner, open, onOpenChange }: PartnerModalProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto pt-12 [&>button]:w-12 [&>button]:h-12 [&>button]:top-6 [&>button]:right-6 [&_svg]:!size-6">
+        <DialogHeader className="pt-4">
           <DialogTitle className="text-2xl text-[#2E2E2E]">
             {partner.name}
           </DialogTitle>

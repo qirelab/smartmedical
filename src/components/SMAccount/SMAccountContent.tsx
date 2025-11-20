@@ -49,6 +49,7 @@ import { useRouter } from "../SMRouter/SMRouter";
 import { useSession, signOut } from "next-auth/react";
 import { ChangePasswordModal } from "./SMChangePasswordModal";
 import { useAlert } from "../common/SMAlert/AlertProvider";
+import { Pagination } from "../common/SMPagination/SMPagination";
 
 interface UserData {
   id: number;
@@ -95,12 +96,15 @@ export function AccountContent() {
     useState(accountData.subscriptions.settings);
   const [selectedYear, setSelectedYear] =
     useState<string>("all");
+  const [materialsPage, setMaterialsPage] = useState(1);
   const [contactForm, setContactForm] = useState(
     accountData.contact.form,
   );
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+
+  const MATERIALS_PER_PAGE = 6;
 
   // Обновляем email в настройках подписки, когда загружаются данные пользователя
   useEffect(() => {
@@ -450,8 +454,11 @@ export function AccountContent() {
           <p className="text-gray-600 mt-4">Загрузка материалов...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMaterials.map((item) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMaterials
+              .slice((materialsPage - 1) * MATERIALS_PER_PAGE, materialsPage * MATERIALS_PER_PAGE)
+              .map((item) => (
           <Card
             key={item.id}
             className="group hover:shadow-lg transition-all duration-300 border border-gray-200"
@@ -481,8 +488,19 @@ export function AccountContent() {
               </div>
             </CardContent>
           </Card>
-        ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination for materials */}
+          {filteredMaterials.length > MATERIALS_PER_PAGE && (
+            <Pagination
+              currentPage={materialsPage}
+              totalPages={Math.ceil(filteredMaterials.length / MATERIALS_PER_PAGE)}
+              onPageChange={setMaterialsPage}
+              className="mt-8"
+            />
+          )}
+        </>
       )}
 
       {!materialsLoading && filteredMaterials.length === 0 && (

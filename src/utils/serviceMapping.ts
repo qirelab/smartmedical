@@ -90,6 +90,29 @@ export function getServiceTitleByServiceId(
 }
 
 /**
+ * Получить serviceId (slug) по названию услуги и categorySlug
+ * Обратный маппинг для поиска
+ */
+export function getServiceSlugByTitle(
+  categorySlug: string,
+  serviceTitle: string
+): string | null {
+  const categoryMapping = serviceIdToTitleMapping[categorySlug];
+  if (!categoryMapping) {
+    return null;
+  }
+
+  // Ищем serviceId по названию
+  for (const [serviceId, title] of Object.entries(categoryMapping)) {
+    if (title.toLowerCase() === serviceTitle.toLowerCase()) {
+      return serviceId;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Получить ключевые слова для поиска услуги по serviceId
  */
 export function getServiceKeywords(serviceId: string): string[] {

@@ -5,7 +5,7 @@ import { Button } from '../common/SMButton/SMButton';
 import { Card } from '../common/SMCard/SMCard';
 import { Badge } from '../common/SMBadge/SMBadge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/common/SMAccordion/SMAccordion';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/common/SMPagination/SMPagination';
+import { Pagination } from '@/components/common/SMPagination/SMPagination';
 import { getClinicItemById, ClinicItem, Review } from '../../data/SMClinicData/SMClinicData';
 import { useRouter } from '@/components/SMRouter/SMRouter';
 import { Breadcrumb } from '../SMBreadcrumb/SMBreadcrumb';
@@ -59,10 +59,14 @@ interface ClinicPageProps {
 }
 
 const REVIEWS_PER_PAGE = 10;
+const VACANCIES_PER_PAGE = 6;
+const PARTNERS_PER_PAGE = 6;
 
 export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   const [activeTab, setActiveTab] = useState('info');
   const [currentPage, setCurrentPage] = useState(1);
+  const [vacanciesPage, setVacanciesPage] = useState(1);
+  const [partnersPage, setPartnersPage] = useState(1);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [singlePartner, setSinglePartner] = useState<Partner | null>(null);
@@ -213,8 +217,11 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                 <p className="text-gray-600">Загрузка...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {partners.map((partner) => (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {partners
+                    .slice((partnersPage - 1) * PARTNERS_PER_PAGE, partnersPage * PARTNERS_PER_PAGE)
+                    .map((partner) => (
                   <Card
                     key={partner.id}
                     className="group hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#18A36C]/20 h-full"
@@ -257,8 +264,19 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                       </Button>
                     </div>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+
+                {/* Pagination for partners */}
+                {partners.length > PARTNERS_PER_PAGE && (
+                  <Pagination
+                    currentPage={partnersPage}
+                    totalPages={Math.ceil(partners.length / PARTNERS_PER_PAGE)}
+                    onPageChange={setPartnersPage}
+                    className="mt-8"
+                  />
+                )}
+              </>
             )}
           </div>
 
@@ -459,50 +477,13 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             ))}
           </div>
           
-          {totalPages > 1 && (
-            <div className="mt-8">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 1) setCurrentPage(currentPage - 1);
-                      }}
-                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
-                  
-                  {[...Array(totalPages)].map((_, i) => (
-                    <PaginationItem key={i + 1}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(i + 1);
-                        }}
-                        isActive={currentPage === i + 1}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                      }}
-                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          {/* Pagination for reviews */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            className="mt-8"
+          />
         </Card>
 
         <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
@@ -558,8 +539,11 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                 <p className="text-gray-600">Загрузка...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {vacancies.map((vacancy) => (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {vacancies
+                    .slice((vacanciesPage - 1) * VACANCIES_PER_PAGE, vacanciesPage * VACANCIES_PER_PAGE)
+                    .map((vacancy) => (
                   <Card key={vacancy.id} className="p-6 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     <div className="flex items-start justify-between mb-4">
                       <div>
@@ -601,8 +585,19 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                       </Button>
                     </div>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+
+                {/* Pagination for vacancies */}
+                {vacancies.length > VACANCIES_PER_PAGE && (
+                  <Pagination
+                    currentPage={vacanciesPage}
+                    totalPages={Math.ceil(vacancies.length / VACANCIES_PER_PAGE)}
+                    onPageChange={setVacanciesPage}
+                    className="mt-8"
+                  />
+                )}
+              </>
             )}
 
             {/* Ask Question Footer */}

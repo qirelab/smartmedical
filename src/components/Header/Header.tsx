@@ -8,8 +8,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { AuthModals } from "../SMAuthModals/SMAuthModals";
 import { useMenu } from "../SMMenuContext/SMMenuContext";
 import SMLogo from "@/icons/SMLogo";
-import SMSearchInput from "../common/SMSearchInput/SMSerachInput";
 import SMMobileLogo from "@/icons/SMMobileLogo";
+import { SearchModal } from "../common/SMSearch/SMSearch";
 import SMBurgerMenu from "../common/SMBurgerMenu/SMBurgerMenu";
 import navigationConfig from "@/config/navigation.json";
 import contactsConfig from "@/config/contacts.json";
@@ -46,6 +46,19 @@ export function Header() {
     };
   }, [isBurgerMenuOpen]);
 
+  // Keyboard shortcut: Ctrl+K or Cmd+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleNavigation = (path: string) => {
     router.push(path);
   };
@@ -78,7 +91,23 @@ export function Header() {
               <SMLogo />
             </button>
 
-            <SMSearchInput />
+            {/* Desktop Search - Click to open modal */}
+            <div className="flex-1 max-w-md mx-8">
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="w-full relative"
+              >
+                <Input
+                  type="text"
+                  placeholder="Поиск услуг и специалистов..."
+                  readOnly
+                  className="pl-4 pr-12 bg-gray-50 border-0 h-12 rounded-lg focus:outline-none focus:shadow-none focus:border-0 focus:ring-1 focus:ring-[#18A36C] cursor-pointer"
+                />
+                <div className="absolute right-1 top-1 h-10 w-10 p-0 bg-[#18A36C] hover:bg-[#18A36C]/90 rounded flex items-center justify-center">
+                  <Search className="w-4 h-4 text-white" />
+                </div>
+              </button>
+            </div>
 
             <div className="flex items-center gap-6">
               <div className="text-right">
@@ -113,7 +142,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  onClick={() => setIsSearchOpen(true)}
                   className="p-2"
                 >
                   <Search className="w-5 h-5" />
@@ -130,24 +159,6 @@ export function Header() {
                 </Button>
               </div>
             </div>
-
-            {isSearchOpen && (
-              <div className="mt-4">
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Поиск..."
-                    className="pl-4 pr-12 bg-gray-50 border-0 h-10 rounded-lg w-full"
-                  />
-                  <Button
-                    size="sm"
-                    className="absolute right-1 top-1 h-8 w-8 p-0 bg-[#18A36C] hover:bg-[#18A36C]/90"
-                  >
-                    <Search className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -191,6 +202,11 @@ export function Header() {
           <SMBurgerMenu />
         </div>
       </div>
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       <AuthModals
         isOpen={isAuthModalOpen}
