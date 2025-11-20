@@ -817,7 +817,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <MapPin className="w-5 h-5 text-[#18A36C] mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-600">Адрес</p>
-                    <p className="text-[#212121]">г. Минск, пр-т Победителей, д. 119, пом. 504</p>
+                    <p className="text-[#212121]">Витебская обл., г. Новополоцк, ул. Парковая, д. 16А, пом.1</p>
                   </div>
                 </div>
                 
@@ -825,7 +825,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <Phone className="w-5 h-5 text-[#18A36C] mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-600">Телефон</p>
-                    <p className="text-[#212121]">+375-29-161-01-01</p>
+                    <p className="text-[#212121]">+375 (29) 631 07-07, +375 (29) 632 07-07</p>
                   </div>
                 </div>
                 
@@ -833,7 +833,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <Mail className="w-5 h-5 text-[#18A36C] mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
-                    <p className="text-[#212121]">smartmedical.by@gmail.com</p>
+                    <p className="text-[#212121]">6310707df@gmail.com</p>
                   </div>
                 </div>
                 
