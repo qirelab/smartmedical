@@ -82,11 +82,13 @@ model Question {
   id         Int      @id @default(autoincrement()) @map("questions_id")
   question   String
   answer     String?  @db.Text
-  service_id Int
-  service    Service  @relation(fields: [service_id], references: [id])
+  category   String?  // Категория для общих FAQ (например, 'stomatology', 'ultrasound')
+  service_id Int?     // Теперь необязательный - для общих FAQ
+  service    Service? @relation(fields: [service_id], references: [id])
 
   @@map("questions")
   @@index([service_id])
+  @@index([category])
 }
 
 model Feedback {
@@ -96,8 +98,9 @@ model Feedback {
   date       DateTime @db.Date
   grade      Int
   image_url  String
-  service_id Int
-  service    Service  @relation(fields: [service_id], references: [id])
+  verified   Boolean  @default(false) // Для общих отзывов клиники
+  service_id Int?     // Теперь необязательный - для общих отзывов клиники
+  service    Service? @relation(fields: [service_id], references: [id])
 
   @@map("feedbacks")
   @@index([service_id])
@@ -153,4 +156,20 @@ model Patient {
   registration_date  DateTime @db.Date
 
   @@map("patients")
+}
+
+model Material {
+  id          Int      @id @default(autoincrement()) @map("material_id")
+  title       String
+  content     String   @db.Text
+  image_url   String
+  date        DateTime @db.Date
+  year        Int
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("materials")
+  @@index([year])
+  @@index([is_active])
 }

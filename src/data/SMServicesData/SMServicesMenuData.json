@@ -135,6 +135,17 @@
       ]
     },
     {
+      "id": "cardiology",
+      "title": "Кардиология",
+      "icon": "Heart",
+      "children": [
+        { "id": "echo-kg", "title": "ЭХО-КГ (УЗИ сердца)" },
+        { "id": "ecg", "title": "ЭКГ (электрокардиография)" },
+        { "id": "holter-monitoring", "title": "Холтеровское мониторирование" },
+        { "id": "cardiologist-appointment", "title": "Приём кардиолога" }
+      ]
+    },
+    {
       "id": "diagnostics",
       "title": "Диагностика",
       "icon": "Search",

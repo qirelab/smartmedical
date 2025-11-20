@@ -5,9 +5,11 @@ import { Button } from "../common/SMButton/SMButton";
 import SMLogo from "@/icons/SMLogo";
 import { useRouter } from "next/navigation";
 import footerConfig from "@/config/footer.json";
+import { useContacts } from "@/hooks/useContacts";
 
 export function Footer() {
   const router = useRouter();
+  const { contacts } = useContacts();
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -88,7 +90,7 @@ export function Footer() {
                 <Phone className="w-4 h-4 lg:w-5 lg:h-5 mt-0.5 flex-shrink-0 text-[#18A36C]" />
                 <div>
                   <div className="text-[#2E2E2E] text-sm lg:text-base">
-                    {footerConfig.contactInfo.phone.number}
+                    {contacts?.phone_number || footerConfig.contactInfo.phone.number}
                   </div>
                   <div className="text-gray-500 text-xs lg:text-sm">
                     {footerConfig.contactInfo.phone.workingHours}
@@ -100,7 +102,7 @@ export function Footer() {
                 <Mail className="w-4 h-4 lg:w-5 lg:h-5 mt-0.5 flex-shrink-0 text-[#18A36C]" />
                 <div>
                   <div className="text-[#2E2E2E] text-sm lg:text-base">
-                    {footerConfig.contactInfo.email.address}
+                    {contacts?.email || footerConfig.contactInfo.email.address}
                   </div>
                   <div className="text-gray-500 text-xs lg:text-sm">
                     {footerConfig.contactInfo.email.responseTime}
@@ -112,7 +114,7 @@ export function Footer() {
                 <MapPin className="w-4 h-4 lg:w-5 lg:h-5 mt-0.5 flex-shrink-0 text-[#18A36C]" />
                 <div>
                   <div className="text-[#2E2E2E] text-sm lg:text-base">
-                    {footerConfig.contactInfo.address.full}
+                    {contacts?.address || footerConfig.contactInfo.address.full}
                   </div>
                   <div className="text-gray-500 text-xs lg:text-sm">
                     {footerConfig.contactInfo.address.note}
@@ -127,7 +129,7 @@ export function Footer() {
                     {footerConfig.contactInfo.schedule.title}
                   </div>
                   <div className="text-gray-500 text-xs lg:text-sm">
-                    {footerConfig.contactInfo.schedule.hours}
+                    {contacts?.work_hours_main || footerConfig.contactInfo.schedule.hours}
                   </div>
                 </div>
               </div>

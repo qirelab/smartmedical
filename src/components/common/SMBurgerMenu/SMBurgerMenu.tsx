@@ -10,12 +10,14 @@ import { Phone, X, User, MapPin, Mail } from "lucide-react";
 import navigationConfig from "@/config/navigation.json";
 import contactsConfig from "@/config/contacts.json";
 import { iconMap, IconName } from "@/utils/iconMapper";
+import { useContacts } from "@/hooks/useContacts";
 
 const SMBurgerMenu = () => {
   const { isBurgerMenuOpen, setIsBurgerMenuOpen } = useMenu();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAuthenticated] = useState(false);
   const router = useRouter();
+  const { contacts } = useContacts();
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -68,7 +70,7 @@ const SMBurgerMenu = () => {
                 <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4 text-green-200" />
-                    <span>{contactsConfig.phone}</span>
+                    <span>{contacts?.phone_number || contactsConfig.phone}</span>
                   </div>
                   <button className="text-xs text-green-200 hover:text-white transition-colors mt-1">
                     {contactsConfig.callbackText}
@@ -146,11 +148,11 @@ const SMBurgerMenu = () => {
               >
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <MapPin className="w-4 h-4 text-[#18A36C]" />
-                  <span>{contactsConfig.address}</span>
+                  <span>{contacts?.address || contactsConfig.address}</span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <Mail className="w-4 h-4 text-[#18A36C]" />
-                  <span>{contactsConfig.email}</span>
+                  <span>{contacts?.email || contactsConfig.email}</span>
                 </div>
               </motion.div>
             </div>

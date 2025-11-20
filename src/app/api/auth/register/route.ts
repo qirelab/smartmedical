@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import prisma from "../../../../../prisma/prismaClient";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +48,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Валидация формата email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Некорректный формат email" },
+        { status: 400 }
+      );
+    }
+
+    // Валидация формата белорусского телефона: +375(XX)XXX-XX-XX
+    const phoneRegex = /^\+375\((25|29|33|44|17)\)\d{3}-\d{2}-\d{2}$/;
+    if (!phoneRegex.test(phone)) {
+      return NextResponse.json(
+        { error: "Некорректный формат телефона. Используйте формат: +375(29)123-45-67" },
+        { status: 400 }
+      );
+    }
+
     // Проверка уникальности email
     const existingUserByEmail = await prisma.patient.findFirst({
       where: { email },
@@ -68,6 +86,18 @@ export async function POST(request: NextRequest) {
     if (existingUserByLogin) {
       return NextResponse.json(
         { error: "Пользователь с таким логином уже существует" },
+        { status: 409 }
+      );
+    }
+
+    // Проверка уникальности телефона
+    const existingUserByPhone = await prisma.patient.findFirst({
+      where: { phone },
+    });
+
+    if (existingUserByPhone) {
+      return NextResponse.json(
+        { error: "Пользователь с таким телефоном уже существует" },
         { status: 409 }
       );
     }

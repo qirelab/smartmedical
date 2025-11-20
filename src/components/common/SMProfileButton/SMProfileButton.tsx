@@ -43,7 +43,7 @@ export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onA
       className={`text-[#18A36C] hover:bg-[#F4F4F4] flex items-center gap-2 px-2 lg:px-3 py-2 text-sm ${className || ''}`}
     >
       <User className="w-4 h-4" />
-      <span>Мой кабинет</span>
+      <span>{session ? 'Мой кабинет' : 'Войти'}</span>
     </Button>
   );
 };

@@ -40,15 +40,30 @@ export const serviceIdToTitleMapping: Record<string, Record<string, string>> = {
     'fetal-ultrasound': 'УЗИ плода',
     'gender-party': 'УЗИ плода', // Fallback
   },
-  // Детская гинекология
-  'pediatric-gynecology': {
-    'pelvic-ultrasound-girls': 'УЗИ органов малого таза', // Fallback
-    'adolescent-gynecologist': 'Приём гинеколога', // Fallback
-    'pediatric-gynecologist': 'Приём гинеколога', // Fallback
-  },
   // Кардиология
   'cardiology': {
     'echo-kg': 'ЭХО-КГ (УЗИ сердца)',
+    'cardiologist-appointment': 'Приём кардиолога',
+    'ecg': 'ЭКГ (электрокардиография)',
+    'holter-monitoring': 'Холтеровское мониторирование',
+  },
+  // Детская гинекология
+  'pediatric-gynecology': {
+    'pediatric-gynecologist': 'Детский гинеколог',
+    'pelvic-ultrasound-girls': 'УЗИ органов малого таза для девочек',
+    'adolescent-gynecologist': 'Подростковый гинеколог',
+  },
+  // Эндокринология
+  'endocrinology': {
+    'endocrinologist-consultation': 'Консультация врача-эндокринолога',
+  },
+  // Онкология
+  'oncology': {
+    'oncologist-appointment': 'Приём врача онколога',
+  },
+  // Дневной стационар
+  'day-hospital': {
+    'procedure-room': 'Процедурный кабинет',
   },
   // Диагностика
   'diagnostics': {
@@ -105,24 +120,4 @@ export function getServiceKeywords(serviceId: string): string[] {
   
   return keywordMap[serviceId] || [];
 }
-
-/**
- * Перевод английских терминов в русские для поиска
- */
-const englishToRussianTerms: Record<string, string[]> = {
-  'breast': ['молочных', 'желез', 'груди', 'молочные'],
-  'pelvic': ['малого', 'таза', 'таз', 'малый'],
-  'thyroid': ['щитовидной', 'железы', 'щитовидная'],
-  'ultrasound': ['узи', 'ультразвук'],
-  'caries': ['кариеса', 'кариес'],
-  'teeth': ['зубов', 'зубы'],
-  'milk': ['молочных', 'молочные'],
-  'treatment': ['лечение'],
-  'cleaning': ['чистка'],
-  'professional': ['профессиональная'],
-  'whitening': ['отбеливание'],
-  'pulpitis': ['пульпита', 'пульпит'],
-  'gynecologist': ['гинеколога', 'гинеколог'],
-  'appointment': ['приём'],
-};
 

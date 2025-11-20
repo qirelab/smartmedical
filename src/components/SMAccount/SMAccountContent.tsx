@@ -36,6 +36,9 @@ import {
   ChevronRight,
   LogOut,
   User,
+  Phone,
+  Lock,
+  AtSign,
 } from "lucide-react";
 import {
   accountData,
@@ -44,6 +47,8 @@ import {
 import { ImageWithFallback } from "../SMImage/ImageWithFallback";
 import { useRouter } from "../SMRouter/SMRouter";
 import { useSession, signOut } from "next-auth/react";
+import { ChangePasswordModal } from "./SMChangePasswordModal";
+import { useAlert } from "../common/SMAlert/AlertProvider";
 
 interface UserData {
   id: number;
@@ -54,12 +59,25 @@ interface UserData {
   registration_date: string;
 }
 
+interface Material {
+  id: string;
+  title: string;
+  content: string;
+  image: string;
+  date: string;
+  year: number;
+}
+
 export function AccountContent() {
   const { navigate, currentRoute } = useRouter();
   const { data: session, status } = useSession();
+  const alert = useAlert();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
   const pathParts = currentRoute.replace(/^\/+|\/+$/g, '').split('/');
   
   let sectionFromUrl = '';
@@ -94,6 +112,33 @@ export function AccountContent() {
     }
   }, [user]);
 
+  // Загружаем материалы из API
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      setMaterialsLoading(true);
+      try {
+        const params = new URLSearchParams({
+          year: selectedYear,
+          page: "1",
+          limit: "100",
+        });
+        const response = await fetch(`/api/materials?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMaterials(data.materials);
+        } else {
+          alert.error("Не удалось загрузить материалы", "Ошибка загрузки");
+        }
+      } catch (error) {
+        alert.error("Произошла ошибка при загрузке материалов", "Ошибка");
+      } finally {
+        setMaterialsLoading(false);
+      }
+    };
+
+    fetchMaterials();
+  }, [selectedYear, alert]);
+
   useEffect(() => {
     if (sectionFromUrl && ['subscriptions', 'materials', 'contact'].includes(sectionFromUrl)) {
       setActiveSection(sectionFromUrl);
@@ -115,21 +160,10 @@ export function AccountContent() {
       const response = await fetch("/api/auth/me");
       if (response.ok) {
         const data = await response.json();
-        if (data.user) {
-          setUser(data.user);
-        } else {
-          console.error("Failed to fetch user data: user data is missing in response", data);
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        console.error("Failed to fetch user data:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData.error || errorData.message || "Unknown error"
-        });
+        setUser(data.user);
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      // Silently handle error - user data is optional
     } finally {
       setIsLoading(false);
     }
@@ -203,12 +237,7 @@ export function AccountContent() {
     setTimeout(() => setSubmitStatus("idle"), 3000);
   };
 
-  const filteredMaterials =
-    selectedYear === "all"
-      ? accountData.materials.items
-      : accountData.materials.items.filter(
-          (item) => item.year.toString() === selectedYear,
-        );
+  const filteredMaterials = materials;
 
   const renderSubscriptions = () => (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6" >
@@ -415,8 +444,14 @@ export function AccountContent() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMaterials.map((item) => (
+      {materialsLoading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#18A36C] mx-auto"></div>
+          <p className="text-gray-600 mt-4">Загрузка материалов...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMaterials.map((item) => (
           <Card
             key={item.id}
             className="group hover:shadow-lg transition-all duration-300 border border-gray-200"
@@ -447,9 +482,10 @@ export function AccountContent() {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
-      {filteredMaterials.length === 0 && (
+      {!materialsLoading && filteredMaterials.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg text-gray-800 mb-2">
@@ -639,7 +675,7 @@ export function AccountContent() {
               <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="text-2xl text-gray-800 mb-1">
-                    {accountData.materials.items.length}
+                    {materials.length}
                   </div>
                   <div className="text-sm text-gray-600 text-center">
                     Материалов
@@ -649,6 +685,112 @@ export function AccountContent() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Profile Information Section */}
+      <div className="mb-12">
+        <Card className="border border-gray-200">
+          <CardHeader className="border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#18A36C] rounded-lg flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-gray-800">
+                    Информация профиля
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Ваши личные данные и настройки безопасности
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setShowChangePasswordModal(true)}
+                variant="outline"
+                className="border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white transition-all duration-300"
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Сменить пароль
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Login */}
+              <div className="space-y-2">
+                <Label className="text-gray-600 text-sm flex items-center gap-2">
+                  <AtSign className="w-4 h-4 text-[#18A36C]" />
+                  Логин
+                </Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 font-medium">
+                    {user?.login || 'Не указан'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label className="text-gray-600 text-sm flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-[#18A36C]" />
+                  Email
+                </Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 font-medium">
+                    {user?.email || 'Не указан'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label className="text-gray-600 text-sm flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-[#18A36C]" />
+                  Телефон
+                </Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 font-medium">
+                    {user?.phone || 'Не указан'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Registration Date */}
+              <div className="space-y-2">
+                <Label className="text-gray-600 text-sm flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-[#18A36C]" />
+                  Дата регистрации
+                </Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 font-medium">
+                    {user?.registration_date
+                      ? new Date(user.registration_date).toLocaleDateString('ru-RU', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : 'Не указана'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Full Name */}
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-gray-600 text-sm flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#18A36C]" />
+                  Полное имя
+                </Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 font-medium">
+                    {user?.name || 'Не указано'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions Grid */}
@@ -746,7 +888,7 @@ export function AccountContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accountData.materials.items
+          {materials
             .slice(0, 3)
             .map((item) => (
               <Card
@@ -856,6 +998,12 @@ export function AccountContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 

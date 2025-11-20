@@ -13,7 +13,10 @@
     "prisma:migrate": "npx dotenv-cli -e .env -- npx prisma migrate dev",
     "prisma:generate": "npx dotenv-cli -e .env -- npx prisma generate",
     "prisma:studio": "npx dotenv-cli -e .env -- npx prisma studio",
-    "prisma:seed": "npx dotenv-cli -e .env -- npx prisma db seed"
+    "prisma:seed": "npx dotenv-cli -e .env -- npx prisma db seed",
+    "prisma:reset": "npx dotenv-cli -e .env -- npx prisma migrate reset",
+    "prisma:push": "npx dotenv-cli -e .env -- npx prisma migrate push",
+    "upload:cloudinary": "npx dotenv-cli -e .env -- npx tsx scripts/upload-to-cloudinary.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -32,10 +35,12 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.8.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.548.0",
     "next": "16.0.0",
     "next-auth": "^4.24.13",
+    "next-cloudinary": "^6.17.5",
     "prisma": "^6.18.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

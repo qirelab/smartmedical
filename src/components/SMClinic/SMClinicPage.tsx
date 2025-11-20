@@ -6,10 +6,52 @@ import { Card } from '../common/SMCard/SMCard';
 import { Badge } from '../common/SMBadge/SMBadge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/common/SMAccordion/SMAccordion';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/common/SMPagination/SMPagination';
-import { getClinicItemById, getPartnersByCategory, getPartnerById, clinicReviews, vacanciesData, getVacancyById, ClinicItem, Partner, Review, Vacancy } from '../../data/SMClinicData/SMClinicData';
+import { getClinicItemById, ClinicItem, Review } from '../../data/SMClinicData/SMClinicData';
 import { useRouter } from '@/components/SMRouter/SMRouter';
 import { Breadcrumb } from '../SMBreadcrumb/SMBreadcrumb';
 import { ImageWithFallback } from '../SMImage/ImageWithFallback';
+import { PartnerModal } from './SMPartnerModal';
+import { VacancyModal } from './SMVacancyModal';
+
+// Types from API
+interface Partner {
+  id: number;
+  name: string;
+  description: string;
+  image_url: string;
+  website_url: string;
+  number: number;
+  category: {
+    name: string;
+    slug: string;
+  };
+}
+
+interface Vacancy {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  payment: number;
+  experience: number;
+  requirements: string;
+}
+
+interface ClinicReview {
+  id: number;
+  name: string;
+  text: string;
+  date: Date | string;
+  grade: number;
+  verified: boolean;
+}
+
+interface ClinicFaq {
+  id: number;
+  question: string;
+  answer: string | null;
+  category: string | null;
+}
 
 interface ClinicPageProps {
   itemId: string;
@@ -72,16 +114,111 @@ function getQuestionWord(count: number) {
 export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   const [activeTab, setActiveTab] = useState('info');
   const [currentPage, setCurrentPage] = useState(1);
-  const [faqServicesFromDB, setFaqServicesFromDB] = useState<FAQServiceFromDB[]>([]);
-  const [faqLoading, setFaqLoading] = useState(false);
-  const [faqError, setFaqError] = useState<string | null>(null);
-  const { navigate, currentRoute } = useRouter();
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [vacancies, setVacancies] = useState<Vacancy[]>([]);
+  const [singlePartner, setSinglePartner] = useState<Partner | null>(null);
+  const [singleVacancy, setSingleVacancy] = useState<Vacancy | null>(null);
+  const [clinicReviewsData, setClinicReviewsData] = useState<ClinicReview[]>([]);
+  const [clinicFaqsData, setClinicFaqsData] = useState<ClinicFaq[]>([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [selectedVacancy, setSelectedVacancy] = useState<Vacancy | null>(null);
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [isVacancyModalOpen, setIsVacancyModalOpen] = useState(false);
+  const { navigate, currentRoute} = useRouter();
 
   const clinicItem = getClinicItemById(itemId);
   const categoryItem = categoryId !== itemId ? getClinicItemById(categoryId) : null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, [itemId, categoryId]);
+
+  // Load partners for partner category pages
+  useEffect(() => {
+    const isPartnerPage = ['medical-labs', 'insurance', 'dental-labs'].includes(itemId);
+    if (isPartnerPage) {
+      const categoryMap: Record<string, string> = {
+        'medical-labs': 'diagnostics',
+        'insurance': 'gynecology',
+        'dental-labs': 'ultrasound'
+      };
+
+      setLoading(true);
+      fetch(`/api/partners?category=${categoryMap[itemId]}`)
+        .then(res => res.json())
+        .then(data => setPartners(data))
+        .catch(err => console.error('Failed to load partners:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [itemId]);
+
+  // Load single partner
+  useEffect(() => {
+    if (categoryId === 'partners' && !isNaN(Number(itemId))) {
+      setLoading(true);
+      fetch(`/api/partners/${itemId}`)
+        .then(res => res.json())
+        .then(data => setSinglePartner(data))
+        .catch(err => console.error('Failed to load partner:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [itemId, categoryId]);
+
+  // Load vacancies
+  useEffect(() => {
+    if (itemId === 'vacancies') {
+      setLoading(true);
+      fetch('/api/vacancies')
+        .then(res => res.json())
+        .then(data => setVacancies(data))
+        .catch(err => console.error('Failed to load vacancies:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [itemId]);
+
+  // Load clinic reviews
+  useEffect(() => {
+    if (itemId === 'reviews') {
+      setLoading(true);
+      fetch(`/api/clinic-reviews?page=${currentPage}&limit=${REVIEWS_PER_PAGE}`)
+        .then(res => res.json())
+        .then(data => {
+          setClinicReviewsData(data.reviews);
+          setReviewsTotal(data.pagination.total);
+        })
+        .catch(err => console.error('Failed to load clinic reviews:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [itemId, currentPage]);
+
+  // Load clinic FAQs for specific categories
+  useEffect(() => {
+    const faqCategories = ['children-teeth', 'girls-hygiene', 'boys-hygiene', 'girls-puberty',
+                           'culdocentesis', 'stomatology', 'polyp-removal', 'ultrasound',
+                           'womens-health', 'curettage'];
+
+    if (faqCategories.includes(itemId)) {
+      setLoading(true);
+      fetch(`/api/clinic-faqs?category=${itemId}`)
+        .then(res => res.json())
+        .then(data => setClinicFaqsData(data))
+        .catch(err => console.error('Failed to load clinic FAQs:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [itemId]);
+
+  // Load single vacancy
+  useEffect(() => {
+    if (categoryId === 'vacancies' && !isNaN(Number(itemId))) {
+      setLoading(true);
+      fetch(`/api/vacancies/${itemId}`)
+        .then(res => res.json())
+        .then(data => setSingleVacancy(data))
+        .catch(err => console.error('Failed to load vacancy:', err))
+        .finally(() => setLoading(false));
+    }
   }, [itemId, categoryId]);
 
   if (!clinicItem) {
@@ -320,14 +457,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
   // Handle partners page
   if (itemId === 'medical-labs' || itemId === 'insurance' || itemId === 'dental-labs') {
-    const categoryMap: Record<string, string> = {
-      'medical-labs': 'medical',
-      'insurance': 'insurance',
-      'dental-labs': 'dental'
-    };
-    
-    const partners = getPartnersByCategory(categoryMap[itemId]);
-    
     return (
       <>
         <Breadcrumb items={breadcrumbItems} />
@@ -344,54 +473,58 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {partners.map((partner) => (
-            <Card 
-              key={partner.id} 
-              className="group hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-[#18A36C]/20 h-full"
-              onClick={() => navigate(`/clinic/partners/${partner.id}`)}
-            >
-              <div className="p-6 h-full flex flex-col">
-                <div className="mb-4">
-                  <ImageWithFallback
-                    src={partner.image}
-                    alt={partner.name}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                </div>
-                <h3 className="text-lg text-[#2E2E2E] mb-2 group-hover:text-[#18A36C] transition-colors duration-300">
-                  {partner.name}
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4 flex-grow">
-                  {partner.description}
-                </p>
-                
-                <div className="space-y-2 mb-4">
-                  {partner.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      {partner.phone}
-                    </div>
-                  )}
-                  {partner.website && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Globe className="w-4 h-4" />
-                      {partner.website}
-                    </div>
-                  )}
-                </div>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#18A36C] hover:text-[#18A36C]/80 hover:bg-[#18A36C]/5 p-0 h-auto group-hover:translate-x-1 transition-all duration-300 w-full justify-start"
-                >
-                  Подробнее
-                  <ExternalLink className="w-4 h-4 ml-[2.5px]" />
-                </Button>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Загрузка...</p>
               </div>
-            </Card>
-          ))}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {partners.map((partner) => (
+                  <Card
+                    key={partner.id}
+                    className="group hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#18A36C]/20 h-full"
+                  >
+                    <div className="p-6 h-full flex flex-col">
+                      <div className="mb-4">
+                        <ImageWithFallback
+                          src={partner.image_url}
+                          alt={partner.name}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                      <h3 className="text-lg text-[#2E2E2E] mb-2 group-hover:text-[#18A36C] transition-colors duration-300">
+                        {partner.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed mb-4 flex-grow">
+                        {partner.description}
+                      </p>
+
+                      <div className="space-y-2 mb-4">
+                        {partner.website_url && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Globe className="w-4 h-4" />
+                            {partner.website_url}
+                          </div>
+                        )}
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPartner(partner);
+                          setIsPartnerModalOpen(true);
+                        }}
+                        className="text-[#18A36C] hover:text-[#18A36C]/80 hover:bg-[#18A36C]/5 p-0 h-auto group-hover:translate-x-1 transition-all duration-300 w-full justify-start"
+                      >
+                        Подробнее
+                        <ExternalLink className="w-4 h-4 ml-[2.5px]" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
@@ -407,17 +540,31 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
               </Button>
             </div>
           </div>
-          </div>
         </div>
+
+        {/* Partner Modal */}
+        <PartnerModal
+          partner={selectedPartner}
+          open={isPartnerModalOpen}
+          onOpenChange={setIsPartnerModalOpen}
+        />
       </>
     );
   }
 
   // Handle individual partner page
   if (currentRoute.includes('/clinic/partners/') && !['medical-labs', 'insurance', 'dental-labs'].includes(itemId)) {
-    const partner = getPartnerById(itemId);
-    
-    if (!partner) {
+    if (loading) {
+      return (
+        <div className="p-4 lg:p-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600">Загрузка...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!singlePartner) {
       return (
         <div className="p-4 lg:p-8">
           <div className="text-center">
@@ -436,7 +583,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           { label: 'Главная', href: '/' },
           { label: 'Клиника', href: '/clinic' },
           { label: 'Партнёры', href: '/clinic/partners' },
-          { label: partner.name }
+          { label: singlePartner.name }
         ]} />
         
         <div className="p-4 lg:p-8">
@@ -446,42 +593,36 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
               <Card className="p-6">
                 <div className="mb-4">
                   <ImageWithFallback
-                    src={partner.image}
-                    alt={partner.name}
+                    src={singlePartner.image_url}
+                    alt={singlePartner.name}
                     className="w-full h-48 object-cover rounded-lg"
                   />
                 </div>
-                <h1 className="text-xl text-[#2E2E2E] mb-4">{partner.name}</h1>
-                
+                <h1 className="text-xl text-[#2E2E2E] mb-4">{singlePartner.name}</h1>
+
                 <div className="space-y-3">
-                  {partner.phone && (
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-5 h-5 text-[#18A36C]" />
-                      <span className="text-sm">{partner.phone}</span>
-                    </div>
-                  )}
-                  {partner.website && (
+                  {singlePartner.website_url && (
                     <div className="flex items-center gap-3">
                       <Globe className="w-5 h-5 text-[#18A36C]" />
-                      <a 
-                        href={partner.website} 
-                        target="_blank" 
+                      <a
+                        href={singlePartner.website_url}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-[#18A36C] hover:text-[#18A36C]/80 hover:underline"
                       >
-                        {partner.website}
+                        {singlePartner.website_url}
                       </a>
                     </div>
                   )}
                 </div>
               </Card>
             </div>
-            
+
             <div className="lg:col-span-2">
               <Card className="p-6">
                 <h2 className="text-xl text-[#2E2E2E] mb-4">О компании</h2>
                 <p className="text-[#212121] leading-relaxed">
-                  {partner.description}
+                  {singlePartner.description}
                 </p>
               </Card>
             </div>
@@ -507,10 +648,8 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   }
 
   if (itemId === 'reviews') {
-    const totalPages = Math.ceil(clinicReviews.length / REVIEWS_PER_PAGE);
-    const startIndex = (currentPage - 1) * REVIEWS_PER_PAGE;
-    const endIndex = startIndex + REVIEWS_PER_PAGE;
-    const currentReviews = clinicReviews.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(reviewsTotal / REVIEWS_PER_PAGE);
+    const currentReviews = clinicReviewsData;
 
     return (
       <>
@@ -545,7 +684,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             <div className="flex items-center justify-between">
               <h2 className="text-xl text-[#2E2E2E]">Отзывы пациентов</h2>
               <div className="text-sm text-gray-600">
-                Страница {currentPage} из {totalPages} ({clinicReviews.length} отзывов)
+                Страница {currentPage} из {totalPages} ({reviewsTotal} отзывов)
               </div>
             </div>
           </div>
@@ -557,14 +696,14 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center">
                       <span className="text-[#18A36C] font-medium">
-                        {review.patientName.charAt(0)}
+                        {review.name.charAt(0)}
                       </span>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-[#2E2E2E]">{review.patientName}</h4>
+                        <h4 className="font-medium text-[#2E2E2E]">{review.name}</h4>
                       </div>
-                      <p className="text-sm text-gray-500">{review.date}</p>
+                      <p className="text-sm text-gray-500">{typeof review.date === 'string' ? review.date : new Date(review.date).toLocaleDateString('ru-RU')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -572,7 +711,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                       <Star
                         key={i}
                         className={`w-4 h-4 ${
-                          i < review.rating
+                          i < review.grade
                             ? 'fill-[#18A36C] text-[#18A36C]'
                             : 'text-gray-300'
                         }`}
@@ -679,63 +818,59 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {vacanciesData.map((vacancy) => (
-            <Card key={vacancy.id} className="p-6 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg text-[#2E2E2E] mb-2">{vacancy.title}</h3>
-                  <p className="text-sm text-gray-600">{vacancy.department}</p>
-                </div>
-                <Badge variant={vacancy.type === 'full-time' ? 'default' : 'secondary'} className={vacancy.type === 'full-time' ? 'bg-[#18A36C] text-white' : ''}>
-                  {vacancy.type === 'full-time' ? 'Полная занятость' : 
-                   vacancy.type === 'part-time' ? 'Неполная занятость' : 'Контракт'}
-                </Badge>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Загрузка...</p>
               </div>
-              
-              <p className="text-sm text-gray-700 leading-relaxed mb-4 flex-grow">
-                {vacancy.description}
-              </p>
-              
-              <div className="space-y-3 mb-4">
-                {vacancy.salary && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="w-4 h-4 text-[#18A36C]" />
-                    <span>{vacancy.salary}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-[#18A36C]" />
-                  <span>Опыт: {vacancy.experience}</span>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div>
-                  <h4 className="text-sm font-medium text-[#2E2E2E] mb-2">Требования:</h4>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    {vacancy.requirements.slice(0, 2).map((req, index) => (
-                      <li key={index}>• {req}</li>
-                    ))}
-                    {vacancy.requirements.length > 2 && (
-                      <li className="text-[#18A36C]">... и еще {vacancy.requirements.length - 2}</li>
-                    )}
-                  </ul>
-                </div>
-                
-                <Button
-                  onClick={() => navigate(`/clinic/vacancies/${vacancy.id}`)}
-                  className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
-                  size="sm"
-                >
-                  Подробнее
-                </Button>
-              </div>
-            </Card>
-          ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {vacancies.map((vacancy) => (
+                  <Card key={vacancy.id} className="p-6 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg text-[#2E2E2E] mb-2">{vacancy.name}</h3>
+                        <p className="text-sm text-gray-600">{vacancy.category}</p>
+                      </div>
+                    </div>
 
-          {/* Ask Question Footer */}
+                    <p className="text-sm text-gray-700 leading-relaxed mb-4 flex-grow">
+                      {vacancy.description}
+                    </p>
+
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="w-4 h-4 text-[#18A36C]" />
+                        <span>{vacancy.payment} BYN</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="w-4 h-4 text-[#18A36C]" />
+                        <span>Опыт: {vacancy.experience} {vacancy.experience === 1 ? 'год' : 'лет'}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-sm font-medium text-[#2E2E2E] mb-2">Требования:</h4>
+                        <p className="text-xs text-gray-600">{vacancy.requirements}</p>
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          setSelectedVacancy(vacancy);
+                          setIsVacancyModalOpen(true);
+                        }}
+                        className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
+                        size="sm"
+                      >
+                        Подробнее
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Ask Question Footer */}
           <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
             <div className="text-center">
               <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
@@ -751,15 +886,30 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Vacancy Modal */}
+      <VacancyModal
+        vacancy={selectedVacancy}
+        open={isVacancyModalOpen}
+        onOpenChange={setIsVacancyModalOpen}
+      />
       </>
     );
   }
 
   // Handle individual vacancy page
   if (currentRoute.includes('/clinic/vacancies/') && itemId !== 'vacancies') {
-    const vacancy = getVacancyById(itemId);
-    
-    if (!vacancy) {
+    if (loading) {
+      return (
+        <div className="p-4 lg:p-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600">Загрузка...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!singleVacancy) {
       return (
         <div className="p-4 lg:p-8">
           <div className="text-center">
@@ -778,7 +928,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           { label: 'Главная', href: '/' },
           { label: 'Клиника', href: '/clinic' },
           { label: 'Вакансии', href: '/clinic/vacancies' },
-          { label: vacancy.title }
+          { label: singleVacancy.name }
         ]} />
         
         <div className="p-4 lg:p-8">
@@ -802,57 +952,34 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           <Card className="p-6 lg:p-8">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">{vacancy.title}</h1>
-                <p className="text-gray-600 mb-2">{vacancy.department}</p>
+                <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">{singleVacancy.name}</h1>
+                <p className="text-gray-600 mb-2">{singleVacancy.category}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                  {vacancy.salary && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4" />
-                      {vacancy.salary}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" />
+                    {singleVacancy.payment} BYN
+                  </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Опыт: {vacancy.experience}
+                    Опыт: {singleVacancy.experience} {singleVacancy.experience === 1 ? 'год' : 'лет'}
                   </div>
                 </div>
               </div>
-              <Badge variant={vacancy.type === 'full-time' ? 'default' : 'secondary'} className={`shrink-0 ${vacancy.type === 'full-time' ? 'bg-[#18A36C] text-white' : ''}`}>
-                {vacancy.type === 'full-time' ? 'Полная занятость' : 
-                 vacancy.type === 'part-time' ? 'Неполная занятость' : 'Контракт'}
-              </Badge>
             </div>
-            
+
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg text-[#2E2E2E] mb-3">Описание вакансии</h2>
                 <p className="text-[#212121] leading-relaxed">
-                  {vacancy.description}
+                  {singleVacancy.description}
                 </p>
               </div>
-              
+
               <div>
                 <h2 className="text-lg text-[#2E2E2E] mb-3">Требования</h2>
-                <ul className="space-y-2">
-                  {vacancy.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start gap-2 text-[#212121]">
-                      <span className="text-[#18A36C] mt-1">•</span>
-                      {req}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div>
-                <h2 className="text-lg text-[#2E2E2E] mb-3">Обязанности</h2>
-                <ul className="space-y-2">
-                  {vacancy.responsibilities.map((resp, index) => (
-                    <li key={index} className="flex items-start gap-2 text-[#212121]">
-                      <span className="text-[#18A36C] mt-1">•</span>
-                      {resp}
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-[#212121] leading-relaxed">
+                  {singleVacancy.requirements}
+                </p>
               </div>
             </div>
             
@@ -1023,7 +1150,23 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
         </div>
       )}
 
-      {isFaqSection ? renderFaqFromDatabase() : renderStaticFaqCard()}
+      {(clinicFaqsData.length > 0 || (clinicItem.faq && clinicItem.faq.length > 0)) && (
+        <Card className="p-6 lg:p-8">
+          <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
+          <Accordion type="single" collapsible className="w-full">
+            {(clinicFaqsData.length > 0 ? clinicFaqsData : clinicItem.faq || []).map((item, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-[#212121] leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Card>
+      )}
 
       <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
         <div className="text-center">
@@ -1040,6 +1183,20 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
       </div>
       </div>
     </div>
+
+    {/* Partner Modal */}
+    <PartnerModal
+      partner={selectedPartner}
+      open={isPartnerModalOpen}
+      onOpenChange={setIsPartnerModalOpen}
+    />
+
+    {/* Vacancy Modal */}
+    <VacancyModal
+      vacancy={selectedVacancy}
+      open={isVacancyModalOpen}
+      onOpenChange={setIsVacancyModalOpen}
+    />
     </>
   );
 }

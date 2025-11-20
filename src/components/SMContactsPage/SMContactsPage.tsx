@@ -4,8 +4,21 @@ import { MapPin, Phone, Clock, Mail, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../common/SMButton/SMButton";
 import contactsPageConfig from "@/config/contactsPage.json";
+import { useContacts } from "@/hooks/useContacts";
 
 export function SMContactsPage() {
+  const { contacts } = useContacts();
+
+  // Prepare phone numbers array
+  const phoneNumbers = contacts?.phone_number
+    ? [contacts.phone_number, ...(contacts.phone_number_sec ? [contacts.phone_number_sec] : [])]
+    : contactsPageConfig.contactInfo.phones.numbers;
+
+  // Prepare map URL from coordinates
+  const mapUrl = contacts?.map_geo
+    ? `https://www.google.com/maps?q=${contacts.map_geo}&output=embed`
+    : contactsPageConfig.map.url;
+
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12 max-w-7xl">
       {/* Page Header */}
@@ -45,7 +58,7 @@ export function SMContactsPage() {
                   {contactsPageConfig.contactInfo.address.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  {contactsPageConfig.contactInfo.address.main}
+                  {contacts?.address || contactsPageConfig.contactInfo.address.main}
                 </p>
                 <p className="text-[#2E2E2E] text-sm mt-1">
                   {contactsPageConfig.contactInfo.address.metro}
@@ -70,7 +83,7 @@ export function SMContactsPage() {
                       {contactsPageConfig.contactInfo.workingHours.weekdays.days}
                     </span>
                     <span className="text-[#2E2E2E]">
-                      {contactsPageConfig.contactInfo.workingHours.weekdays.hours}
+                      {contacts?.work_hours_main || contactsPageConfig.contactInfo.workingHours.weekdays.hours}
                     </span>
                   </div>
                   <div className="flex justify-between items-center gap-6">
@@ -78,7 +91,7 @@ export function SMContactsPage() {
                       {contactsPageConfig.contactInfo.workingHours.weekend.days}
                     </span>
                     <span className="text-[#2E2E2E]">
-                      {contactsPageConfig.contactInfo.workingHours.weekend.hours}
+                      {contacts?.work_hours_sunday || contactsPageConfig.contactInfo.workingHours.weekend.hours}
                     </span>
                   </div>
                 </div>
@@ -97,7 +110,7 @@ export function SMContactsPage() {
                   {contactsPageConfig.contactInfo.phones.title}
                 </h3>
                 <div className="space-y-2">
-                  {contactsPageConfig.contactInfo.phones.numbers.map((phone, index) => (
+                  {phoneNumbers.map((phone, index) => (
                     <a
                       key={index}
                       href={`tel:${phone.replace(/-/g, "")}`}
@@ -122,10 +135,10 @@ export function SMContactsPage() {
                   {contactsPageConfig.contactInfo.email.title}
                 </h3>
                 <a
-                  href={`mailto:${contactsPageConfig.contactInfo.email.address}`}
+                  href={`mailto:${contacts?.email || contactsPageConfig.contactInfo.email.address}`}
                   className="text-[#2E2E2E] hover:text-[#18A36C] transition-colors text-sm"
                 >
-                  {contactsPageConfig.contactInfo.email.address}
+                  {contacts?.email || contactsPageConfig.contactInfo.email.address}
                 </a>
               </div>
             </div>
@@ -141,10 +154,7 @@ export function SMContactsPage() {
                 className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 flex-1"
                 onClick={() =>
                   window.open(
-                    `tel:${contactsPageConfig.contactInfo.phones.numbers[0].replace(
-                      /-/g,
-                      ""
-                    )}`
+                    `tel:${phoneNumbers[0].replace(/-/g, "")}`
                   )
                 }
               >
@@ -174,7 +184,7 @@ export function SMContactsPage() {
           </h3>
           <div className="h-[400px] rounded-lg overflow-hidden bg-[#E8E6E3] border border-[#E8E6E3]">
             <iframe
-              src={contactsPageConfig.map.url}
+              src={mapUrl}
               width="100%"
               height="100%"
               style={{ border: 0 }}

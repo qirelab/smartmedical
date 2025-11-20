@@ -48,7 +48,6 @@ export function DoctorsContent() {
         const response = await fetch('/api/categories');
         if (!response.ok) throw new Error('Failed to fetch categories');
         const data = await response.json();
-        console.log('Fetched categories:', data);
         setCategories(data);
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -82,7 +81,6 @@ export function DoctorsContent() {
         // selectedCategory теперь это slug из URL
         const categoryId = getCategoryIdBySlug(selectedCategory, categories);
         if (!categoryId) {
-          console.warn(`Category not found for slug: ${selectedCategory}`, categories);
           setSpecialists([]);
           setLoading(false);
           return;
@@ -91,7 +89,6 @@ export function DoctorsContent() {
         const response = await fetch(`/api/specialists?categoryId=${categoryId}`);
         if (!response.ok) throw new Error('Failed to fetch specialists');
         const data = await response.json();
-        console.log('Fetched specialists:', data);
         setSpecialists(data);
       } catch (err) {
         console.error('Error fetching specialists:', err);
@@ -125,7 +122,7 @@ export function DoctorsContent() {
   };
 
   const handleBookAppointment = (doctorId: number, doctorName: string) => {
-    console.log(`Booking appointment with ${doctorName} (${doctorId})`);
+    // TODO: Implement booking functionality
   };
 
   // Преобразование имени специалиста (полное имя) в имя и фамилию
@@ -276,7 +273,6 @@ export function DoctorsContent() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
             {specialists.map((specialist, index) => {
-              const { name, surname } = parseName(specialist.name);
               return (
                 <motion.div
                   key={specialist.id}
