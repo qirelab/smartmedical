@@ -1,6 +1,18 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://doctorfamily.by";
+const DEFAULT_SITE_URL = "https://doctorfamily.by";
+const RAW_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXTAUTH_URL ??
+  DEFAULT_SITE_URL;
+
+const SITE_ORIGIN = (() => {
+  try {
+    return new URL(RAW_SITE_URL).origin.replace(/\/+$/, "");
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+})();
 type ServiceSitemapRow = {
   id: number;
   serviceCategory: { slug: string } | null;
@@ -27,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const baseEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
-    url: `${SITE_URL}${route}`,
+    url: `${SITE_ORIGIN}${route}`,
     lastModified: now,
     changeFrequency: route === "" ? "daily" : "weekly",
     priority: route === "" ? 1 : 0.7,
@@ -93,7 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const dynamicEntries: MetadataRoute.Sitemap = Array.from(dynamicRoutes).map(
       (route) => ({
-        url: `${SITE_URL}${route}`,
+        url: `${SITE_ORIGIN}${route}`,
         lastModified: now,
         changeFrequency: "weekly",
         priority: 0.6,

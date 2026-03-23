@@ -12,13 +12,32 @@ import { ChatNotifications } from "@/components/ChatNotifications/ChatNotificati
 import { Onboarding } from "@/components/Onboarding";
 import { ScrollToTop } from "@/components/common/ScrollToTop/ScrollToTop";
 
+const DEFAULT_SITE_URL = "https://doctorfamily.by";
+const RAW_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXTAUTH_URL ??
+  DEFAULT_SITE_URL;
+
+const SITE_ORIGIN = (() => {
+  try {
+    return new URL(RAW_SITE_URL).origin;
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+})();
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: "Doctor Family | Медицинский центр",
     template: "Doctor Family | %s",
   },
   description: "Doctor Family - медицинский центр нового поколения. Профессиональная медицина, квалифицированные врачи, современное оборудование.",
   keywords: ["Doctor Family", "медицинский центр", "клиника", "врачи", "медицина", "здоровье"],
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "Doctor Family | Медицинский центр",
     description: "Doctor Family - медицинский центр нового поколения. Профессиональная медицина, квалифицированные врачи, современное оборудование.",
