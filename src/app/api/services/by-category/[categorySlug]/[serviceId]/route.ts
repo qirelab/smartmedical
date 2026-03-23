@@ -34,18 +34,18 @@ export async function GET(
     const serviceIdNumber = parseInt(serviceId);
     const isNumericId = !isNaN(serviceIdNumber);
 
-    let service;
+    let service: unknown;
 
     if (isNumericId) {
       // Если serviceId - число, ищем по id
       // Ищем либо по category_id (старая структура) либо по service_category_id (новая структура)
-      service = await prisma.service.findFirst({
+      const foundService = await prisma.service.findFirst({
         where: {
           id: serviceIdNumber,
           OR: [
             { category_id: category?.id },
             { service_category_id: serviceCategory?.id },
-          ].filter(condition => Object.values(condition)[0] !== undefined),
+          ].filter((condition: { category_id?: number; service_category_id?: number }) => Object.values(condition)[0] !== undefined),
         },
         include: {
           category: true,
@@ -69,10 +69,10 @@ export async function GET(
       });
 
       // Transform data
-      if (service) {
+      if (foundService) {
         service = {
-          ...service,
-          specialists: service.specialists.map(ss => ss.specialist),
+          ...foundService,
+          specialists: foundService.specialists.map((ss: (typeof foundService.specialists)[number]) => ss.specialist),
         };
       }
     } else {
@@ -85,7 +85,7 @@ export async function GET(
           OR: [
             { category_id: category?.id },
             { service_category_id: serviceCategory?.id },
-          ].filter(condition => Object.values(condition)[0] !== undefined),
+          ].filter((condition: { category_id?: number; service_category_id?: number }) => Object.values(condition)[0] !== undefined),
         },
         include: {
           category: true,
@@ -109,9 +109,9 @@ export async function GET(
       });
 
       // Transform data
-      const services = servicesRaw.map(s => ({
+      const services = servicesRaw.map((s: (typeof servicesRaw)[number]) => ({
         ...s,
-        specialists: s.specialists.map(ss => ss.specialist),
+        specialists: s.specialists.map((ss: (typeof s.specialists)[number]) => ss.specialist),
       }));
 
       // Если есть маппинг, ищем по точному названию (это самый надежный способ)
@@ -161,7 +161,7 @@ export async function GET(
           
           // Приоритет: ключевые слова из маппинга (они наиболее важны)
           if (keywords.length > 0) {
-            const keywordMatches = keywords.filter(keyword =>
+            const keywordMatches = keywords.filter((keyword: string) =>
               normalizedTitle.includes(keyword) || normalizedSubtitle.includes(keyword)
             ).length;
             // Если все ключевые слова найдены - это очень хорошее совпадение
@@ -175,11 +175,11 @@ export async function GET(
           // Проверяем совпадения обычных слов
           for (const word of serviceIdWords) {
             // Проверяем совпадения в title
-            if (titleWords.some(tw => tw.includes(word) || word.includes(tw))) {
+            if (titleWords.some((tw: string) => tw.includes(word) || word.includes(tw))) {
               matchScore += 3; // Больший вес для совпадений в title
             }
             // Проверяем совпадения в subtitle
-            if (subtitleWords.some(sw => sw.includes(word) || word.includes(sw))) {
+            if (subtitleWords.some((sw: string) => sw.includes(word) || word.includes(sw))) {
               matchScore += 1; // Меньший вес для совпадений в subtitle
             }
           }
@@ -199,7 +199,7 @@ export async function GET(
             };
             
             const conflicting = conflictingWords[serviceId] || [];
-            const hasConflict = conflicting.some(conflictWord =>
+            const hasConflict = conflicting.some((conflictWord: string) =>
               normalizedTitle.includes(conflictWord) || normalizedSubtitle.includes(conflictWord)
             );
             
