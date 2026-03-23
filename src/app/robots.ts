@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://doctorfamily.by";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -9,5 +11,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/account/", "/api/"],
       },
     ],
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
