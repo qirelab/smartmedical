@@ -109,3 +109,6 @@ https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', ..."   
 [01:11:12.797] Server  ERROR   Failed to build dynamic sitemap, using static routes only Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
 [01:11:12.905] Server  ERROR   Failed to build dynamic sitemap, using static routes only Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
 [01:11:18.304] Server  ERROR   Failed to build dynamic sitemap, using static routes only Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[01:19:48.379] Server  LOG        Reload env: .env
+[01:19:50.136] Server  LOG        Reload env: .env
+[01:20:09.711] Server  ERROR   Failed to build dynamic sitemap, using static routes only Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
