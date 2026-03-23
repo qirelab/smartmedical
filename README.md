@@ -77,6 +77,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/smartmedical"
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key-here"
+SITE_URL="https://your-domain.com"
 
 # Cloudinary
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
