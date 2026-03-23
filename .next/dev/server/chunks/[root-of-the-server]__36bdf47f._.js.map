@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Study/GitHub/smartmedical/src/lib/prisma.ts"],"sourcesContent":["import { PrismaClient } from '@prisma/client';\r\n\r\nconst globalForPrisma = globalThis as unknown as {\r\n  prisma: PrismaClient | undefined;\r\n};\r\n\r\nexport const prisma =\r\n  globalForPrisma.prisma ??\r\n  new PrismaClient({\r\n    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],\r\n  });\r\n\r\nif (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;\r\n\r\n"],"names":[],"mappings":";;;;AAAA;;AAEA,MAAM,kBAAkB;AAIjB,MAAM,SACX,gBAAgB,MAAM,IACtB,IAAI,6IAAY,CAAC;IACf,KAAK,uCAAyC;QAAC;QAAS;QAAS;KAAO,GAAG;AAC7E;AAEF,wCAA2C,gBAAgB,MAAM,GAAG","debugId":null}}]
+}

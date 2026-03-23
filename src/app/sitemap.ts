@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/prisma";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 type ServiceSitemapRow = {
@@ -35,6 +34,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
+    const { prisma } = await import("@/lib/prisma");
+
     const [services, specialists, questionCategories] = await Promise.all([
       prisma.service.findMany({
         select: {
