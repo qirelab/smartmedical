@@ -1,5 +1,3 @@
-import { prisma } from './prisma';
-
 interface ServiceCategory {
   id: number;
   name: string;
@@ -53,6 +51,10 @@ function buildMenuWithServices(categories: ServiceCategory[]): MenuItem[] {
 // Получение меню услуг из БД (для использования на сервере)
 export async function getServicesMenuFromDB(): Promise<MenuItem[]> {
   try {
+    // Lazy import prevents hard crash on module load
+    // when Prisma client is not generated yet.
+    const { prisma } = await import('./prisma');
+
     // @ts-ignore - ServiceCategory будет доступна после npx prisma generate
     const categories = await prisma.serviceCategory.findMany({
       where: {

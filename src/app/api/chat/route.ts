@@ -113,7 +113,7 @@ async function getClinicContext() {
     });
 
     // Нормализуем данные: преобразуем вложенные объекты в строки
-    const normalizedServices = services.map((s) => ({
+    const normalizedServices = services.map((s: (typeof services)[number]) => ({
       ...s,
       category: s.category?.name || "Не указано",
     }));
