@@ -206,7 +206,10 @@ export function CookieConsent() {
                     Подробнее:{' '}
                     <Link
                       href="/cookie-policy"
-                      onClick={handlePolicyLinkClick}
+                      onClick={() => {
+                        setView('banner');
+                        setIsVisible(true);
+                      }}
                       className="text-[#18A36C] underline-offset-2 hover:underline"
                     >
                       Политика в отношении файлов cookie
@@ -214,7 +217,10 @@ export function CookieConsent() {
                     и{' '}
                     <Link
                       href="/privacy-policy"
-                      onClick={handlePolicyLinkClick}
+                      onClick={() => {
+                        setView('banner');
+                        setIsVisible(true);
+                      }}
                       className="text-[#18A36C] underline-offset-2 hover:underline"
                     >
                       Политика по обработке персональных данных
