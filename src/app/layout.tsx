@@ -6,7 +6,7 @@ import { Router } from "@/components/SMRouter/SMRouter";
 import { Footer } from "@/components/Footer/Footer";
 import { Providers } from "./providers";
 import { AIAssistant } from "@/components/AIAssistant/AIAssistant";
-import { CookieConsent } from "@/components/common/CookieConsent";
+import { AnalyticsLoader, CookieConsent } from "@/components/common/CookieConsent";
 import { LetterNotifications } from "@/components/LetterNotifications/LetterNotifications";
 import { ChatNotifications } from "@/components/ChatNotifications/ChatNotifications";
 import { Onboarding } from "@/components/Onboarding";
@@ -38,6 +38,7 @@ export default function RootLayout({
         <Providers>
           <MenuProvider>
             <Router>
+              <AnalyticsLoader />
               <ScrollToTop />
               <Header />
               <main>{children}</main>
