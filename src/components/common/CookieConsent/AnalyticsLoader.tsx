@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { readCookiePreferences } from "@/lib/cookieConsent";
+import { readCookiePreferences } from "@/lib/cookie-consent";
 
 declare global {
   interface Window {

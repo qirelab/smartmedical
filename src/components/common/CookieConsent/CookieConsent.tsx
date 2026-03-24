@@ -9,7 +9,7 @@ import {
   readCookiePreferences,
   revokeTargetCookies,
   writeCookiePreferences,
-} from '@/lib/cookieConsent';
+} from '@/lib/cookie-consent';
 
 type CookieView = 'banner' | 'settings';
 type CookieSection = 'technical' | 'target';
@@ -107,10 +107,10 @@ export function CookieConsent() {
             setView('banner');
             setIsVisible(true);
           }}
-          className="fixed bottom-6 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#18A36C] text-white shadow-lg transition hover:bg-[#15905f] md:left-6"
+          className="fixed bottom-6 left-4 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[#18A36C] text-white shadow-lg transition hover:bg-[#15905f] md:left-6"
           aria-label="Открыть настройки cookie"
         >
-          <Cookie className="h-6 w-6" />
+          <Cookie className="h-7 w-7" />
         </button>
       )}
 
@@ -121,42 +121,42 @@ export function CookieConsent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-0 left-0 right-0 z-50 h-[100px] border-t border-[#18A36C]/25 bg-white/80 px-4 text-[#2E2E2E] shadow-2xl backdrop-blur"
+              className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#18A36C]/25 bg-white/80 pl-5 pr-5 pb-5 pt-[35px] text-[#2E2E2E] shadow-2xl backdrop-blur md:pr-12"
             >
               <button
                 onClick={() => setIsVisible(false)}
-                className="absolute right-0 top-0 rounded-bl-md bg-white/80 p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="absolute right-5 top-5 rounded-md bg-white/80 p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 aria-label="Закрыть баннер cookie"
               >
                 <X className="h-4 w-4" />
               </button>
-              <div className="flex h-full w-full flex-col justify-center gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex w-full flex-col justify-center gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="hidden md:block">
+                  <div className="hidden lg:block">
                     <SMLogo />
                   </div>
-                  <div className="text-sm leading-6">
+                  <div className="pr-8 text-sm leading-6 md:pr-0">
                     Для обеспечения корректной и удобной работы сайта doctorfamily.by, предоставления лучшего
                     пользовательского опыта и анализа интереса пользователей к услугам ООО "Доктор Фемели"
                     используются файлы cookie.
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
+                <div className="flex w-full shrink-0 flex-col gap-2 md:w-auto md:flex-row md:flex-wrap">
                   <button
                     onClick={() => savePreferences({ target: true })}
-                    className="rounded-lg bg-[#18A36C] px-4 py-2 text-sm font-semibold text-white hover:bg-[#15905f]"
+                    className="w-full rounded-lg bg-[#18A36C] px-4 py-2 text-sm font-semibold text-white hover:bg-[#15905f] md:w-auto"
                   >
                     Согласен со всеми
                   </button>
                   <button
                     onClick={() => savePreferences({ target: false })}
-                    className="rounded-lg border border-[#18A36C] bg-white px-4 py-2 text-sm font-semibold text-[#18A36C] hover:bg-[#18A36C]/5"
+                    className="w-full rounded-lg border border-[#18A36C] bg-white px-4 py-2 text-sm font-semibold text-[#18A36C] hover:bg-[#18A36C]/5 md:w-auto"
                   >
                     Отклонить
                   </button>
                   <button
                     onClick={() => setView('settings')}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#2E2E2E] hover:bg-gray-50"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-[#2E2E2E] hover:bg-gray-50 md:w-auto"
                   >
                     Настройки
                   </button>
@@ -168,15 +168,15 @@ export function CookieConsent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-4 sm:items-center"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
             >
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
-                className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
+                className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
               >
-                <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
                   <h4 className="text-2xl font-semibold text-[#1F2937]">Настройка файлов cookie</h4>
                   <button
                     onClick={handleClose}
@@ -187,7 +187,7 @@ export function CookieConsent() {
                   </button>
                 </div>
 
-                <div className="max-h-[65vh] overflow-y-auto px-5 py-4">
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                   <p className="mb-4 text-sm leading-6 text-[#4B5563]">
                     Для корректной и удобной работы сайта мы используем файлы cookie. Ниже вы можете выбрать,
                     разрешить ли использование целевых/маркетинговых cookie.
@@ -326,17 +326,17 @@ export function CookieConsent() {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 px-5 py-4">
-                  <div className="flex flex-wrap justify-end gap-2">
+                <div className="shrink-0 border-t border-gray-200 px-5 py-4">
+                  <div className="flex w-full flex-col gap-2 md:flex-row md:flex-wrap md:justify-end">
                     <button
                       onClick={() => savePreferences({ target: false })}
-                      className="rounded-lg border border-[#18A36C] px-4 py-2 text-sm font-medium text-[#18A36C] hover:bg-[#18A36C]/5"
+                      className="w-full rounded-lg border border-[#18A36C] px-4 py-2 text-sm font-medium text-[#18A36C] hover:bg-[#18A36C]/5 md:w-auto"
                     >
                       Только необходимые
                     </button>
                     <button
                       onClick={() => savePreferences({ target: targetEnabled })}
-                      className="rounded-lg bg-[#18A36C] px-6 py-2 text-base font-semibold text-white hover:bg-[#15905f]"
+                      className="w-full rounded-lg bg-[#18A36C] px-6 py-2 text-base font-semibold text-white hover:bg-[#15905f] md:w-auto"
                     >
                       Сохранить настройки
                     </button>
