@@ -194,11 +194,25 @@ export function CookieConsent() {
                   </p>
                   <p className="mb-4 text-sm leading-6 text-[#4B5563]">
                     Подробнее:{' '}
-                    <Link href="/cookie-policy" className="text-[#18A36C] underline-offset-2 hover:underline">
+                    <Link
+                      href="/cookie-policy"
+                      onClick={() => {
+                        setView('banner');
+                        setIsVisible(true);
+                      }}
+                      className="text-[#18A36C] underline-offset-2 hover:underline"
+                    >
                       Политика в отношении файлов cookie
                     </Link>{' '}
                     и{' '}
-                    <Link href="/privacy-policy" className="text-[#18A36C] underline-offset-2 hover:underline">
+                    <Link
+                      href="/privacy-policy"
+                      onClick={() => {
+                        setView('banner');
+                        setIsVisible(true);
+                      }}
+                      className="text-[#18A36C] underline-offset-2 hover:underline"
+                    >
                       Политика по обработке персональных данных
                     </Link>
                     .
