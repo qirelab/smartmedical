@@ -21,6 +21,10 @@ export function Footer() {
     router.push(path);
   };
 
+  const handleOpenCookieSettings = () => {
+    window.dispatchEvent(new Event('open-cookie-settings'));
+  };
+
   // Не показываем футер на страницах админки
   if (pathname?.startsWith('/admin')) {
     return null;
@@ -162,8 +166,27 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col lg:flex-row pt-6 lg:pt-8 border-t border-gray-300 justify-center items-center">
-
           <div className="text-center lg:text-right">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-xs lg:text-sm">
+              <button
+                onClick={() => handleNavigation('/privacy-policy')}
+                className="text-gray-500 hover:text-[#18A36C] transition-colors"
+              >
+                Политика персональных данных
+              </button>
+              <button
+                onClick={() => handleNavigation('/cookie-policy')}
+                className="text-gray-500 hover:text-[#18A36C] transition-colors"
+              >
+                Политика cookie
+              </button>
+              <button
+                onClick={handleOpenCookieSettings}
+                className="text-gray-500 hover:text-[#18A36C] transition-colors"
+              >
+                Настройки cookie
+              </button>
+            </div>
             <div className="text-gray-500 text-xs lg:text-sm">
               {footerConfig.companyInfo.copyright}
             </div>
