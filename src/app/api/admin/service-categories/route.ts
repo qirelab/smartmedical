@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 
-// GET - получить все категории (только корневые, без подкатегорий)
+// GET - получить все категории с иерархией
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -12,17 +12,35 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Получаем только корневые категории (parent_id = null)
-    // @ts-ignore - ServiceCategory будет доступна после npx prisma generate
-    const categories = await prisma.serviceCategory.findMany({
-      where: {
-        parent_id: null, // Только корневые категории
-      },
-      orderBy: [
-        { order: 'asc' },
-        { name: 'asc' },
-      ],
-    });
+    // Рекурсивная функция для загрузки дочерних категорий
+    async function loadCategoryTree(parentId: number | null): Promise<any[]> {
+      // @ts-ignore - ServiceCategory будет доступна после npx prisma generate
+      const categories = await prisma.serviceCategory.findMany({
+        where: {
+          parent_id: parentId,
+        },
+        orderBy: [
+          { order: 'asc' },
+          { name: 'asc' },
+        ],
+      });
+
+      // Загружаем детей для каждой категории
+      const categoriesWithChildren = await Promise.all(
+        categories.map(async (cat: any) => {
+          const children = await loadCategoryTree(cat.id);
+          return {
+            ...cat,
+            children: children.length > 0 ? children : undefined,
+          };
+        })
+      );
+
+      return categoriesWithChildren;
+    }
+
+    // Загружаем корневые категории с их детьми
+    const categories = await loadCategoryTree(null);
 
     return NextResponse.json(categories);
   } catch (error) {

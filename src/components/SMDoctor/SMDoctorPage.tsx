@@ -24,7 +24,9 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
@@ -116,8 +118,8 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
   const handleBookAppointment = () => {
   };
 
-  // conferences уже массив из БД
-  const conferencesList = doctor.conferences?.filter(Boolean) || [];
+  // additional_education уже массив из БД
+  const additionalEducationList = doctor.additional_education?.filter(Boolean) || [];
 
   return (
     <>
@@ -148,6 +150,8 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
 
                   <div className="text-gray-600 mb-4 flex flex-col gap-1 items-center lg:items-start">
                     <span>{doctor.qualification}</span>
+                    {doctor.doctor_category && <span>Категория: {doctor.doctor_category}</span>}
+                    {doctor.academic_degree && <span>{doctor.academic_degree}</span>}
                     <span>Стаж: {doctor.experience} {doctor.experience === 1 ? 'год' : doctor.experience < 5 ? 'года' : 'лет'}</span>
                   </div>
 
@@ -238,13 +242,13 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
                   <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center">
                     <Users className="w-5 h-5 text-[#18A36C]" />
                   </div>
-                  <h2 className="text-xl text-[#2E2E2E]">Участие в конференциях</h2>
+                  <h2 className="text-xl text-[#2E2E2E]">Дополнительное образование</h2>
                 </div>
                 <ul className="space-y-3">
-                  {conferencesList.length > 0 ? (
-                    conferencesList.map((conf, index) => (
+                  {additionalEducationList.length > 0 ? (
+                    additionalEducationList.map((edu, index) => (
                       <li key={index} className="text-gray-700 border-l-2 border-[#18A36C]/20 pl-4">
-                        {conf}
+                        {edu}
                       </li>
                     ))
                   ) : (

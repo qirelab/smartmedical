@@ -166,7 +166,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
             onClick={onClose}
           />
 
@@ -176,7 +176,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 left-0 right-0 z-50 p-4 sm:p-6 md:p-8"
+            className="fixed top-0 left-0 right-0 z-[81] p-4 sm:p-6 md:p-8"
           >
             <div className="max-w-3xl mx-auto">
               {/* Search Input */}

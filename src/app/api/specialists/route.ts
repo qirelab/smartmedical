@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const categoryId = searchParams.get('categoryId');
     const serviceCategorySlug = searchParams.get('serviceCategorySlug');
 
-    let specialists: Awaited<ReturnType<typeof prisma.specialist.findMany>> = [];
+    let specialists;
 
     if (serviceCategorySlug) {
       console.log('Filtering by service category slug:', serviceCategorySlug);
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
         },
       });
 
-      console.log('Found specialists:', specialists.length, specialists.map((s: (typeof specialists)[number]) => ({ name: s.name, service_category_id: s.service_category_id })));
+      console.log('Found specialists:', specialists.length, specialists.map(s => ({ name: s.name, service_category_id: s.service_category_id })));
     } else if (categoryId) {
       // Старый способ - фильтрация по старой таблице категорий
       specialists = await prisma.specialist.findMany({

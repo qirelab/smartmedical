@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Eye, Building, Award, Clock, FileText, Calendar, Heart, Phone, Star, Users } from "lucide-react";
+import { ArrowRight, Eye, Building, Award, Clock, FileText, Calendar, Heart, Phone, Star, Users, MessageSquare } from "lucide-react";
 import { Button } from "../common/SMButton/SMButton";
 import { useRouter as useSMRouter } from "../SMRouter/SMRouter";
 import { useRouter } from "next/navigation";
@@ -188,7 +188,7 @@ export function SMHomePage() {
             <div>
               <div className="border border-[#E8E6E3] rounded-lg overflow-hidden">
                 <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1758101512269-660feabf64fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBtZWRpY2FsJTIwY2xpbmljJTIwaW50ZXJpb3J8ZW58MXx8fHwxNzU5NzU1OTc3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                  src="/about_clinic_homepage.jpg"
                   alt="Интерьер клиники Doctor Family"
                   className="w-full h-64 lg:h-80 object-cover"
                 />
@@ -387,8 +387,14 @@ export function SMHomePage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Отзывы загружаются...</p>
+            <div className="text-center py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 mb-12">
+              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-8 h-8 lg:w-10 lg:h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg lg:text-xl text-gray-800 mb-2">Отзывов пока нет</h3>
+              <p className="text-sm lg:text-base text-gray-600 max-w-md mx-auto px-4">
+                Станьте первым, кто оставит отзыв о нашей клинике! Ваше мнение важно для нас.
+              </p>
             </div>
           )}
 

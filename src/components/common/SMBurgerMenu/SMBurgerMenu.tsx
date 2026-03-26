@@ -138,30 +138,20 @@ const SMBurgerMenu = ({ onAuthModalOpen }: SMBurgerMenuProps) => {
                 {navigationConfig.mainNavigation.map((item, index) => {
                   const Icon = iconMap[item.icon as IconName];
                   return (
-                    <motion.button
+                    <button
                       key={item.name}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        delay: index * 0.1 + 0.2,
-                      }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-[#2E2E2E] hover:text-[#18A36C] transition-all duration-200 group cursor-pointer"
                       onClick={() => handleNavigation(item.path)}
                     >
                       <Icon className="w-5 h-5 text-gray-400 group-hover:text-[#18A36C] transition-colors" />
                       <span className="text-base">{item.name}</span>
-                    </motion.button>
+                    </button>
                   );
                 })}
               </nav>
 
               {/* CTA Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                className="mt-8 pt-6 border-t border-[#E8E6E3]"
-              >
+              <div className="mt-8 pt-6 border-t border-[#E8E6E3]">
                 <Button
                   className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white py-3 h-auto"
                   onClick={() => handleNavigation("/contacts")}
@@ -225,15 +215,10 @@ const SMBurgerMenu = ({ onAuthModalOpen }: SMBurgerMenuProps) => {
                     </Button>
                   )}
                 </div>
-              </motion.div>
+              </div>
 
               {/* Contact info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="mt-6 pt-6 border-t border-[#E8E6E3] text-center text-sm text-[#2E2E2E]"
-              >
+              <div className="mt-6 pt-6 border-t border-[#E8E6E3] text-center text-sm text-[#2E2E2E]">
                 {contactsLoading || !contacts ? (
                   <div className="flex items-center justify-center gap-2">
                     <Mail className="w-4 h-4 text-[#18A36C]" />
@@ -250,7 +235,7 @@ const SMBurgerMenu = ({ onAuthModalOpen }: SMBurgerMenuProps) => {
                     </a>
                   </div>
                 )}
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         </>

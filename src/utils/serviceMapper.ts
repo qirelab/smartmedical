@@ -119,31 +119,10 @@ export function mapServiceFromDBToServiceData(service: ServiceFromDB): ServiceDa
       { label: service.title },
     ],
     fullDescription: service.description,
-    faq: faq.length > 0 ? faq : [
-      {
-        question: 'Как подготовиться к процедуре?',
-        answer: 'Специальной подготовки не требуется. При необходимости врач даст индивидуальные рекомендации.',
-      },
-      {
-        question: 'Сколько времени занимает процедура?',
-        answer: 'Время проведения зависит от сложности случая, обычно от 30 до 60 минут.',
-      },
-      {
-        question: 'Есть ли противопоказания?',
-        answer: 'Противопоказания определяются индивидуально на консультации с врачом.',
-      },
-    ],
-    gallery: gallery.length > 0 ? gallery : [service.image_url],
+    faq: faq,
+    gallery: gallery,
     specialists,
-    reviews: reviews.length > 0 ? reviews : [
-      {
-        id: '1',
-        name: 'Отзывов пока нет',
-        rating: 5,
-        text: 'Станьте первым, кто оставит отзыв об этой услуге.',
-        date: new Date().toLocaleDateString('ru-RU'),
-      },
-    ],
+    reviews: reviews,
   };
 }
 

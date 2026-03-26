@@ -76,9 +76,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to match expected format
-    const transformedServices = services.map((service: (typeof services)[number]) => ({
+    const transformedServices = services.map(service => ({
       ...service,
-      specialists: service.specialists.map((ss: (typeof service.specialists)[number]) => ss.specialist),
+      specialists: service.specialists.map(ss => ss.specialist),
     }));
 
     return NextResponse.json({
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     // Transform data to match expected format
     const transformedService = {
       ...service,
-      specialists: service.specialists.map((ss: (typeof service.specialists)[number]) => ss.specialist),
+      specialists: service.specialists.map(ss => ss.specialist),
     };
 
     return NextResponse.json(transformedService, { status: 201 });

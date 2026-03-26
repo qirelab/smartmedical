@@ -178,7 +178,7 @@ export function Header() {
                     href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts.address)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs lg:text-sm hover:scale-105 transition-transform cursor-pointer inline-block"
+                    className="text-xs lg:text-sm hover:underline transition-colors cursor-pointer inline-block"
                   >
                     {contacts.address}
                   </a>
@@ -193,7 +193,7 @@ export function Header() {
               ) : (
                 <a
                   href={`mailto:${contacts.email}`}
-                  className="text-xs lg:text-sm hover:scale-105 transition-transform cursor-pointer inline-block"
+                  className="text-xs lg:text-sm hover:underline transition-colors cursor-pointer inline-block"
                 >
                   {contacts.email}
                 </a>

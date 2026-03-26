@@ -18,7 +18,9 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
@@ -138,7 +140,7 @@ export function DoctorsContent() {
                 Наши специалисты
               </h1>
               <p className="text-sm lg:text-base text-gray-600 leading-relaxed">
-                Команда высококвалифицированных врачей Doctor Family готова оказать вам профессиональную медицинскую помощь. 
+                Команда высококвалифицированных врачей Doctor Family готова оказать вам профессиональную медицинскую помощь.
                 Выберите нужную специализацию в меню слева.
               </p>
             </div>
@@ -185,32 +187,64 @@ export function DoctorsContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-[#18A36C] rounded-lg p-6 text-white"
+            className="border border-gray-200 rounded-2xl p-6 lg:p-8"
           >
-            <h2 className="text-xl mb-4">Связаться с нами</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center mb-6">
+              <h2 className="text-xl lg:text-2xl text-[#2E2E2E] mb-2">Связаться с нами</h2>
+              <p className="text-sm lg:text-base text-gray-600">
+                Мы всегда рады ответить на ваши вопросы
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
               <a
                 href={`tel:${(contacts?.phone_number || '+375 29 161-01-01').replace(/[\s\-()]/g, '')}`}
-                className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200 inline-block"
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
               >
-                <Phone className="w-4 h-4" />
-                <span>{contacts?.phone_number || '+375 29 161-01-01'}</span>
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <Phone className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Телефон</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors">
+                      {contacts?.phone_number || '+375 29 161-01-01'}
+                    </p>
+                  </div>
+                </div>
               </a>
               <a
                 href={`mailto:${contacts?.email || 'smartmedical.by@gmail.com'}`}
-                className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200 inline-block"
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
               >
-                <Mail className="w-4 h-4" />
-                <span>{contacts?.email || 'smartmedical.by@gmail.com'}</span>
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <Mail className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Email</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors break-all">
+                      {contacts?.email || 'smartmedical.by@gmail.com'}
+                    </p>
+                  </div>
+                </div>
               </a>
               <a
                 href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200 inline-block"
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
               >
-                <MapPin className="w-4 h-4" />
-                <span>{contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504'}</span>
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <MapPin className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Адрес</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors">
+                      {contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504'}
+                    </p>
+                  </div>
+                </div>
               </a>
             </div>
           </motion.div>

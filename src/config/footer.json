@@ -3,7 +3,7 @@
     "name": "Doctor Family",
     "description": "Современная медицинская клиника в Новополоцке. Профессиональная медицина нового уровня.",
     "copyright": "© 2025 Doctor Family. Все права защищены.",
-    "license": "Лицензия на медицинскую деятельность от 15.06.2020 г."
+    "license": "Лицензия на медицинскую деятельность от 31.07.2025 г."
   },
   "services": [
     {
@@ -67,24 +67,14 @@
   },
   "socialMedia": [
     {
-      "name": "VK",
-      "url": "#",
-      "label": "VK"
-    },
-    {
-      "name": "Facebook",
-      "url": "#",
-      "label": "F"
-    },
-    {
       "name": "Instagram",
-      "url": "#",
-      "label": "IG"
+      "url": "https://www.instagram.com/doctorfamily_np?igsh=MWI5Y2ttYjB5N3Niag==",
+      "label": "doctorfamily_np"
     },
     {
-      "name": "YouTube",
-      "url": "#",
-      "label": "YT"
+      "name": "TikTok",
+      "url": "https://www.tiktok.com/@doctor_family_np",
+      "label": "doctorfamily"
     }
   ],
   "newsletter": {

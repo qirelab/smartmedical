@@ -185,14 +185,19 @@ export default function AdminServicesPage() {
     setPage(1);
   }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Flatten service categories (теперь без подкатегорий, все корневые)
+  // Flatten service categories with hierarchy support
   const flattenedServiceCategories = useMemo(() => {
-    // Можно выбирать любую категорию, так как подкатегорий больше нет
-    return serviceCategories.map(cat => ({
-      ...cat,
-      level: 0,
-      disabled: false,
-    }));
+    const flatten = (cats: ServiceCategory[], level = 0): Array<ServiceCategory & { level: number; disabled: boolean }> => {
+      const result: Array<ServiceCategory & { level: number; disabled: boolean }> = [];
+      for (const cat of cats) {
+        result.push({ ...cat, level, disabled: false });
+        if (cat.children && cat.children.length > 0) {
+          result.push(...flatten(cat.children, level + 1));
+        }
+      }
+      return result;
+    };
+    return flatten(serviceCategories);
   }, [serviceCategories]);
 
   // Form handlers

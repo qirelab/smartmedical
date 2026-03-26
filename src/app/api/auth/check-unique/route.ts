@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         select: { id: true, phone: true },
       });
 
-      const existingPhone = allPatients.find((patient: (typeof allPatients)[number]) => {
+      const existingPhone = allPatients.find(patient => {
         const patientNormalized = patient.phone.replace(/\D/g, '');
         // Проверяем полное совпадение или совпадение последних 9 цифр
         return patientNormalized === normalizedPhone ||

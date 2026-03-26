@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { ChevronRight, Phone, Mail, MapPin, Clock, Instagram } from "lucide-react";
 import { Button } from "../common/SMButton/SMButton";
 import SMLogo from "@/icons/SMLogo";
 import { useRouter, usePathname } from "next/navigation";
@@ -21,17 +21,13 @@ export function Footer() {
     router.push(path);
   };
 
-  const handleOpenCookieSettings = () => {
-    window.dispatchEvent(new Event('open-cookie-settings'));
-  };
-
   // Не показываем футер на страницах админки
   if (pathname?.startsWith('/admin')) {
     return null;
   }
 
   return (
-    <footer className="bg-[#F8F8F8] text-[#2E2E2E]">
+    <footer className="bg-[#F8F8F8] text-[#2E2E2E] border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 pt-8 pb-8 lg:pt-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-8 lg:mb-12">
           {/* Company Info */}
@@ -165,32 +161,35 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col lg:flex-row pt-6 lg:pt-8 border-t border-gray-300 justify-center items-center">
+        <div className="flex flex-col lg:flex-row pt-6 lg:pt-8 border-t border-gray-300 justify-between items-center gap-4">
+          {/* Social Media - Left */}
+          <div className="flex items-center gap-4">
+            {footerConfig.socialMedia.map((social, index) => (
+              <a
+                key={index}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-[#18A36C] transition-colors"
+                aria-label={social.name}
+              >
+                {social.name === "Instagram" ? (
+                  <Instagram className="w-5 h-5" />
+                ) : social.name === "TikTok" ? (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                  </svg>
+                ) : null}
+              </a>
+            ))}
+          </div>
+
+          {/* Copyright - Right */}
           <div className="text-center lg:text-right">
-            <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-xs lg:text-sm">
-              <button
-                onClick={() => handleNavigation('/privacy-policy')}
-                className="text-gray-500 hover:text-[#18A36C] transition-colors"
-              >
-                Политика персональных данных
-              </button>
-              <button
-                onClick={() => handleNavigation('/cookie-policy')}
-                className="text-gray-500 hover:text-[#18A36C] transition-colors"
-              >
-                Политика cookie
-              </button>
-              <button
-                onClick={handleOpenCookieSettings}
-                className="text-gray-500 hover:text-[#18A36C] transition-colors"
-              >
-                Настройки cookie
-              </button>
-            </div>
             <div className="text-gray-500 text-xs lg:text-sm">
               {footerConfig.companyInfo.copyright}
             </div>
-            <div className="text-gray-400 text-xs mt-1">
+            <div className="text-gray-400 text-xs mt-1 whitespace-pre-line">
               {footerConfig.companyInfo.license}
             </div>
           </div>

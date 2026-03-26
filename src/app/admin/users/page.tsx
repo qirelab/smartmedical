@@ -320,8 +320,8 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => setFilterRole('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'all'
-                    ? 'bg-gray-700 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <UserCog className="w-4 h-4" />
@@ -330,16 +330,16 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => setFilterRole('admin')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'admin'
-                    ? 'bg-[#18A36C] text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <Shield className="w-4 h-4" />
                 Администраторы
                 {adminsCount > 0 && (
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${filterRole === 'admin'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[#18A36C]/10 text-[#18A36C]'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#18A36C]/10 text-[#18A36C]'
                     }`}>
                     {adminsCount}
                   </span>
@@ -348,16 +348,16 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => setFilterRole('operator')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'operator'
-                    ? 'bg-[#18A36C] text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <Headphones className="w-4 h-4" />
                 Операторы
                 {operatorsCount > 0 && (
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${filterRole === 'operator'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[#18A36C]/10 text-[#18A36C]'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#18A36C]/10 text-[#18A36C]'
                     }`}>
                     {operatorsCount}
                   </span>
@@ -379,9 +379,8 @@ export default function AdminUsersPage() {
                       <ItemCard key={user.id}>
                         <div className="flex gap-4">
                           {/* Avatar */}
-                          <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${
-                            user.role === 'ADMIN' ? 'bg-[#18A36C]' : user.role === 'OPERATOR' ? 'bg-[#18A36C]' : 'bg-gray-500'
-                          }`}>
+                          <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${user.role === 'ADMIN' ? 'bg-[#18A36C]' : user.role === 'OPERATOR' ? 'bg-[#18A36C]' : 'bg-gray-500'
+                            }`}>
                             {user.avatar_url ? (
                               <img
                                 src={user.avatar_url}

@@ -1,7 +1,6 @@
 import { Building2, FileText, Users, Star, HelpCircle, Briefcase, ArrowRight } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { Card } from '../common/SMCard/SMCard';
-import { Badge } from '../common/SMBadge/SMBadge';
 import { clinicMenuData } from '../../data/SMClinicData/SMClinicData';
 import { useRouter } from '@/components/SMRouter/SMRouter';
 import clinicContentConfig from '@/config/clinicContent.json';
@@ -42,10 +41,10 @@ export function ClinicContent() {
           className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-8"
         >
           {clinicMenuData.map((section, index) => (
-            <Card 
+            <Card
               key={section.id}
               className="group hover:shadow-lg transition-all duration-300 cursor-pointer border border-[#E8E6E3] hover:border-[#18A36C] rounded-lg h-full"
-              onClick={() => navigate(`/clinic/${section.id}`)}
+              onClick={() => navigate(section.id === 'faq' ? '/clinic/questions' : `/clinic/${section.id}`)}
             >
               <div className="p-6 h-full flex flex-col">
                 <div className="flex items-start gap-4 mb-4 flex-grow">
@@ -61,34 +60,14 @@ export function ClinicContent() {
                     <p className="text-sm text-gray-600 leading-relaxed mb-3">
                       {section.description}
                     </p>
-                    {section.children && section.children.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {section.children.slice(0, 3).map((child) => (
-                          <Badge key={child.id} variant="secondary" className="text-xs bg-[#18A36C] text-white rounded-lg">
-                            {child.title}
-                          </Badge>
-                        ))}
-                        {section.children.length > 3 && (
-                          <Badge variant="secondary" className="text-xs bg-[#18A36C] text-white rounded-lg">
-                            +{section.children.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center">
                   <div className="flex items-center text-[#18A36C] group-hover:text-[#18A36C]/80 transition-colors">
                     <span className="text-sm mr-2">{clinicContentConfig.sectionLabels.moreDetails}</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </div>
-
-                  {section.children && (
-                    <span className="text-xs text-gray-600">
-                      {section.children.length} {clinicContentConfig.sectionLabels.sections}
-                    </span>
-                  )}
                 </div>
               </div>
             </Card>

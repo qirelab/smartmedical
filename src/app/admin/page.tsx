@@ -39,7 +39,9 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
@@ -94,7 +96,9 @@ export default function AdminPage() {
     image_url: '',
     activity_area: '',
     education_details: '',
-    conferences: '',
+    doctor_category: '',
+    academic_degree: '',
+    additional_education: '',
     specializations: '',
     education: '',
     category_id: '',
@@ -192,7 +196,9 @@ export default function AdminPage() {
       image_url: '',
       activity_area: '',
       education_details: '',
-      conferences: '',
+      doctor_category: '',
+      academic_degree: '',
+      additional_education: '',
       specializations: '',
       education: '',
       category_id: '',
@@ -218,7 +224,9 @@ export default function AdminPage() {
       image_url: specialist.image_url,
       activity_area: specialist.activity_area || '',
       education_details: specialist.education_details || '',
-      conferences: specialist.conferences.join('\n'),
+      doctor_category: specialist.doctor_category || '',
+      academic_degree: specialist.academic_degree || '',
+      additional_education: specialist.additional_education.join('\n'),
       specializations: specialist.specializations.join('\n'),
       education: specialist.education.join('\n'),
       category_id: specialist.category_id ? specialist.category_id.toString() : '',
@@ -234,7 +242,7 @@ export default function AdminPage() {
         ...formData,
         specializations: formData.specializations.split('\n').filter((s) => s.trim()),
         education: formData.education.split('\n').filter((e) => e.trim()),
-        conferences: formData.conferences.split('\n').filter((c) => c.trim()),
+        additional_education: formData.additional_education.split('\n').filter((a) => a.trim()),
       };
 
       const url = editingSpecialist
@@ -429,6 +437,24 @@ export default function AdminPage() {
                 />
               </FormField>
 
+              <FormField label="Категория">
+                <FormInput
+                  type="text"
+                  value={formData.doctor_category}
+                  onChange={(e) => setFormData({ ...formData, doctor_category: e.target.value })}
+                  placeholder="Высшая, первая, вторая..."
+                />
+              </FormField>
+
+              <FormField label="Ученая степень, звание">
+                <FormInput
+                  type="text"
+                  value={formData.academic_degree}
+                  onChange={(e) => setFormData({ ...formData, academic_degree: e.target.value })}
+                  placeholder="Кандидат медицинских наук, доктор наук..."
+                />
+              </FormField>
+
               <FormField label="Категория услуг" required>
                 <FormSelect
                   value={formData.service_category_id}
@@ -497,12 +523,12 @@ export default function AdminPage() {
               </div>
 
               <div className="md:col-span-2">
-                <FormField label="Конференции (каждая с новой строки)">
+                <FormField label="Дополнительное образование (каждое с новой строки)">
                   <FormTextarea
-                    value={formData.conferences}
-                    onChange={(e) => setFormData({ ...formData, conferences: e.target.value })}
+                    value={formData.additional_education}
+                    onChange={(e) => setFormData({ ...formData, additional_education: e.target.value })}
                     rows={3}
-                    placeholder="Международная конференция стоматологов 2023&#10;DentalTech Summit 2024&#10;European Dental Congress 2024"
+                    placeholder="Курсы повышения квалификации по эндодонтии, 2023&#10;Сертификационный курс по имплантации, 2024&#10;Международная конференция стоматологов, 2024"
                   />
                 </FormField>
               </div>

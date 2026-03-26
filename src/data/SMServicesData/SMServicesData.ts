@@ -207,40 +207,11 @@ function getServiceFaq(categoryId: string, serviceId: string) {
     }
   };
   
-  return faqs[categoryId]?.[serviceId] || [
-    {
-      question: 'Как подготовиться к процедуре?',
-      answer: 'Специальной подготовки не требуется. При необходимости врач даст индивидуальные рекомендации.'
-    },
-    {
-      question: 'Сколько времени занимает процедура?',
-      answer: 'Время проведения зависит от сложности случая, обычно от 30 до 60 минут.'
-    },
-    {
-      question: 'Есть ли противопоказания?',
-      answer: 'Противопоказания определяются индивидуально на консультации с врачом.'
-    }
-  ];
+  return faqs[categoryId]?.[serviceId] || [];
 }
 
 function getServiceGallery(categoryId: string, serviceId: string): string[] {
-  const galleries: Record<string, string[]> = {
-    'pediatric-dentistry': [
-      'https://images.unsplash.com/photo-1642844819197-5f5f21b89ff8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1683520701490-7172fa20c8f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1758205308106-5760d0227cc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1758205308172-fc864545dcf7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1642844819197-5f5f21b89ff8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1758205308172-fc864545dcf7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
-    ],
-    'dentistry': [
-      'https://images.unsplash.com/photo-1642844819197-5f5f21b89ff8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1558618047-a9cd48c043c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
-    ]
-  };
-  
-  return galleries[categoryId] || galleries['dentistry'];
+  return [];
 }
 
 function getServiceSpecialists(categoryId: string, serviceId: string) {
@@ -300,29 +271,5 @@ function getServiceSpecialists(categoryId: string, serviceId: string) {
 }
 
 function getServiceReviews(categoryId: string, serviceId: string) {
-  const reviews = [
-    {
-      id: '1',
-      name: 'Мария Иванова',
-      rating: 5,
-      text: 'Отличное качество услуг! Врач профессионал, все прошло быстро и безболезненно. Очень довольна результатом.',
-      date: '15.01.2025'
-    },
-    {
-      id: '2',
-      name: 'Алексей Петров',
-      rating: 5, 
-      text: 'Современное оборудование, профессиональный подход. Рекомендую всем знакомым.',
-      date: '12.01.2025'
-    },
-    {
-      id: '3',
-      name: 'Елена Козлова',
-      rating: 5,
-      text: 'Прекрасная клиника! Внимательный персонал, комфортная атмосфера. Обязательно приду еще.',
-      date: '10.01.2025'
-    }
-  ];
-  
-  return reviews;
+  return [];
 }

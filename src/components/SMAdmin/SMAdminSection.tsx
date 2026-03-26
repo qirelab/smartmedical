@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LucideIcon, Plus, Search, Loader2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { AdminGridSkeleton } from './SMAdminSkeleton';
@@ -206,67 +206,75 @@ export function FormModal({
   loading = false,
   disabled = false,
 }: FormModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      />
-
-      {/* Modal */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden mx-4"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-110 active:scale-95 cursor-pointer"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {children}
-        </div>
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden mx-4"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="rounded-xl cursor-pointer"
-          >
-            Отмена
-          </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={loading || disabled}
-            className="bg-gradient-to-r from-[#18A36C] to-[#15905f] text-white rounded-xl min-w-[120px] cursor-pointer"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              submitText
-            )}
-          </Button>
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)] space-y-4">
+              {children}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="rounded-xl border-gray-300 hover:border-gray-400 cursor-pointer"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={onSubmit}
+                disabled={loading || disabled}
+                className="bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#128a54] text-white shadow-lg shadow-[#18A36C]/20 hover:shadow-xl hover:shadow-[#18A36C]/30 rounded-xl min-w-[120px] cursor-pointer transition-all"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span>Сохранение...</span>
+                  </>
+                ) : (
+                  submitText
+                )}
+              </Button>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
 

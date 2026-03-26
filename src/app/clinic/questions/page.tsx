@@ -8,6 +8,8 @@ import { Card } from '@/components/common/SMCard/SMCard';
 import { Badge } from '@/components/common/SMBadge/SMBadge';
 import { motion } from 'framer-motion';
 import { NavigableClinicMenu } from '@/components/SMClinic/SMNavigableClinicMenu';
+import { AskQuestionModal } from '@/components/AskQuestionModal/AskQuestionModal';
+import { useAskQuestionModal } from '@/hooks/useAskQuestionModal';
 
 interface QuestionCategory {
   id: number;
@@ -45,6 +47,7 @@ export default function QuestionsPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<QuestionCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const askQuestionModal = useAskQuestionModal();
 
   useEffect(() => {
     async function loadCategories() {
@@ -161,10 +164,7 @@ export default function QuestionsPage() {
                 <ArrowRight className="w-5 h-5 ml-[2.5px]" />
               </Button>
               <Button
-                onClick={() => {
-                  // Open AI Assistant or contact form
-                  // This could trigger the AskQuestionModal
-                }}
+                onClick={askQuestionModal.open}
                 variant="outline"
                 className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 cursor-pointer"
               >
@@ -176,6 +176,13 @@ export default function QuestionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Ask Question Modal */}
+      <AskQuestionModal
+        isOpen={askQuestionModal.isOpen}
+        onClose={askQuestionModal.close}
+        onComplete={() => {}}
+      />
     </div>
   );
 }

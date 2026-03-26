@@ -357,7 +357,7 @@ export default function AdminServiceCategoriesPage() {
             {hasChildren && (
               <button
                 onClick={() => toggleExpand(category.id)}
-                className="absolute left-3 top-6 -translate-y-1/2 z-10 p-1.5 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 shadow-sm transition-all hover:scale-110"
+                className="absolute cursor-pointer left-3 top-6 -translate-y-1/2 z-10 p-1.5 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 shadow-sm transition-all hover:scale-110"
               >
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4 text-[#18A36C]" />
@@ -372,17 +372,14 @@ export default function AdminServiceCategoriesPage() {
               <div className="flex items-start gap-3 mb-3">
                 {/* Индикатор уровня */}
                 <div className="flex items-center gap-2">
-                  <div className={`w-1 h-12 rounded-full ${
-                    level === 0 ? 'bg-[#18A36C]' : level === 1 ? 'bg-blue-400' : 'bg-purple-400'
-                  }`} />
+                  <div className={`w-1 h-12 rounded-full ${level === 0 ? 'bg-[#18A36C]' : level === 1 ? 'bg-blue-400' : 'bg-purple-400'
+                    }`} />
 
                   {Icon && (
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      level === 0 ? 'bg-[#18A36C]/10' : level === 1 ? 'bg-blue-100' : 'bg-purple-100'
-                    }`}>
-                      <Icon className={`w-6 h-6 ${
-                        level === 0 ? 'text-[#18A36C]' : level === 1 ? 'text-blue-600' : 'text-purple-600'
-                      }`} />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${level === 0 ? 'bg-[#18A36C]/10' : level === 1 ? 'bg-blue-100' : 'bg-purple-100'
+                      }`}>
+                      <Icon className={`w-6 h-6 ${level === 0 ? 'text-[#18A36C]' : level === 1 ? 'text-blue-600' : 'text-purple-600'
+                        }`} />
                     </div>
                   )}
                 </div>
@@ -490,13 +487,13 @@ export default function AdminServiceCategoriesPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <button
                     onClick={expandAll}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 cursor-pointer text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Развернуть все
                   </button>
                   <button
                     onClick={collapseAll}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 text-sm cursor-pointer font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Свернуть все
                   </button>
@@ -553,7 +550,7 @@ export default function AdminServiceCategoriesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, slug: generateSlug(formData.name) })}
-                      className="text-xs font-medium text-[#18A36C] hover:text-[#18A36C]/80 underline"
+                      className="text-xs cursor-pointer font-medium text-[#18A36C] hover:text-[#18A36C]/80 underline"
                       disabled={!formData.name}
                     >
                       Регенерировать
@@ -622,6 +619,25 @@ export default function AdminServiceCategoriesPage() {
                   </FormSelect>
                 </FormField>
               </div>
+
+              <FormField label="Родительская категория">
+                <FormSelect
+                  value={formData.parent_id}
+                  onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                >
+                  <option value="">Нет (корневая категория)</option>
+                  {flattenedCategories
+                    .filter(cat => !editingCategory || cat.id !== editingCategory.id)
+                    .map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {'—'.repeat(cat.level)} {cat.name}
+                      </option>
+                    ))}
+                </FormSelect>
+                <p className="text-xs text-gray-500 mt-1">
+                  Выберите родительскую категорию для создания подкатегории
+                </p>
+              </FormField>
 
               <FormField label="Описание">
                 <FormTextarea

@@ -235,6 +235,11 @@ export default function CategoryPage() {
 
   const Icon = category.icon ? iconMap[category.icon as IconName] : null;
   const hasServices = services && services.length > 0;
+  const hasSubcategories = category.children && category.children.length > 0;
+
+  // Фильтруем подкатегории - только те, которые являются категориями (не услугами)
+  const subcategories = category.children?.filter(child => !child.id.includes('/')) || [];
+  const hasFilteredSubcategories = subcategories.length > 0;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -261,6 +266,43 @@ export default function CategoryPage() {
               </div>
             </div>
 
+            {/* Subcategories */}
+            {hasFilteredSubcategories && (
+              <div className="mb-12">
+                <h2 className="text-xl lg:text-2xl text-[#2E2E2E] mb-6">Подкатегории</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {subcategories.map((subcat) => {
+                    const SubcatIcon = subcat.icon ? iconMap[subcat.icon as IconName] : null;
+                    return (
+                      <Card
+                        key={subcat.id}
+                        className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#18A36C] cursor-pointer p-6"
+                        onClick={() => router.push(`/services/${subcat.slug}`)}
+                      >
+                        <div className="flex items-start gap-4 mb-4">
+                          {SubcatIcon && (
+                            <div className="flex-shrink-0 w-16 h-16 bg-[#18A36C]/10 rounded-xl flex items-center justify-center group-hover:bg-[#18A36C]/20 transition-colors">
+                              <SubcatIcon className="w-8 h-8 text-[#18A36C]" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-[#2E2E2E] mb-2 group-hover:text-[#18A36C] transition-colors truncate">
+                              {subcat.name}
+                            </h3>
+                          </div>
+                        </div>
+                        {subcat.description && (
+                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                            {subcat.description}
+                          </p>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Services from database */}
             {hasServices && (
               <div>
@@ -281,7 +323,7 @@ export default function CategoryPage() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-3 right-3 bg-[#18A36C] text-white px-3 py-1 rounded-full text-sm font-medium">
-                            {service.price.toLocaleString('ru-RU')} ₽
+                            {service.price.toLocaleString('ru-RU')} BYN
                           </div>
                         </div>
                       )}
@@ -306,8 +348,8 @@ export default function CategoryPage() {
               </div>
             )}
 
-            {/* Empty state - only show if no services */}
-            {!hasServices && (
+            {/* Empty state - only show if no services and no subcategories */}
+            {!hasServices && !hasFilteredSubcategories && (
               <div className="text-center bg-white border border-[#E8E6E3] rounded-lg p-8 lg:p-12">
                 <p className="text-gray-600 mb-4">
                   Услуги в этой категории скоро появятся

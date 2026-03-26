@@ -15,6 +15,9 @@ import { LeaveReviewModal } from "@/components/SMClinic/LeaveReviewModal";
 
 const CHAT_STORAGE_KEY = 'ai_assistant_messages';
 const ONBOARDING_SEEN_KEY = 'ai_assistant_onboarding_seen';
+const COOKIE_CONSENT_KEY = 'cookie-consent-accepted';
+const HINT_LAST_SHOWN_KEY = 'ai_assistant_hint_last_shown';
+const HINT_INTERVAL = 3 * 60 * 1000; // 3 минуты в миллисекундах
 
 interface CardData {
   type: "specialist" | "service";
@@ -54,15 +57,45 @@ export function AIAssistant() {
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Prevent hydration mismatch and show hint after delay
   useEffect(() => {
     setIsMounted(true);
 
-    // Show hint after 2 seconds delay on every page load
+    // Check if cookies are accepted
+    const cookiesAccepted = localStorage.getItem(COOKIE_CONSENT_KEY);
+
+    if (!cookiesAccepted) {
+      // If cookies not accepted, don't show hint
+      return;
+    }
+
+    // Check if hint was shown recently (within last 3 minutes)
+    const lastShown = localStorage.getItem(HINT_LAST_SHOWN_KEY);
+    const now = Date.now();
+
+    if (lastShown && (now - parseInt(lastShown)) < HINT_INTERVAL) {
+      // Hint was shown recently, don't show it again
+      return;
+    }
+
+    // Show hint after 2 seconds delay
     const timer = setTimeout(() => {
       setShowHint(true);
+      // Save the time when hint was shown
+      localStorage.setItem(HINT_LAST_SHOWN_KEY, now.toString());
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -418,7 +451,7 @@ export function AIAssistant() {
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: 20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="fixed bottom-24 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+            className="fixed bottom-24 right-6 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-lg:!z-30 lg:!z-50"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#18A36C] to-[#15905f] p-4 relative">
@@ -498,7 +531,7 @@ export function AIAssistant() {
               setIsOpen(true);
               if (showHint) handleDismissHint();
             }}
-            className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-[#18A36C]/50 transition-all duration-300 cursor-pointer"
+            className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-[#18A36C]/50 transition-all duration-300 cursor-pointer max-lg:!z-40 lg:!z-50"
           >
             <MessageCircle className="w-7 h-7" />
             {hasUnreadChat && (

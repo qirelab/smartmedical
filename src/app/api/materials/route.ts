@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Форматируем данные для фронтенда
-    const formattedMaterials = materials.map((material: (typeof materials)[number]) => ({
+    const formattedMaterials = materials.map((material) => ({
       id: material.id.toString(),
       title: material.title,
       content: material.content,

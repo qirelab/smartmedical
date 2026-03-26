@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AskQuestionModal } from '@/components/AskQuestionModal/AskQuestionModal';
 import { useAskQuestionModal } from '@/hooks/useAskQuestionModal';
+import { LeaveReviewModal } from '@/components/SMClinic/LeaveReviewModal';
 
 // Функция для конвертации YouTube URL в embed формат
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -184,6 +185,9 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
+  // Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
   // Reset showAllSpecialists when service changes
   useEffect(() => {
     setShowAllSpecialists(false);
@@ -339,12 +343,25 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
               </div>
 
               <TabsContent value="description" className="p-6 lg:p-8">
-                <div className="space-y-6">
-                  <div className="prose max-w-none">
-                    <p className="text-[#2E2E2E] leading-relaxed whitespace-pre-line">
-                      {serviceData.fullDescription}
+                {!serviceData.fullDescription || serviceData.fullDescription.trim() === '' ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Описание пока не добавлено
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4">
+                      Мы работаем над наполнением этого раздела. Пожалуйста, вернитесь позже.
                     </p>
                   </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="prose max-w-none">
+                      <p className="text-[#2E2E2E] leading-relaxed whitespace-pre-line">
+                        {serviceData.fullDescription}
+                      </p>
+                    </div>
 
                   {/* Секция видео - показываем только если есть валидное видео */}
                   {(() => {
@@ -369,111 +386,147 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
                     );
                   })()}
 
-                  {/* Секция фотографий - показываем только если есть фото (кроме заглавной) */}
-                  {serviceData.gallery && serviceData.gallery.length > 0 && (
-                    <div>
-                      <h3 className="text-lg text-[#2E2E2E] mb-4">Фотографии</h3>
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                        {serviceData.gallery.map((imageUrl, index) => (
-                          <div
-                            key={index}
-                            className="aspect-square cursor-pointer group"
-                            onClick={() => openPhotoModal(index)}
-                          >
-                            <div className="relative w-full h-full overflow-hidden rounded-lg">
-                              <ImageWithFallback
-                                src={imageUrl}
-                                alt={`${serviceData.title} фото ${index + 1}`}
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                                    <Play className="w-5 h-5 text-[#18A36C] ml-0.5" />
+                    {/* Секция фотографий - показываем только если есть фото (кроме заглавной) */}
+                    {serviceData.gallery && serviceData.gallery.length > 0 && (
+                      <div>
+                        <h3 className="text-lg text-[#2E2E2E] mb-4">Фотографии</h3>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                          {serviceData.gallery.map((imageUrl, index) => (
+                            <div
+                              key={index}
+                              className="aspect-square cursor-pointer group"
+                              onClick={() => openPhotoModal(index)}
+                            >
+                              <div className="relative w-full h-full overflow-hidden rounded-lg">
+                                <ImageWithFallback
+                                  src={imageUrl}
+                                  alt={`${serviceData.title} фото ${index + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+                                      <Play className="w-5 h-5 text-[#18A36C] ml-0.5" />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="faq" className="p-6 lg:p-8">
-                <Accordion type="single" collapsible className="w-full">
-                  {serviceData.faq.map((item, index) => (
-                    <AccordionItem key={index} value={`item-${index}`}>
-                      <AccordionTrigger className="text-left text-[#2E2E2E] hover:text-[#18A36C]">
-                        {item.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-[#2E2E2E] leading-relaxed">
-                        {item.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                {!serviceData.faq || serviceData.faq.length === 0 ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <HelpCircle className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Вопросы пока не добавлены
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4">
+                      Мы работаем над наполнением этого раздела. Пожалуйста, вернитесь позже.
+                    </p>
+                  </div>
+                ) : (
+                  <Accordion type="single" collapsible className="w-full">
+                    {serviceData.faq.map((item, index) => (
+                      <AccordionItem key={index} value={`item-${index}`}>
+                        <AccordionTrigger className="text-left text-[#2E2E2E] hover:text-[#18A36C]">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-[#2E2E2E] leading-relaxed">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                )}
               </TabsContent>
 
               <TabsContent value="reviews" className="p-6 lg:p-8">
-                <div className="space-y-6">
-                  {serviceData.reviews.map((review) => {
-                    // Генерация инициалов из имени
-                    const getInitials = (name: string) => {
-                      const parts = name.trim().split(/\s+/);
-                      if (parts.length >= 2) {
-                        return (parts[0][0] + parts[1][0]).toUpperCase();
-                      }
-                      return name.charAt(0).toUpperCase();
-                    };
-
-                    return (
-                      <div key={review.id} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center overflow-hidden">
-                              {review.image_url ? (
-                                <img
-                                  src={review.image_url}
-                                  alt={review.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-[#18A36C] font-medium">
-                                  {getInitials(review.name)}
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-700">{review.name}</h4>
-                              <p className="text-sm text-gray-500">{review.date}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < review.rating
-                                  ? 'fill-[#18A36C] text-[#18A36C]'
-                                  : 'text-gray-300'
-                                  }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-gray-700 leading-relaxed">{review.text}</p>
-                      </div>
-                    );
-                  })}
-
-                  <div className="text-center pt-6">
-                    <Button variant="outline" className="border-[#18A36C] text-[#18A36C] hover:shadow-lg hover:shadow-[#18A36C]/20">
-                      Показать все отзывы
+                {!serviceData.reviews || serviceData.reviews.length === 0 ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Отзывы пока не добавлены
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4 mb-6">
+                      Станьте первым, кто оставит отзыв об этой услуге!
+                    </p>
+                    <Button
+                      onClick={() => setIsReviewModalOpen(true)}
+                      className="bg-[#18A36C] hover:bg-[#15905f] text-white px-6 sm:px-8 py-3 h-auto rounded-lg transition-all duration-300 cursor-pointer"
+                    >
+                      <Star className="w-5 h-5 mr-2" />
+                      Оставить отзыв
                     </Button>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-6">
+                    {serviceData.reviews.map((review) => {
+                      // Генерация инициалов из имени
+                      const getInitials = (name: string) => {
+                        const parts = name.trim().split(/\s+/);
+                        if (parts.length >= 2) {
+                          return (parts[0][0] + parts[1][0]).toUpperCase();
+                        }
+                        return name.charAt(0).toUpperCase();
+                      };
+
+                      return (
+                        <div key={review.id} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center overflow-hidden">
+                                {review.image_url ? (
+                                  <img
+                                    src={review.image_url}
+                                    alt={review.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-[#18A36C] font-medium">
+                                    {getInitials(review.name)}
+                                  </span>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-700">{review.name}</h4>
+                                <p className="text-sm text-gray-500">{review.date}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < review.rating
+                                    ? 'fill-[#18A36C] text-[#18A36C]'
+                                    : 'text-gray-300'
+                                    }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-gray-700 leading-relaxed">{review.text}</p>
+                        </div>
+                      );
+                    })}
+
+                    <div className="text-center pt-6">
+                      <Button variant="outline" className="border-[#18A36C] text-[#18A36C] hover:shadow-lg hover:shadow-[#18A36C]/20">
+                        Показать все отзывы
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </Card>
@@ -563,6 +616,12 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
         onComplete={() => {
           // Здесь можно добавить логику для открытия чата или другого действия
         }}
+      />
+
+      {/* Leave Review Modal */}
+      <LeaveReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
       />
     </div>
   );

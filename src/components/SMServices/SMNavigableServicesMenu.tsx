@@ -157,18 +157,15 @@ export function NavigableServicesMenu() {
     const fetchMenuData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/services-menu', { cache: 'no-store' });
+        const response = await fetch('/api/services-menu');
         if (response.ok) {
           const data = await response.json();
           setCategories(data.menuData || []);
         } else {
-          const errorText = await response.text();
-          console.error('Failed to fetch services menu', response.status, errorText);
-          setCategories([]);
+          console.error('Failed to fetch services menu');
         }
       } catch (error) {
         console.error('Error fetching services menu:', error);
-        setCategories([]);
       } finally {
         setLoading(false);
       }

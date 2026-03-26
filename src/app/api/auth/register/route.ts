@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, phone: true },
     });
 
-    const existingUserByPhone = allPatients.find((patient: (typeof allPatients)[number]) => {
+    const existingUserByPhone = allPatients.find(patient => {
       const patientNormalized = patient.phone.replace(/\D/g, '');
       return patientNormalized === normalizedPhone ||
              patientNormalized.slice(-9) === last9Digits;
