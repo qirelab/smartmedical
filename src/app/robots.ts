@@ -7,9 +7,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        disallow: ["/admin", "/admin/", "/account", "/account/", "/api/"],
+        disallow: ["/admin", "/account", "/api/"],
       },
     ],
-    sitemap: "https://doctorfamily.by/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }
