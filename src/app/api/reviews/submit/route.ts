@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error submitting review:', error);
     return NextResponse.json(
       { error: 'Не удалось отправить отзыв' },
       { status: 500 }

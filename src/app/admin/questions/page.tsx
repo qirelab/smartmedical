@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { AnimatePresence } from 'framer-motion';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { AdminMenu } from '@/components/SMAdmin/SMAdminMenu';
+import { Pagination } from '@/components/common/SMPagination/SMPagination';
 import {
   AdminSection,
   EmptyState,
@@ -24,6 +25,7 @@ import { AdminAccessSkeleton, AdminQuestionsGridSkeleton } from '@/components/SM
 import { ConfirmDialog } from '@/components/SMAdmin/SMConfirmDialog';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useAlert } from '@/components/common/SMAlert';
+import { useServerPagination } from '@/hooks/useServerPagination';
 
 interface Question {
   id: number;
@@ -31,9 +33,14 @@ interface Question {
   answer: string | null;
   category: string | null;
   service_id: number | null;
+  question_category_id: number | null;
   service: {
     id: number;
     title: string;
+  } | null;
+  questionCategory: {
+    id: number;
+    name: string;
   } | null;
 }
 
@@ -42,25 +49,12 @@ interface Service {
   title: string;
 }
 
-// Захардкоженные категории FAQ (соответствуют категориям на странице Клиники)
-const FAQ_CATEGORIES: Record<string, string> = {
-  'children-teeth': 'Детские зубы',
-  'girls-hygiene': 'Гигиена девочек',
-  'boys-hygiene': 'Гигиена мальчиков',
-  'girls-puberty': 'Половое созревание девочек',
-  'culdocentesis': 'Кульдоцентез',
-  'stomatology': 'Стоматология',
-  'polyp-removal': 'Удаления полипов | Полипэктомия',
-  'ultrasound': 'УЗИ',
-  'womens-health': 'Женское здоровье',
-  'curettage': 'Раздельное диагностическое выскабливание',
-};
+interface QuestionCategory {
+  id: number;
+  name: string;
+  slug: string;
+}
 
-// Функция для получения русского названия категории
-const getCategoryLabel = (category: string | null): string => {
-  if (!category) return '';
-  return FAQ_CATEGORIES[category] || category;
-};
 
 export default function AdminQuestionsPage() {
   const { status } = useSession();
@@ -69,9 +63,15 @@ export default function AdminQuestionsPage() {
   const confirmDialog = useConfirmDialog();
   const { success, error: showError } = useAlert();
 
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl } = useServerPagination(12);
+
   // Data states
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [services, setServices] = useState<Service[]>([]);
+  const [questionCategories, setQuestionCategories] = useState<QuestionCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -82,8 +82,8 @@ export default function AdminQuestionsPage() {
   const [formData, setFormData] = useState({
     question: '',
     answer: '',
-    category: '',
     service_id: '',
+    question_category_id: '',
   });
 
   // Check admin role
@@ -94,13 +94,6 @@ export default function AdminQuestionsPage() {
       setHasAdminRole(false);
     }
   }, [status]);
-
-  // Load data when session is verified
-  useEffect(() => {
-    if (sessionVerified && hasAdminRole) {
-      loadData();
-    }
-  }, [sessionVerified, hasAdminRole]);
 
   const checkAdminRole = async () => {
     try {
@@ -119,46 +112,56 @@ export default function AdminQuestionsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [questionsRes, servicesRes] = await Promise.all([
-        fetch('/api/admin/questions'),
+      const apiUrl = buildApiUrl('/api/admin/questions', searchQuery);
+
+      const [questionsRes, servicesRes, categoriesRes] = await Promise.all([
+        fetch(apiUrl),
         fetch('/api/services'),
+        fetch('/api/admin/question-categories'),
       ]);
 
       if (questionsRes.ok) {
-        const data = await questionsRes.json();
-        setQuestions(data);
+        const response = await questionsRes.json();
+        setQuestions(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
       }
 
       if (servicesRes.ok) {
         const data = await servicesRes.json();
         setServices(data);
       }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json();
+        setQuestionCategories(data);
+      }
     } catch (error) {
-      console.error('Error loading data:', error);
+      showError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered questions
-  const filteredQuestions = useMemo(() => {
-    if (!searchQuery) return questions;
-    const query = searchQuery.toLowerCase();
-    return questions.filter(
-      (q) =>
-        q.question.toLowerCase().includes(query) ||
-        q.answer?.toLowerCase().includes(query) ||
-        getCategoryLabel(q.category).toLowerCase().includes(query)
-    );
-  }, [questions, searchQuery]);
+  // Load data when session is verified or page/search changes
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole) {
+      loadData();
+    }
+  }, [sessionVerified, hasAdminRole, currentPage, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Form handlers
   const resetForm = () => {
     setFormData({
       question: '',
       answer: '',
-      category: '',
       service_id: '',
+      question_category_id: '',
     });
     setEditingQuestion(null);
     setIsModalOpen(false);
@@ -174,8 +177,8 @@ export default function AdminQuestionsPage() {
     setFormData({
       question: question.question,
       answer: question.answer || '',
-      category: question.category || '',
       service_id: question.service_id?.toString() || '',
+      question_category_id: question.question_category_id?.toString() || '',
     });
     setIsModalOpen(true);
   };
@@ -262,7 +265,7 @@ export default function AdminQuestionsPage() {
           <AdminSection
             title="Вопросы (FAQ)"
             icon={HelpCircle}
-            count={questions.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
@@ -270,7 +273,7 @@ export default function AdminQuestionsPage() {
             addButtonText="Добавить вопрос"
             loadingSkeleton={<AdminQuestionsGridSkeleton count={12} />}
           >
-            {filteredQuestions.length === 0 ? (
+            {questions.length === 0 ? (
               <EmptyState
                 icon={HelpCircle}
                 title="Вопросы не найдены"
@@ -279,43 +282,55 @@ export default function AdminQuestionsPage() {
                 onAction={!searchQuery ? handleAdd : undefined}
               />
             ) : (
-              <div className="space-y-4">
-                <AnimatePresence>
-                  {filteredQuestions.map((question) => (
-                    <ItemCard key={question.id}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          {/* Question */}
-                          <h3 className="font-semibold text-gray-800 mb-2">{question.question}</h3>
+              <>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {questions.map((question) => (
+                      <ItemCard key={question.id}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {/* Question */}
+                            <h3 className="font-semibold text-gray-800 mb-2">{question.question}</h3>
 
-                          {/* Answer */}
-                          {question.answer && (
-                            <p className="text-sm text-gray-500 line-clamp-2 mb-3">{question.answer}</p>
-                          )}
+                            {/* Answer */}
+                            {question.answer && (
+                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{question.answer}</p>
+                            )}
 
-                          {/* Tags */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {question.category && (
-                              <Badge variant="primary">{getCategoryLabel(question.category)}</Badge>
-                            )}
-                            {question.service && (
-                              <Badge variant="secondary">{question.service.title}</Badge>
-                            )}
-                            {!question.answer && (
-                              <Badge variant="warning">Без ответа</Badge>
-                            )}
+                            {/* Tags */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {question.questionCategory && (
+                                <Badge variant="success">Категория: {question.questionCategory.name}</Badge>
+                              )}
+                              {question.service && (
+                                <Badge variant="secondary">Услуга: {question.service.title}</Badge>
+                              )}
+                              {!question.answer && (
+                                <Badge variant="warning">Без ответа</Badge>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <CardActions
-                          onEdit={() => handleEdit(question)}
-                          onDelete={() => handleDelete(question.id, question.question)}
-                        />
-                      </div>
-                    </ItemCard>
-                  ))}
-                </AnimatePresence>
-              </div>
+                          <CardActions
+                            onEdit={() => handleEdit(question)}
+                            onDelete={() => handleDelete(question.id, question.question)}
+                          />
+                        </div>
+                      </ItemCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    className="mt-6"
+                  />
+                )}
+              </>
             )}
           </AdminSection>
 
@@ -347,18 +362,21 @@ export default function AdminQuestionsPage() {
                 />
               </FormField>
 
-              <FormField label="Категория FAQ (для страницы Клиника)">
+              <FormField label="Категория вопроса">
                 <FormSelect
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.question_category_id}
+                  onChange={(e) => setFormData({ ...formData, question_category_id: e.target.value })}
                 >
                   <option value="">Не выбрано</option>
-                  {Object.entries(FAQ_CATEGORIES).map(([slug, name]) => (
-                    <option key={slug} value={slug}>
-                      {name}
+                  {questionCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </FormSelect>
+                <p className="text-xs text-gray-500 mt-1">
+                  Выберите категорию для отображения в разделе "Вопросы и ответы"
+                </p>
               </FormField>
 
               <FormField label="Привязка к услуге (опционально)">

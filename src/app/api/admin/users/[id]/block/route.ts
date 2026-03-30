@@ -79,7 +79,6 @@ export async function POST(
         : `Пользователь "${user.name}" разблокирован`,
     });
   } catch (error) {
-    console.error("Error blocking/unblocking user:", error);
     return NextResponse.json(
       { error: "Ошибка при изменении статуса блокировки" },
       { status: 500 }

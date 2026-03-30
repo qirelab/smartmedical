@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LucideIcon, Plus, Search, Loader2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { AdminGridSkeleton } from './SMAdminSkeleton';
@@ -72,7 +72,7 @@ export function AdminSection({
             {onAdd && (
               <Button
                 onClick={onAdd}
-                className="bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#128a54] text-white shadow-lg shadow-[#18A36C]/20 rounded-xl px-5 py-2.5 transition-all hover:shadow-xl hover:shadow-[#18A36C]/30 whitespace-nowrap"
+                className="bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#128a54] text-white shadow-lg shadow-[#18A36C]/20 rounded-xl px-5 py-2.5 transition-all hover:shadow-xl hover:shadow-[#18A36C]/30 whitespace-nowrap cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">{addButtonText}</span>
@@ -115,7 +115,7 @@ export function EmptyState({ icon: Icon, title, description, actionText, onActio
       {actionText && onAction && (
         <Button
           onClick={onAction}
-          className="bg-[#18A36C] hover:bg-[#15905f] text-white rounded-xl"
+          className="bg-[#18A36C] hover:bg-[#15905f] text-white rounded-xl cursor-pointer"
         >
           <Plus className="w-4 h-4 mr-2" />
           {actionText}
@@ -161,7 +161,7 @@ export function CardActions({ onEdit, onDelete }: CardActionsProps) {
           e.stopPropagation();
           onEdit();
         }}
-        className="p-2 text-gray-400 hover:text-[#18A36C] hover:bg-[#18A36C]/10 rounded-lg transition-all"
+        className="p-2 text-gray-400 hover:text-[#18A36C] hover:bg-[#18A36C]/10 rounded-lg transition-all duration-200 transform hover:scale-110 active:scale-95 cursor-pointer"
         title="Редактировать"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ export function CardActions({ onEdit, onDelete }: CardActionsProps) {
           e.stopPropagation();
           onDelete();
         }}
-        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110 active:scale-95 cursor-pointer"
         title="Удалить"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,67 +206,75 @@ export function FormModal({
   loading = false,
   disabled = false,
 }: FormModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      />
-
-      {/* Modal */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden mx-4"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {children}
-        </div>
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden mx-4"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="rounded-xl"
-          >
-            Отмена
-          </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={loading || disabled}
-            className="bg-gradient-to-r from-[#18A36C] to-[#15905f] text-white rounded-xl min-w-[120px]"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              submitText
-            )}
-          </Button>
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)] space-y-4">
+              {children}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="rounded-xl border-gray-300 hover:border-gray-400 cursor-pointer"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={onSubmit}
+                disabled={loading || disabled}
+                className="bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#128a54] text-white shadow-lg shadow-[#18A36C]/20 hover:shadow-xl hover:shadow-[#18A36C]/30 rounded-xl min-w-[120px] cursor-pointer transition-all"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span>Сохранение...</span>
+                  </>
+                ) : (
+                  submitText
+                )}
+              </Button>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -482,7 +490,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-2.5 pr-10 border rounded-xl text-sm text-left transition-all bg-white ${
+        className={`w-full px-4 py-2.5 pr-10 border rounded-xl text-sm text-left transition-all bg-white cursor-pointer ${
           isOpen
             ? 'border-[#18A36C] ring-2 ring-[#18A36C]/20'
             : 'border-gray-200 hover:border-gray-300'
@@ -506,7 +514,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
               <button
                 type="button"
                 onClick={view === 'days' ? handlePrevMonth : view === 'months' ? handlePrevYear : handlePrevDecade}
-                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5 text-white" />
               </button>
@@ -514,7 +522,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
               <button
                 type="button"
                 onClick={() => setView(view === 'days' ? 'months' : view === 'months' ? 'years' : 'years')}
-                className="px-3 py-1 hover:bg-white/20 rounded-lg transition-colors"
+                className="px-3 py-1 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
               >
                 <span className="font-semibold text-white">
                   {view === 'days' && `${MONTHS_RU[viewDate.getMonth()]} ${viewDate.getFullYear()}`}
@@ -526,7 +534,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
               <button
                 type="button"
                 onClick={view === 'days' ? handleNextMonth : view === 'months' ? handleNextYear : handleNextDecade}
-                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5 text-white" />
               </button>
@@ -557,7 +565,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
                         <button
                           type="button"
                           onClick={() => handleSelectDay(day)}
-                          className={`w-full h-full flex items-center justify-center text-sm rounded-xl transition-all font-medium ${
+                          className={`w-full h-full flex items-center justify-center text-sm rounded-xl transition-all font-medium cursor-pointer ${
                             isSelectedDay(day)
                               ? 'bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-lg shadow-[#18A36C]/30'
                               : isToday(day)
@@ -582,7 +590,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
                     key={month}
                     type="button"
                     onClick={() => handleSelectMonth(index)}
-                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-all ${
+                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                       isSelectedMonth(index)
                         ? 'bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-lg shadow-[#18A36C]/30'
                         : isCurrentMonth(index)
@@ -604,7 +612,7 @@ export function FormDateInput({ value, onChange, placeholder }: FormDateInputPro
                     key={year}
                     type="button"
                     onClick={() => handleSelectYear(year)}
-                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-all ${
+                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                       isSelectedYear(year)
                         ? 'bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-lg shadow-[#18A36C]/30'
                         : isCurrentYear(year)

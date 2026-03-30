@@ -6,10 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../common/SMButton/SMButton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../common/SMTooltip/SMTooltip';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '../common/SMSheet/SMSheet';
-import { useRouter } from '../SMRouter/SMRouter';
+import { useRouter as useNextRouter, usePathname } from 'next/navigation';
 import { useMenu } from '../SMMenuContext/SMMenuContext';
+import { MenuSkeleton } from '../common/SMMenuSkeleton';
 import servicesMenuConfig from '@/config/servicesMenu.json';
-import servicesMenuData from '@/data/SMServicesData/SMServicesMenuData.json';
 import { iconMap, IconName } from '@/utils/iconMapper';
 
 interface MenuItem {
@@ -26,7 +26,6 @@ interface MenuItemProps {
   onItemClick: (itemId: string, item: MenuItem) => void;
   expandedItems: Set<string>;
   onToggleExpand: (itemId: string) => void;
-  currentRoute: string;
 }
 
 function MenuItemComponent({
@@ -35,18 +34,22 @@ function MenuItemComponent({
   activeItem,
   onItemClick,
   expandedItems,
-  onToggleExpand,
-  currentRoute
+  onToggleExpand
 }: MenuItemProps) {
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedItems.has(item.id);
   const isActive = activeItem === item.id;
 
-  const handleClick = () => {
+  const handleTitleClick = () => {
+    // Клик на название всегда переходит на страницу
+    onItemClick(item.id, item);
+  };
+
+  const handleArrowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Клик на стрелочку только раскрывает/закрывает
     if (hasChildren) {
       onToggleExpand(item.id);
-    } else {
-      onItemClick(item.id, item);
     }
   };
 
@@ -70,44 +73,45 @@ function MenuItemComponent({
 
   return (
     <div className="group overflow-hidden">
-      <Button
-        variant="ghost"
-        className={`w-full justify-start text-left p-0 h-auto transition-all duration-200 overflow-hidden ${getItemStyles()}`}
-        onClick={handleClick}
+      <div
+        className={`w-full flex items-center justify-between transition-all duration-200 overflow-hidden ${getItemStyles()}`}
+        style={{ paddingLeft: `${level * 12 + 12}px` }}
       >
         <div
-          className="flex items-center justify-between w-full py-3 px-3 gap-2 overflow-hidden"
-          style={{ paddingLeft: `${level * 12 + 12}px` }}
+          className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden py-3 px-3 cursor-pointer"
+          onClick={handleTitleClick}
         >
-          <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
-            {level === 0 && Icon && (
-              <div className={`flex-shrink-0 ${isActive ? 'text-[#18A36C]' : 'text-[#18A36C]'}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-            )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className={`transition-all duration-200 truncate block ${
-                  level === 0 ? 'text-sm font-medium' : level === 1 ? 'text-sm' : 'text-xs'
-                } ${isActive ? 'text-[#18A36C]' : ''}`}>
-                  {item.title}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs z-[100]">
-                {item.title}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {hasChildren && (
-            <div className={`flex-shrink-0 transition-transform duration-200 ${
-              isExpanded ? 'rotate-90' : ''
-            } ${isActive && level === 0 ? 'text-[#18A36C]' : 'text-gray-400'}`}>
-              <ChevronRight className="w-4 h-4" />
+          {level === 0 && Icon && (
+            <div className={`flex-shrink-0 ${isActive ? 'text-[#18A36C]' : 'text-[#18A36C]'}`}>
+              <Icon className="w-4 h-4" />
             </div>
           )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className={`transition-all duration-200 truncate block ${
+                level === 0 ? 'text-sm font-medium' : level === 1 ? 'text-sm' : 'text-xs'
+              } ${isActive ? 'text-[#18A36C]' : ''}`}>
+                {item.title}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs z-[100]">
+              {item.title}
+            </TooltipContent>
+          </Tooltip>
         </div>
-      </Button>
+        {hasChildren && (
+          <div
+            className={`hidden lg:flex flex-shrink-0 transition-transform duration-200 p-3 cursor-pointer hover:bg-gray-100 rounded ${
+              isExpanded ? 'rotate-90' : ''
+            } ${isActive && level === 0 ? 'text-[#18A36C]' : 'text-gray-400'}`}
+            onClick={handleArrowClick}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        )}
+      </div>
 
+      {/* Показываем children только на desktop */}
       <AnimatePresence initial={false}>
         {hasChildren && isExpanded && (
           <motion.div
@@ -115,7 +119,7 @@ function MenuItemComponent({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className="overflow-hidden hidden lg:block"
           >
             <div className="bg-white">
               {item.children!.map((child) => (
@@ -127,7 +131,6 @@ function MenuItemComponent({
                     onItemClick={onItemClick}
                     expandedItems={expandedItems}
                     onToggleExpand={onToggleExpand}
-                    currentRoute={currentRoute}
                   />
                 </div>
               ))}
@@ -143,20 +146,46 @@ export function NavigableServicesMenu() {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { navigate, currentRoute } = useRouter();
+  const [categories, setCategories] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const nextRouter = useNextRouter();
+  const currentRoute = usePathname();
   const { isBurgerMenuOpen } = useMenu();
 
-  const menuData = servicesMenuData.menuData;
+  // Load menu data from API
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/services-menu');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.menuData || []);
+        } else {
+          console.error('Failed to fetch services menu');
+        }
+      } catch (error) {
+        console.error('Error fetching services menu:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuData();
+  }, []);
+
+  const menuData = categories;
 
   // Auto-expand and select based on current route
   useEffect(() => {
+    if (!menuData.length) return;
+
     const routeParts = currentRoute.split('/').filter(Boolean);
-    if (routeParts[0] === 'services' && routeParts.length >= 3) {
-      const categoryId = routeParts[1];
-      const serviceId = routeParts[2];
+    if (routeParts[0] === 'services' && routeParts.length >= 2) {
+      const categorySlug = routeParts[1];
 
       // Set active item
-      setActiveItem(serviceId);
+      setActiveItem(categorySlug);
 
       // Find and expand parents
       const findParents = (items: MenuItem[], targetId: string, parents: string[] = []): string[] | null => {
@@ -172,13 +201,14 @@ export function NavigableServicesMenu() {
         return null;
       };
 
-      const parents = findParents(menuData, serviceId);
-      if (parents) {
-        setExpandedItems(new Set([...parents, categoryId]));
-      } else {
-        // If service not found in nested, just expand the category
-        setExpandedItems(new Set([categoryId]));
+      const parents = findParents(menuData, categorySlug);
+      if (parents && parents.length > 0) {
+        setExpandedItems(new Set(parents));
       }
+    } else if (routeParts[0] === 'services' && routeParts.length === 1) {
+      // На главной странице услуг - сбрасываем активный пункт
+      setActiveItem(null);
+      setExpandedItems(new Set());
     }
   }, [currentRoute, menuData]);
 
@@ -188,28 +218,8 @@ export function NavigableServicesMenu() {
       setActiveItem(itemId);
     }
 
-    let categoryId = '';
-    let foundItem: MenuItem | null = null;
-
-    const findCategory = (items: MenuItem[], parentId = ''): boolean => {
-      for (const menuItem of items) {
-        if (menuItem.id === itemId) {
-          categoryId = parentId || menuItem.id;
-          foundItem = item;
-          return true;
-        }
-        if (menuItem.children && findCategory(menuItem.children, parentId || menuItem.id)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    findCategory(menuData);
-
-    if (foundItem) {
-      navigate(`/services/${categoryId}/${itemId}`);
-    }
+    // Всегда переходим на страницу категории
+    nextRouter.push(`/services/${itemId}`);
   };
 
   const handleToggleExpand = (itemId: string) => {
@@ -223,7 +233,8 @@ export function NavigableServicesMenu() {
   };
 
   const MenuContent = ({ onItemClick: onItemClickProp }: { onItemClick?: (itemId: string, item: MenuItem) => void }) => (
-    <div className="bg-white flex flex-col h-full overflow-hidden">
+    <div className="bg-white flex flex-col h-full">
+      {/* Header - Fixed */}
       <div className="p-4 lg:p-6 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
@@ -239,29 +250,38 @@ export function NavigableServicesMenu() {
           </div>
         </div>
       </div>
-      <div className="py-2 flex-1 overflow-y-auto overflow-x-hidden">
-        {menuData.map((item) => (
-          <MenuItemComponent
-            key={item.id}
-            item={item}
-            level={0}
-            activeItem={activeItem}
-            onItemClick={onItemClickProp || handleItemClick}
-            expandedItems={expandedItems}
-            onToggleExpand={handleToggleExpand}
-            currentRoute={currentRoute}
-          />
-        ))}
+
+      {/* Scrollable Menu Items */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
+        {loading ? (
+          <MenuSkeleton itemCount={8} showHeader={false} showFooter={false} />
+        ) : menuData.length > 0 ? (
+          menuData.map((item) => (
+            <MenuItemComponent
+              key={item.id}
+              item={item}
+              level={0}
+              activeItem={activeItem}
+              onItemClick={onItemClickProp || handleItemClick}
+              expandedItems={expandedItems}
+              onToggleExpand={handleToggleExpand}
+            />
+          ))
+        ) : (
+          <div className="px-4 py-6 text-sm text-gray-500">Услуги не найдены</div>
+        )}
       </div>
 
-      <div className="p-3 lg:p-4 mt-2 lg:mt-4 border-t border-[#E8E6E3] bg-white">
+      {/* Footer - Fixed */}
+      <div className="p-3 lg:p-4 border-t border-[#E8E6E3] bg-white flex-shrink-0">
         <div className="text-center">
           <p className="text-xs text-gray-600 mb-2 lg:mb-3">
             {servicesMenuConfig.footer.text}
           </p>
           <Button
             size="sm"
-            className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white w-full text-xs"
+            onClick={() => nextRouter.push('/contacts')}
+            className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white w-full text-xs cursor-pointer"
           >
             {servicesMenuConfig.footer.buttonText}
           </Button>
@@ -294,9 +314,7 @@ export function NavigableServicesMenu() {
             </SheetHeader>
             <MenuContent onItemClick={(itemId, item) => {
               handleItemClick(itemId, item);
-              if (!item.children || item.children.length === 0) {
-                setMobileMenuOpen(false);
-              }
+              setMobileMenuOpen(false);
             }} />
           </SheetContent>
         </Sheet>

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { UserCog, Loader2, Calendar, Shield, User, X, Eye, EyeOff, Lock, CheckCircle, AlertCircle, Headphones } from 'lucide-react';
 import { Pagination } from '@/components/common/SMPagination/SMPagination';
 import { AdminMenu } from '@/components/SMAdmin/SMAdminMenu';
+import { useServerPagination } from '@/hooks/useServerPagination';
 import {
   AdminSection,
   EmptyState,
@@ -40,13 +41,18 @@ export default function AdminUsersPage() {
   const confirmDialog = useConfirmDialog();
   const { success, error: showError } = useAlert();
 
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl } = useServerPagination(12);
+
   // Data states
   const [users, setUsers] = useState<UserData[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [adminsCount, setAdminsCount] = useState(0);
+  const [operatorsCount, setOperatorsCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'operator'>('all');
-  const ITEMS_PER_PAGE = 12;
 
   // Password confirmation modal
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
@@ -65,12 +71,12 @@ export default function AdminUsersPage() {
     }
   }, [status]);
 
-  // Load data when session is verified
+  // Load data when session is verified or page/search/filter changes
   useEffect(() => {
     if (sessionVerified && (isChiefDoctor || isAdmin)) {
       loadData();
     }
-  }, [sessionVerified, isChiefDoctor, isAdmin]);
+  }, [sessionVerified, isChiefDoctor, isAdmin, currentPage, searchQuery, filterRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAdminRole = async () => {
     try {
@@ -88,67 +94,54 @@ export default function AdminUsersPage() {
     verifySession();
   };
 
+  const loadCounts = async () => {
+    try {
+      // Fetch counts for both roles
+      const [adminsRes, operatorsRes] = await Promise.all([
+        fetch('/api/admin/users?page=1&limit=1&role=admin'),
+        fetch('/api/admin/users?page=1&limit=1&role=operator'),
+      ]);
+
+      if (adminsRes.ok) {
+        const data = await adminsRes.json();
+        setAdminsCount(data.totalCount || 0);
+      }
+
+      if (operatorsRes.ok) {
+        const data = await operatorsRes.json();
+        setOperatorsCount(data.totalCount || 0);
+      }
+    } catch (error) {
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/users');
+      const apiUrl = buildApiUrl('/api/admin/users', searchQuery) + (filterRole !== 'all' ? `&role=${filterRole}` : '');
+
+      const [res] = await Promise.all([
+        fetch(apiUrl),
+        loadCounts(), // Load counts in parallel
+      ]);
+
       if (res.ok) {
-        const data = await res.json();
-        setUsers(data);
+        const response = await res.json();
+        setUsers(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      showError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    let result = users;
-
-    // Filter by role
-    if (filterRole === 'admin') {
-      result = result.filter(u => u.role === 'ADMIN');
-    } else if (filterRole === 'operator') {
-      result = result.filter(u => u.role === 'OPERATOR');
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (u) =>
-          u.name.toLowerCase().includes(query) ||
-          (u.email && u.email.toLowerCase().includes(query)) ||
-          (u.phone && u.phone.toLowerCase().includes(query)) ||
-          u.login.toLowerCase().includes(query)
-      );
-    }
-
-    return result;
-  }, [users, searchQuery, filterRole]);
-
-  // Count roles
-  const adminsCount = useMemo(() => {
-    return users.filter(u => u.role === 'ADMIN').length;
-  }, [users]);
-
-  const operatorsCount = useMemo(() => {
-    return users.filter(u => u.role === 'OPERATOR').length;
-  }, [users]);
-
   // Reset page when search or filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterRole]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredUsers, currentPage]);
+    setPage(1);
+  }, [searchQuery, filterRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle role change
   const handleChangeRole = async (user: UserData, newRole: 'USER' | 'OPERATOR' | 'ADMIN') => {
@@ -317,7 +310,7 @@ export default function AdminUsersPage() {
           <AdminSection
             title="Пользователи"
             icon={UserCog}
-            count={users.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
@@ -326,9 +319,9 @@ export default function AdminUsersPage() {
             <div className="flex items-center gap-2 mb-6 flex-wrap">
               <button
                 onClick={() => setFilterRole('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterRole === 'all'
-                    ? 'bg-gray-700 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'all'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <UserCog className="w-4 h-4" />
@@ -336,17 +329,17 @@ export default function AdminUsersPage() {
               </button>
               <button
                 onClick={() => setFilterRole('admin')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterRole === 'admin'
-                    ? 'bg-emerald-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'admin'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <Shield className="w-4 h-4" />
                 Администраторы
                 {adminsCount > 0 && (
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${filterRole === 'admin'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-emerald-500/10 text-emerald-600'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#18A36C]/10 text-[#18A36C]'
                     }`}>
                     {adminsCount}
                   </span>
@@ -354,17 +347,17 @@ export default function AdminUsersPage() {
               </button>
               <button
                 onClick={() => setFilterRole('operator')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterRole === 'operator'
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterRole === 'operator'
+                  ? 'bg-[#18A36C] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 <Headphones className="w-4 h-4" />
                 Операторы
                 {operatorsCount > 0 && (
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${filterRole === 'operator'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-blue-500/10 text-blue-600'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#18A36C]/10 text-[#18A36C]'
                     }`}>
                     {operatorsCount}
                   </span>
@@ -372,7 +365,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
 
-            {filteredUsers.length === 0 ? (
+            {users.length === 0 ? (
               <EmptyState
                 icon={UserCog}
                 title="Пользователи не найдены"
@@ -382,13 +375,12 @@ export default function AdminUsersPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <AnimatePresence>
-                    {paginatedUsers.map((user) => (
+                    {users.map((user) => (
                       <ItemCard key={user.id}>
                         <div className="flex gap-4">
                           {/* Avatar */}
-                          <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${
-                            user.role === 'ADMIN' ? 'bg-emerald-500' : user.role === 'OPERATOR' ? 'bg-blue-500' : 'bg-gray-500'
-                          }`}>
+                          <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${user.role === 'ADMIN' ? 'bg-[#18A36C]' : user.role === 'OPERATOR' ? 'bg-[#18A36C]' : 'bg-gray-500'
+                            }`}>
                             {user.avatar_url ? (
                               <img
                                 src={user.avatar_url}
@@ -438,7 +430,7 @@ export default function AdminUsersPage() {
                             <>
                               <button
                                 onClick={() => handleChangeRole(user, 'OPERATOR')}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#18A36C] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors cursor-pointer"
                               >
                                 <Headphones className="w-4 h-4 flex-shrink-0" />
                                 <span className="truncate">Оператор</span>
@@ -446,7 +438,7 @@ export default function AdminUsersPage() {
                               {isChiefDoctor && (
                                 <button
                                   onClick={() => handleChangeRole(user, 'ADMIN')}
-                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-600 transition-colors"
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#18A36C] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors cursor-pointer"
                                 >
                                   <Shield className="w-4 h-4 flex-shrink-0" />
                                   <span className="truncate">Админ</span>
@@ -456,7 +448,7 @@ export default function AdminUsersPage() {
                           ) : user.role === 'OPERATOR' ? (
                             <button
                               onClick={() => handleChangeRole(user, 'USER')}
-                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors"
+                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
                             >
                               <X className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">Снять оператора</span>
@@ -464,7 +456,7 @@ export default function AdminUsersPage() {
                           ) : user.role === 'ADMIN' && isChiefDoctor ? (
                             <button
                               onClick={() => handleChangeRole(user, 'USER')}
-                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
+                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
                             >
                               <X className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">Снять админа</span>
@@ -481,7 +473,7 @@ export default function AdminUsersPage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setPage}
                     className="mt-6"
                   />
                 )}
@@ -515,7 +507,7 @@ export default function AdminUsersPage() {
                       </h2>
                       <button
                         onClick={() => !passwordLoading && setPasswordModalOpen(false)}
-                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <X className="w-5 h-5 text-white" />
                       </button>
@@ -525,7 +517,7 @@ export default function AdminUsersPage() {
                   {/* Content */}
                   <div className="p-6">
                     <div className="flex items-center gap-4 mb-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-blue-500 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-[#18A36C] flex items-center justify-center">
                         {passwordModalUser.avatar_url ? (
                           <img
                             src={passwordModalUser.avatar_url}
@@ -571,7 +563,7 @@ export default function AdminUsersPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -584,14 +576,14 @@ export default function AdminUsersPage() {
                     <button
                       onClick={() => setPasswordModalOpen(false)}
                       disabled={passwordLoading}
-                      className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                     >
                       Отмена
                     </button>
                     <button
                       onClick={handlePasswordConfirm}
                       disabled={passwordLoading || !adminPassword}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50 cursor-pointer"
                     >
                       {passwordLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

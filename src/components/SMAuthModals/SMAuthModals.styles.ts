@@ -5,12 +5,12 @@ export interface AuthModalsProps {
     onRegister?: (userData: RegisterData) => void;
     onForgotPassword?: (email: string) => void;
     isLoading?: boolean;
+    initialType?: 'login' | 'register' | 'forgot-password';
   };
   
 export interface LoginData {
     login: string;
     password: string;
-    rememberMe: boolean;
   };
   
 export interface RegisterData {

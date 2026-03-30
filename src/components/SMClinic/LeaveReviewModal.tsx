@@ -17,13 +17,14 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
     name: '',
     email: '',
     text: '',
-    grade: 5,
+    grade: 0,
     image_url: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [hoveredStar, setHoveredStar] = useState(0);
 
   // Validate name
   const validateName = (name: string) => {
@@ -93,7 +94,7 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
         setTimeout(() => {
           onClose();
           setSuccess(false);
-          setFormData({ name: '', email: '', text: '', grade: 5, image_url: '' });
+          setFormData({ name: '', email: '', text: '', grade: 0, image_url: '' });
         }, 2000);
       } else {
         const data = await res.json();
@@ -112,13 +113,14 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
       setError(null);
       setSuccess(false);
       setFieldErrors({});
+      setHoveredStar(0);
     }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -143,7 +145,7 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
                 <button
                   onClick={handleClose}
                   disabled={loading}
-                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50"
+                  className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors disabled:opacity-50"
                 >
                   <X className="w-5 h-5 text-white" />
                 </button>
@@ -227,22 +229,26 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
                       Ваша оценка <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, grade: star })}
-                          className="p-1 transition-transform hover:scale-110"
-                        >
-                          <Star
-                            className={`w-8 h-8 transition-colors ${
-                              star <= formData.grade
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const isFilled = star <= (hoveredStar || formData.grade);
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, grade: star })}
+                            onMouseEnter={() => setHoveredStar(star)}
+                            onMouseLeave={() => setHoveredStar(0)}
+                            className="p-1 cursor-pointer transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`w-8 h-8 transition-colors ${isFilled
                                 ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300 hover:text-yellow-300'
-                            }`}
-                          />
-                        </button>
-                      ))}
+                                : 'text-gray-300'
+                                }`}
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -274,18 +280,22 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
                     </div>
                   </div>
 
+                  <div className="h-[1px] bg-gray-200 w-full"></div>
+
                   {/* Photo */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5 text-center">
                       Ваше фото <span className="text-gray-400 font-normal">(необязательно)</span>
                     </label>
-                    <ImageUploader
-                      value={formData.image_url}
-                      onChange={(url) => setFormData({ ...formData, image_url: url })}
-                      folder="smartmedical/feedbacks"
-                      placeholder="Загрузите фото"
-                      maxSizeMB={5}
-                    />
+                    <div className="flex justify-center">
+                      <ImageUploader
+                        value={formData.image_url}
+                        onChange={(url) => setFormData({ ...formData, image_url: url })}
+                        folder="smartmedical/feedbacks"
+                        placeholder="Загрузите фото"
+                        maxSizeMB={5}
+                      />
+                    </div>
                   </div>
 
                   {/* Submit button */}
@@ -296,11 +306,12 @@ export function LeaveReviewModal({ isOpen, onClose }: LeaveReviewModalProps) {
                       !formData.name ||
                       !formData.email ||
                       !formData.text ||
+                      formData.grade === 0 ||
                       formData.name.trim().length < 2 ||
                       formData.text.trim().length < 10 ||
                       Object.keys(fieldErrors).length > 0
                     }
-                    className="w-full bg-[#18A36C] hover:bg-[#15905f] text-white py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#18A36C] hover:bg-[#15905f] text-white cursor-pointer py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>

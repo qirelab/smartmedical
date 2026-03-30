@@ -11,7 +11,16 @@ export async function GET(request: NextRequest) {
     });
 
     if (!token || !token.id) {
-      return NextResponse.json({ hasUnread: false });
+      return NextResponse.json(
+        { hasUnread: false },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
+      );
     }
 
     const userId = parseInt(token.id as string);
@@ -26,9 +35,26 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     });
 
-    return NextResponse.json({ hasUnread: !!chat });
+    return NextResponse.json(
+      { hasUnread: !!chat },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (error) {
-    console.error("Error checking patient chat unread:", error);
-    return NextResponse.json({ hasUnread: false });
+    return NextResponse.json(
+      { hasUnread: false },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   }
 }

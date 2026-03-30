@@ -7,6 +7,7 @@ import { FileText, Loader2, Calendar } from 'lucide-react';
 import { Pagination } from '@/components/common/SMPagination/SMPagination';
 import { ImageUploader } from '@/components/ImageUploader';
 import { AdminMenu } from '@/components/SMAdmin/SMAdminMenu';
+import { useServerPagination } from '@/hooks/useServerPagination';
 import {
   AdminSection,
   EmptyState,
@@ -46,12 +47,15 @@ export default function AdminMaterialsPage() {
   const confirmDialog = useConfirmDialog();
   const { success, error: showError } = useAlert();
 
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl } = useServerPagination(12);
+
   // Data states
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
 
   // Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,40 +104,33 @@ export default function AdminMaterialsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/materials');
+      const apiUrl = buildApiUrl('/api/admin/materials', searchQuery);
+
+      const res = await fetch(apiUrl);
       if (res.ok) {
-        const data = await res.json();
-        setMaterials(data);
+        const response = await res.json();
+        setMaterials(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
       }
     } catch (error) {
-      console.error('Error loading materials:', error);
+      showError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered materials
-  const filteredMaterials = useMemo(() => {
-    if (!searchQuery) return materials;
-    const query = searchQuery.toLowerCase();
-    return materials.filter(
-      (m) =>
-        m.title.toLowerCase().includes(query) ||
-        m.content.toLowerCase().includes(query)
-    );
-  }, [materials, searchQuery]);
+  // Load data when session is verified or page/search changes
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole) {
+      loadData();
+    }
+  }, [sessionVerified, hasAdminRole, currentPage, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset page when search changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredMaterials.length / ITEMS_PER_PAGE);
-  const paginatedMaterials = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredMaterials.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredMaterials, currentPage]);
+    setPage(1);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Form handlers
   const resetForm = () => {
@@ -152,9 +149,12 @@ export default function AdminMaterialsPage() {
 
   const handleAdd = () => {
     resetForm();
+    const currentDate = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear().toString();
     setFormData(prev => ({
       ...prev,
-      date: new Date().toISOString().split('T')[0],
+      date: currentDate,
+      year: currentYear,
     }));
     setIsModalOpen(true);
   };
@@ -255,14 +255,14 @@ export default function AdminMaterialsPage() {
           <AdminSection
             title="Материалы"
             icon={FileText}
-            count={materials.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
             onAdd={handleAdd}
             addButtonText="Добавить материал"
           >
-            {filteredMaterials.length === 0 ? (
+            {materials.length === 0 ? (
               <EmptyState
                 icon={FileText}
                 title="Материалы не найдены"
@@ -274,7 +274,7 @@ export default function AdminMaterialsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   <AnimatePresence>
-                    {paginatedMaterials.map((material) => (
+                    {materials.map((material) => (
                     <ItemCard key={material.id}>
                       {/* Image */}
                       <div className="w-full h-40 rounded-xl overflow-hidden bg-gray-100 mb-4">
@@ -315,7 +315,7 @@ export default function AdminMaterialsPage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setPage}
                     className="mt-6"
                   />
                 )}
@@ -374,7 +374,11 @@ export default function AdminMaterialsPage() {
                 <FormField label="Дата" required>
                   <FormDateInput
                     value={formData.date}
-                    onChange={(date) => setFormData({ ...formData, date })}
+                    onChange={(date) => {
+                      // Автоматически извлекаем год из выбранной даты
+                      const selectedYear = date ? new Date(date).getFullYear().toString() : new Date().getFullYear().toString();
+                      setFormData({ ...formData, date, year: selectedYear });
+                    }}
                   />
                 </FormField>
 
@@ -385,6 +389,9 @@ export default function AdminMaterialsPage() {
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                     placeholder="2024"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Автоматически заполняется из даты
+                  </p>
                 </FormField>
               </div>
 
@@ -392,7 +399,7 @@ export default function AdminMaterialsPage() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
                     formData.is_active ? 'bg-[#18A36C]' : 'bg-gray-300'
                   }`}
                 >

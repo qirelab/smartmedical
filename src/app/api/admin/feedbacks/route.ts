@@ -33,18 +33,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
 
+    // Получаем параметры пагинации и поиска
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || 'all';
+
+    // Формируем условия поиска
+    const whereCondition: any = {};
+
+    // Фильтр по статусу
+    if (status === 'pending') {
+      whereCondition.verified = false;
+    } else if (status === 'approved' || status === 'verified') {
+      whereCondition.verified = true;
+    }
+    // Если 'all', не добавляем фильтр по verified
+
+    if (search) {
+      whereCondition.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { text: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Подсчитываем общее количество
+    const totalCount = await prisma.feedback.count({ where: whereCondition });
+
+    // Получаем отзывы для текущей страницы
     const feedbacks = await prisma.feedback.findMany({
-      include: {
-        service: {
-          select: { id: true, title: true },
-        },
-      },
-      orderBy: { date: "desc" },
+      where: whereCondition,
+      orderBy: { date: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json(feedbacks);
+    return NextResponse.json({
+      data: feedbacks,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
-    console.error("Get feedbacks error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении отзывов" },
       { status: 500 }
@@ -81,7 +113,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(feedback, { status: 201 });
   } catch (error) {
-    console.error("Create feedback error:", error);
     return NextResponse.json(
       { error: "Ошибка при создании отзыва" },
       { status: 500 }

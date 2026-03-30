@@ -34,7 +34,9 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
       ...options,
     };
 
-    setAlerts((prev) => [...prev, newAlert]);
+    // Удаляем предыдущий алерт и показываем только новый
+    // Это предотвращает накопление множества алертов
+    setAlerts([newAlert]);
     return id;
   }, []);
 

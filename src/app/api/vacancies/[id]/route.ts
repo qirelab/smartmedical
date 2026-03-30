@@ -29,7 +29,6 @@ export async function GET(
 
     return NextResponse.json(vacancy, { status: 200 });
   } catch (error) {
-    console.error("Error fetching vacancy:", error);
     return NextResponse.json(
       { error: "Failed to fetch vacancy" },
       { status: 500 }

@@ -55,7 +55,6 @@ export async function PUT(
 
     return NextResponse.json(material);
   } catch (error) {
-    console.error("Update material error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении материала" },
       { status: 500 }
@@ -83,7 +82,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Материал удален" });
   } catch (error) {
-    console.error("Delete material error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении материала" },
       { status: 500 }

@@ -8,7 +8,7 @@ import { User, Shield } from 'lucide-react';
 
 interface SMProfileButtonProps {
   className?: string;
-  onAuthModalOpen?: () => void;
+  onAuthModalOpen?: (type?: 'login' | 'register' | 'forgot-password') => void;
 }
 
 // Скелетон для кнопки профиля
@@ -42,7 +42,7 @@ export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onA
   const handleClick = () => {
     if (!session) {
       if (onAuthModalOpen) {
-        onAuthModalOpen();
+        onAuthModalOpen('login');
       } else {
         signIn('google', {
           callbackUrl: '/account',
@@ -66,28 +66,42 @@ export const SMProfileButton: React.FC<SMProfileButtonProps> = ({ className, onA
   return (
     <div className="flex items-center gap-1">
       {/* Admin shield button */}
-      {isAdmin && (
+      {session && isAdmin && (
         <Button
           onClick={() => router.push('/admin')}
           variant="ghost"
           size="sm"
-          className="text-[#18A36C] hover:bg-[#18A36C]/10 p-2"
+          className="text-[#18A36C] hover:bg-[#18A36C]/10 p-2 cursor-pointer"
           title="Админ-панель"
         >
           <Shield className="w-4 h-4" />
         </Button>
       )}
 
-      {/* Profile button */}
-      <Button
-        onClick={handleClick}
-        variant="ghost"
-        size="sm"
-        className={`text-[#18A36C] hover:bg-[#F4F4F4] flex items-center gap-2 px-2 lg:px-3 py-2 text-sm ${className || ''}`}
-      >
-        <User className="w-4 h-4" />
-        <span>{session ? 'Мой кабинет' : 'Войти'}</span>
-      </Button>
+      {/* Profile/Login button */}
+      {status === 'unauthenticated' && (
+        <Button
+          onClick={handleClick}
+          variant="ghost"
+          size="sm"
+          className={`text-[#18A36C] hover:bg-[#18A36C]/10 flex items-center gap-2 px-2 lg:px-3 py-2 text-sm cursor-pointer ${className || ''}`}
+        >
+          <span>Авторизация</span>
+        </Button>
+      )}
+
+      {/* My account button (when logged in) */}
+      {status === 'authenticated' && session && (
+        <Button
+          onClick={handleClick}
+          variant="ghost"
+          size="sm"
+          className={`text-[#18A36C] hover:bg-[#18A36C]/10 flex items-center gap-2 px-2 lg:px-3 py-2 text-sm cursor-pointer ${className || ''}`}
+        >
+          <User className="w-4 h-4" />
+          <span>Мой кабинет</span>
+        </Button>
+      )}
     </div>
   );
 };

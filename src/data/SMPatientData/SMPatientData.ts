@@ -29,7 +29,6 @@ export async function getPatients(): Promise<Patient[]> {
     const data: PatientsResponse = await response.json();
     return data.patients;
   } catch (error) {
-    console.error('Error fetching patients:', error);
     throw error;
   }
 }
@@ -39,7 +38,6 @@ export async function getPatientById(id: number): Promise<Patient | null> {
     const patients = await getPatients();
     return patients.find((patient) => patient.id === id) || null;
   } catch (error) {
-    console.error('Error fetching patient by id:', error);
     return null;
   }
 }

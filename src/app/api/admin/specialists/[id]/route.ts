@@ -1,30 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getToken } from "next-auth/jwt";
-
-// Middleware для проверки админа
-async function checkAdmin(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET
-  });
-
-  if (!token || !token.id) {
-    return { isAdmin: false, error: "Не авторизован" };
-  }
-
-  const userId = parseInt(token.id as string);
-  const user = await prisma.patient.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-
-  if (!user || (user.role !== "ADMIN" && user.role !== "CHIEF_DOCTOR")) {
-    return { isAdmin: false, error: "Нет прав доступа" };
-  }
-
-  return { isAdmin: true };
-}
+import { checkFullAdminAccess } from "@/utils/api-auth";
 
 // GET - Получить специалиста по ID
 export async function GET(
@@ -32,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adminCheck = await checkAdmin(request);
+    const adminCheck = await checkFullAdminAccess(request);
     if (!adminCheck.isAdmin) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
@@ -44,6 +20,13 @@ export async function GET(
       where: { id: specialistId },
       include: {
         category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        serviceCategory: {
           select: {
             id: true,
             name: true,
@@ -62,7 +45,6 @@ export async function GET(
 
     return NextResponse.json(specialist);
   } catch (error) {
-    console.error("Get specialist error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении специалиста" },
       { status: 500 }
@@ -76,7 +58,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adminCheck = await checkAdmin(request);
+    const adminCheck = await checkFullAdminAccess(request);
     if (!adminCheck.isAdmin) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
@@ -96,20 +78,23 @@ export async function PUT(
         image_url: data.image_url,
         activity_area: data.activity_area || null,
         education_details: data.education_details || null,
-        conferences: data.conferences || [],
+        doctor_category: data.doctor_category || null,
+        academic_degree: data.academic_degree || null,
+        additional_education: data.additional_education || [],
         specializations: data.specializations || [],
         education: data.education || [],
         work_examples: data.work_examples || null,
-        category_id: parseInt(data.category_id),
+        category_id: data.category_id ? parseInt(data.category_id) : null,
+        service_category_id: data.service_category_id ? parseInt(data.service_category_id) : null,
       },
       include: {
         category: true,
+        serviceCategory: true,
       },
     });
 
     return NextResponse.json(specialist);
   } catch (error) {
-    console.error("Update specialist error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении специалиста" },
       { status: 500 }
@@ -123,7 +108,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adminCheck = await checkAdmin(request);
+    const adminCheck = await checkFullAdminAccess(request);
     if (!adminCheck.isAdmin) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
@@ -137,7 +122,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Специалист удален" });
   } catch (error) {
-    console.error("Delete specialist error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении специалиста" },
       { status: 500 }

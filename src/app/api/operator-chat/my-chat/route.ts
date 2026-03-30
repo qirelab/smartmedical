@@ -13,7 +13,14 @@ export async function GET(request: NextRequest) {
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        {
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -28,7 +35,14 @@ export async function GET(request: NextRequest) {
     if (user?.is_messages_blocked) {
       return NextResponse.json(
         { error: "Вы заблокированы и не можете использовать чат" },
-        { status: 403 }
+        {
+          status: 403,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -61,7 +75,16 @@ export async function GET(request: NextRequest) {
     });
 
     if (!chat) {
-      return NextResponse.json({ chat: null });
+      return NextResponse.json(
+        { chat: null },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
+      );
     }
 
     // Отмечаем сообщения оператора как прочитанные
@@ -80,12 +103,27 @@ export async function GET(request: NextRequest) {
       data: { has_unread_patient: false },
     });
 
-    return NextResponse.json({ chat });
+    return NextResponse.json(
+      { chat },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (error) {
-    console.error("Error fetching patient chat:", error);
     return NextResponse.json(
       { error: "Ошибка при получении чата" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
     );
   }
 }

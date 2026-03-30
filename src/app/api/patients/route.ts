@@ -20,7 +20,6 @@ export async function GET() {
 
     return NextResponse.json({ patients }, { status: 200 });
   } catch (error) {
-    console.error('Error fetching patients:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patients' },
       { status: 500 }

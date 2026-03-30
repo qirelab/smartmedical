@@ -17,20 +17,16 @@ export function useFeedbacks(limit = 3) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('Fetching feedbacks with limit:', limit);
     fetch(`/api/clinic-reviews?limit=${limit}`)
       .then(res => {
-        console.log('Response status:', res.status);
         if (!res.ok) throw new Error('Failed to fetch feedbacks');
         return res.json();
       })
       .then(data => {
-        console.log('Received feedbacks data:', data);
         setFeedbacks(data.reviews || []);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching feedbacks:', err);
         setError(err.message);
         setLoading(false);
       });

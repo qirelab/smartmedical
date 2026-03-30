@@ -60,7 +60,6 @@ export function PartnerCardSkeleton() {
 export function PartnersListSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <PageHeaderSkeleton />
@@ -87,7 +86,6 @@ export function PartnersListSkeleton() {
 export function SinglePartnerSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -160,7 +158,6 @@ export function VacancyCardSkeleton() {
 export function VacanciesListSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <Skeleton className="h-10 w-40 mb-4 rounded" />
@@ -188,7 +185,6 @@ export function VacanciesListSkeleton() {
 export function SingleVacancySkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <Skeleton className="h-10 w-40 mb-4 rounded" />
@@ -261,7 +257,6 @@ export function ReviewItemSkeleton() {
 export function ReviewsPageSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <Skeleton className="h-10 w-56 mb-4 rounded" />
@@ -310,7 +305,6 @@ export function FAQItemSkeleton() {
 export function FAQPageSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <PageHeaderSkeleton />
@@ -351,7 +345,6 @@ export function ChildrenGridSkeleton() {
 export function ClinicPageSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <PageHeaderSkeleton />

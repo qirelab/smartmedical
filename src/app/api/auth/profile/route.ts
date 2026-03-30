@@ -78,7 +78,6 @@ export async function PUT(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Profile update error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении профиля" },
       { status: 500 }

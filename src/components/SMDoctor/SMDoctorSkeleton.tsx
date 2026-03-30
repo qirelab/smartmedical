@@ -85,7 +85,7 @@ export function SpecialistsListSkeleton() {
 // Скелетон для секции информации на странице специалиста
 export function InfoSectionSkeleton() {
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-gray-200">
       <div className="flex items-center gap-3 mb-4">
         <Skeleton className="w-10 h-10 rounded-full" />
         <Skeleton className="h-6 w-48" />
@@ -106,8 +106,6 @@ export function InfoSectionSkeleton() {
 export function DoctorPageSkeleton() {
   return (
     <>
-      <BreadcrumbSkeleton />
-
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Main card */}
@@ -140,7 +138,7 @@ export function DoctorPageSkeleton() {
                   </div>
 
                   {/* Booking section */}
-                  <div className="bg-gray-100 rounded-lg p-6">
+                  <div className="bg-gray-100 border border-gray-200 rounded-lg p-6">
                     <Skeleton className="h-6 w-40 mb-3" />
                     <Skeleton className="h-14 w-full lg:w-56 rounded-lg" />
                   </div>

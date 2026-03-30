@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../common/SMButton/SMButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '../common/SMSheet/SMSheet';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../common/SMTooltip/SMTooltip';
-import { useRouter } from '../SMRouter/SMRouter';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useMenu } from '../SMMenuContext/SMMenuContext';
 
 interface MenuItem {
@@ -46,21 +47,10 @@ const menuData: MenuItem[] = [
     children: []
   },
   {
-    id: 'faq',
-    title: 'Вопрос ответ',
+    id: 'questions',
+    title: 'Вопросы и ответы',
     icon: <HelpCircle className="w-4 h-4" />,
-    children: [
-      { id: 'children-teeth', title: 'Детские зубы' },
-      { id: 'girls-hygiene', title: 'Гигиена девочек' },
-      { id: 'boys-hygiene', title: 'Гигиена мальчиков' },
-      { id: 'girls-puberty', title: 'Половое созревание девочек' },
-      { id: 'culdocentesis', title: 'Кульдоцентез' },
-      { id: 'stomatology', title: 'Стоматология' },
-      { id: 'polyp-removal', title: 'Удаления полипов | Полипэктомия' },
-      { id: 'ultrasound', title: 'УЗИ' },
-      { id: 'womens-health', title: 'Женское здоровье' },
-      { id: 'curettage', title: 'Раздельное диагностическое выскабливание' }
-    ]
+    children: [] // Будут загружены динамически из API
   },
   {
     id: 'vacancies',
@@ -89,51 +79,61 @@ function MenuItemComponent({ item, level, activeItem, onItemClick, expandedItems
 
   const paddingLeft = level === 0 ? 'pl-4' : level === 1 ? 'pl-8' : 'pl-12';
 
+  const handleTitleClick = () => {
+    // Клик на название всегда переходит на страницу
+    onItemClick(item.id, item);
+  };
+
+  const handleArrowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Клик на стрелочку только раскрывает/закрывает
+    if (hasChildren) {
+      onToggleExpand(item.id);
+    }
+  };
+
   return (
-    <div className="px-2">
-      <Button
-        variant="ghost"
-        className={`w-full justify-start px-4 py-3 h-auto text-left transition-all duration-300 rounded-lg mb-1 ${isActive || isRouteActive
+    <div className="px-2" data-menu-item={item.id}>
+      <div
+        className={`w-full flex items-center justify-between transition-all duration-300 rounded-lg mb-1 overflow-hidden ${isActive || isRouteActive
           ? 'bg-[#18A36C]/10 text-[#18A36C] shadow-sm'
           : 'text-gray-700 hover:bg-gray-50 hover:text-[#18A36C]'
           }`}
-        onClick={() => {
-          if (hasChildren) {
-            onToggleExpand(item.id);
-          } else {
-            onItemClick(item.id, item);
-          }
-        }}
       >
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-3">
-            {item.icon && (
-              <div className={`transition-colors ${isActive || isRouteActive ? 'text-[#18A36C]' : 'text-gray-600'}`}>
-                {item.icon}
-              </div>
-            )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className={`text-sm lg:text-base transition-colors truncate max-w-[180px] ${isActive || isRouteActive ? 'text-[#18A36C] font-medium' : ''
-                  }`}>
-                  {item.title}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {item.title}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {hasChildren && (
-            <ChevronRight
-              className={`w-4 h-4 text-gray-400 transition-all duration-200 ${isExpanded ? 'rotate-90 text-[#18A36C]' : 'group-hover:text-[#18A36C] group-hover:translate-x-1'
-                }`}
-            />
+        <div
+          className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3 cursor-pointer"
+          onClick={handleTitleClick}
+        >
+          {item.icon && (
+            <div className={`flex-shrink-0 transition-colors ${isActive || isRouteActive ? 'text-[#18A36C]' : 'text-gray-600'}`}>
+              {item.icon}
+            </div>
           )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className={`text-sm lg:text-base transition-colors truncate max-w-[180px] ${isActive || isRouteActive ? 'text-[#18A36C] font-medium' : ''
+                }`}>
+                {item.title}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {item.title}
+            </TooltipContent>
+          </Tooltip>
         </div>
-      </Button>
 
+        {hasChildren && (
+          <div
+            className={`hidden lg:flex flex-shrink-0 transition-transform duration-200 p-3 cursor-pointer hover:bg-gray-100 rounded ${isExpanded ? 'rotate-90' : ''
+              } ${isActive ? 'text-[#18A36C]' : 'text-gray-400'}`}
+            onClick={handleArrowClick}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        )}
+      </div>
+
+      {/* Показываем children только на desktop */}
       <AnimatePresence initial={false}>
         {hasChildren && isExpanded && (
           <motion.div
@@ -141,7 +141,7 @@ function MenuItemComponent({ item, level, activeItem, onItemClick, expandedItems
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className="overflow-hidden hidden lg:block"
           >
             <div className="bg-white">
               {item.children!.map((child) => (
@@ -169,12 +169,46 @@ export function NavigableClinicMenu() {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { navigate, currentRoute } = useRouter();
+  const [dynamicMenuData, setDynamicMenuData] = useState<MenuItem[]>(menuData);
+  const router = useRouter();
+  const pathname = usePathname();
   const { isBurgerMenuOpen } = useMenu();
+
+  // Загрузка категорий вопросов из API
+  useEffect(() => {
+    async function loadQuestionCategories() {
+      try {
+        const response = await fetch('/api/question-categories');
+        if (response.ok) {
+          const categories = await response.json();
+
+          // Обновляем menuData, добавляя категории как children к "questions"
+          const updatedMenu = menuData.map(item => {
+            if (item.id === 'questions') {
+              return {
+                ...item,
+                children: categories.map((cat: any) => ({
+                  id: cat.slug,
+                  title: cat.name,
+                }))
+              };
+            }
+            return item;
+          });
+
+          setDynamicMenuData(updatedMenu);
+        }
+      } catch (error) {
+        console.error('Error loading question categories:', error);
+      }
+    }
+
+    loadQuestionCategories();
+  }, []);
 
   // Auto-expand and select based on current route
   useEffect(() => {
-    const routeParts = currentRoute.split('/').filter(Boolean);
+    const routeParts = pathname.split('/').filter(Boolean);
     if (routeParts[0] === 'clinic' && routeParts.length >= 2) {
       const sectionId = routeParts[1];
       const itemId = routeParts[2] || sectionId;
@@ -184,8 +218,20 @@ export function NavigableClinicMenu() {
 
       // Expand the parent section
       setExpandedItems(new Set([sectionId]));
+
+      // Скролл к активному элементу после небольшой задержки
+      setTimeout(() => {
+        const activeElement = document.querySelector(`[data-menu-item="${itemId}"]`);
+        if (activeElement) {
+          activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 300);
+    } else if (routeParts[0] === 'clinic' && routeParts.length === 1) {
+      // На главной странице клиники - сбрасываем активный пункт
+      setActiveItem(null);
+      setExpandedItems(new Set());
     }
-  }, [currentRoute]);
+  }, [pathname]);
 
   const handleItemClick = (itemId: string, item: MenuItem) => {
     // Обновляем activeItem только если он изменился
@@ -210,15 +256,24 @@ export function NavigableClinicMenu() {
       return false;
     };
 
-    findCategory(menuData);
+    findCategory(dynamicMenuData);
 
     if (foundItem) {
+      // Специальная обработка для главной страницы "Вопросы и ответы"
+      if (itemId === 'questions' && categoryId === 'questions') {
+        router.push('/clinic/questions');
+      }
+      // Если это дочерний элемент категории вопросов
+      else if (categoryId === 'questions' && categoryId !== itemId) {
+        router.push(`/clinic/questions/${itemId}`);
+      }
       // Если это элемент верхнего уровня (нет родителя), используем только itemId
-      if (!categoryId || categoryId === itemId) {
-        navigate(`/clinic/${itemId}`);
-      } else {
-        // Если это дочерний элемент, используем оба
-        navigate(`/clinic/${categoryId}/${itemId}`);
+      else if (!categoryId || categoryId === itemId) {
+        router.push(`/clinic/${itemId}`);
+      }
+      // Если это дочерний элемент, используем оба
+      else {
+        router.push(`/clinic/${categoryId}/${itemId}`);
       }
     }
   };
@@ -234,7 +289,8 @@ export function NavigableClinicMenu() {
   };
 
   const MenuContent = ({ onItemClick: onItemClickProp }: { onItemClick?: (itemId: string, item: MenuItem) => void }) => (
-    <div className="bg-white flex flex-col h-full overflow-hidden">
+    <div className="bg-white flex flex-col h-full">
+      {/* Header - Fixed */}
       <div className="p-4 lg:p-6 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
@@ -247,8 +303,9 @@ export function NavigableClinicMenu() {
         </div>
       </div>
 
-      <div className="py-2">
-        {menuData.map((item) => (
+      {/* Scrollable Menu Items */}
+      <div className="flex-1 overflow-y-auto py-2">
+        {dynamicMenuData.map((item) => (
           <MenuItemComponent
             key={item.id}
             item={item}
@@ -257,17 +314,19 @@ export function NavigableClinicMenu() {
             onItemClick={onItemClickProp || handleItemClick}
             expandedItems={expandedItems}
             onToggleExpand={handleToggleExpand}
-            currentRoute={currentRoute}
+            currentRoute={pathname}
           />
         ))}
       </div>
 
-      <div className="p-3 lg:p-4 mt-2 lg:mt-4 border-t border-[#E8E6E3] bg-white">
+      {/* Footer - Fixed */}
+      <div className="p-3 lg:p-4 border-t border-[#E8E6E3] bg-white flex-shrink-0">
         <div className="text-center">
           <p className="text-xs text-gray-600 mb-2 lg:mb-3">Не нашли нужную информацию?</p>
           <Button
             size="sm"
-            className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white w-full text-xs rounded-lg"
+            onClick={() => router.push('/contacts')}
+            className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white w-full text-xs rounded-lg cursor-pointer"
           >
             Связаться с нами
           </Button>
@@ -278,7 +337,7 @@ export function NavigableClinicMenu() {
 
   return (
     <>
-      <div className="hidden lg:block w-72 bg-white border-r border-[#E8E6E3] shadow-lg flex-shrink-0 sticky top-[80px] h-[calc(100vh-80px)] overflow-y-auto">
+      <div className="hidden lg:block w-72 bg-white border-r border-[#E8E6E3] shadow-lg flex-shrink-0 sticky top-[80px] h-[calc(100vh-80px)]">
         <MenuContent />
       </div>
 

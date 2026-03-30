@@ -18,7 +18,6 @@ export function useUnreadCounts(refreshInterval = 30000) {
         setCounts(data);
       }
     } catch (error) {
-      console.error('Error fetching unread counts:', error);
     } finally {
       setLoading(false);
     }

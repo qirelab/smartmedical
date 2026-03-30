@@ -68,6 +68,15 @@ export function AskQuestionModal({ isOpen, onClose, onComplete }: AskQuestionMod
     handleClose();
   };
 
+  const handleOpenAI = () => {
+    // Отправляем событие для открытия AI помощника на вкладке "AI"
+    const event = new CustomEvent('openAIAssistant', {
+      detail: { tab: 'ai' }
+    });
+    window.dispatchEvent(event);
+    handleClose();
+  };
+
   const handleOpenOperator = () => {
     // Отправляем событие для открытия AI помощника на вкладке "Оператор"
     const event = new CustomEvent('openAIAssistant', {
@@ -106,7 +115,7 @@ export function AskQuestionModal({ isOpen, onClose, onComplete }: AskQuestionMod
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
+              className="absolute cursor-pointer top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
             >
               <X className="w-5 h-5" />
             </button>
@@ -150,11 +159,10 @@ export function AskQuestionModal({ isOpen, onClose, onComplete }: AskQuestionMod
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      index === currentSlide
+                    className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
                         ? 'w-8 bg-[#18A36C]'
                         : 'w-2 bg-gray-300 hover:bg-gray-400'
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -194,16 +202,16 @@ export function AskQuestionModal({ isOpen, onClose, onComplete }: AskQuestionMod
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
-                        onClick={handleNext}
+                        onClick={handleOpenAI}
                         variant="outline"
-                        className="border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white"
+                        className="border-[#18A36C] text-[#18A36C] hover:shadow-lg hover:shadow-[#18A36C]/20 cursor-pointer"
                       >
                         <Bot className="w-4 h-4 mr-2" />
                         AI Помощник
                       </Button>
                       <Button
                         onClick={handleOpenOperator}
-                        className="bg-[#18A36C] hover:bg-[#15905f] text-white px-6"
+                        className="bg-[#18A36C] hover:bg-[#15905f] text-white px-6 cursor-pointer"
                       >
                         <Headphones className="w-4 h-4 mr-2" />
                         Оператор

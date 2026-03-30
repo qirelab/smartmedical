@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
       letters: unreadLetters,
     });
   } catch (error) {
-    console.error("Error fetching unread letters:", error);
     return NextResponse.json(
       { error: "Ошибка при получении писем" },
       { status: 500 }

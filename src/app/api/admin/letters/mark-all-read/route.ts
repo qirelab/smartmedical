@@ -37,7 +37,6 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error marking letters as read:', error);
     return NextResponse.json(
       { error: 'Failed to mark letters as read' },
       { status: 500 }

@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Ошибка при загрузке файла' },
       { status: 500 }
@@ -106,7 +105,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Signature generation error:', error);
     return NextResponse.json(
       { error: 'Ошибка при генерации подписи' },
       { status: 500 }

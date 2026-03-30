@@ -1,27 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServiceSlugByTitle } from "@/utils/serviceMapping";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServicesMenuFromDB } from "@/lib/getServicesMenu";
+
+interface SearchResult {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  url: string;
+  type: "service" | "specialist" | "vacancy" | "faq" | "material" | "partner" | "contact" | "patient-info";
+}
+
+interface MenuItem {
+  id: string;
+  title: string;
+  icon?: string;
+  description?: string;
+  children?: MenuItem[];
+}
+
+// Функция для рекурсивного поиска в меню услуг
+function searchInServiceMenu(
+  items: MenuItem[],
+  searchTerm: string,
+  categoryPath: string[] = []
+): SearchResult[] {
+  const results: SearchResult[] = [];
+  const lowerSearchTerm = searchTerm.toLowerCase();
+
+  for (const item of items) {
+    const titleMatch = item.title.toLowerCase().includes(lowerSearchTerm);
+    const descriptionMatch = item.description?.toLowerCase().includes(lowerSearchTerm);
+
+    if (titleMatch || descriptionMatch) {
+      // Формируем категорию - используем путь категорий или первый элемент
+      const displayCategory = categoryPath.length > 0
+        ? categoryPath[0]  // Показываем только корневую категорию
+        : 'Услуги';
+
+      results.push({
+        id: `service-menu-${item.id}`,
+        title: item.title,
+        description: item.description || `Раздел услуг: ${item.title}`,
+        category: displayCategory,
+        url: `/services/${item.id}`,
+        type: "service",
+      });
+    }
+
+    // Рекурсивный поиск в подкатегориях
+    if (item.children && item.children.length > 0) {
+      // Если путь пустой - начинаем новый путь с текущего элемента
+      // Если путь уже есть - продолжаем его
+      const newPath = categoryPath.length === 0 ? [item.title] : categoryPath;
+      const childResults = searchInServiceMenu(item.children, searchTerm, newPath);
+      results.push(...childResults);
+    }
+  }
+
+  return results;
+}
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q");
 
+    // Минимум 3 символа
     if (!query || query.trim().length < 3) {
       return NextResponse.json({ results: [] }, { status: 200 });
     }
 
-    // Проверяем авторизацию пользователя
+    const searchTerm = query.trim();
     const session = await getServerSession(authOptions);
     const isAuthenticated = !!session?.user;
 
-    const searchTerm = query.trim();
-
-    // Search across all entities
+    // Поиск по всем таблицам БД параллельно
     const [services, specialists, vacancies, faqs, materials, partners, contacts] = await Promise.all([
-      // Search Services
+      // 1. Услуги
       prisma.service.findMany({
         where: {
           OR: [
@@ -32,11 +90,12 @@ export async function GET(request: NextRequest) {
         },
         include: {
           category: true,
+          serviceCategory: true,
         },
-        take: 10,
+        take: 50,
       }),
 
-      // Search Specialists
+      // 2. Специалисты
       prisma.specialist.findMany({
         where: {
           OR: [
@@ -48,10 +107,10 @@ export async function GET(request: NextRequest) {
         include: {
           category: true,
         },
-        take: 10,
+        take: 50,
       }),
 
-      // Search Vacancies
+      // 3. Вакансии (клиника)
       prisma.vacancy.findMany({
         where: {
           OR: [
@@ -61,10 +120,10 @@ export async function GET(request: NextRequest) {
             { requirements: { contains: searchTerm, mode: "insensitive" } },
           ],
         },
-        take: 10,
+        take: 50,
       }),
 
-      // Search FAQs
+      // 4. FAQ (клиника)
       prisma.question.findMany({
         where: {
           OR: [
@@ -72,10 +131,18 @@ export async function GET(request: NextRequest) {
             { answer: { contains: searchTerm, mode: "insensitive" } },
           ],
         },
-        take: 10,
+        include: {
+          questionCategory: {
+            select: {
+              slug: true,
+              name: true,
+            },
+          },
+        },
+        take: 50,
       }),
 
-      // Search Materials (только для авторизованных пользователей)
+      // 5. Материалы (только для авторизованных)
       isAuthenticated
         ? prisma.material.findMany({
             where: {
@@ -89,11 +156,11 @@ export async function GET(request: NextRequest) {
                 },
               ],
             },
-            take: 10,
+            take: 50,
           })
         : Promise.resolve([]),
 
-      // Search Partners
+      // 6. Партнёры (клиника)
       prisma.partner.findMany({
         where: {
           OR: [
@@ -104,10 +171,10 @@ export async function GET(request: NextRequest) {
         include: {
           category: true,
         },
-        take: 10,
+        take: 50,
       }),
 
-      // Search Contacts
+      // 7. Контакты
       prisma.contacts.findMany({
         where: {
           OR: [
@@ -117,96 +184,110 @@ export async function GET(request: NextRequest) {
             { email: { contains: searchTerm, mode: "insensitive" } },
           ],
         },
-        take: 1,
+        take: 10,
       }),
     ]);
 
-    // Format results
-    type SearchResult = {
-      id: string;
-      title: string;
-      description: string;
-      category: string;
-      url: string;
-      type: "service" | "specialist" | "vacancy" | "faq" | "material" | "partner" | "contact" | "patient-info";
-    };
+    const results: SearchResult[] = [];
 
-    const results: SearchResult[] = [
-      ...services.map((service) => {
-        // Получаем slug услуги по её названию и категории
-        const serviceSlug = getServiceSlugByTitle(service.category.slug, service.title);
+    // Форматируем услуги
+    services.forEach((service) => {
+      const categorySlug = service.serviceCategory?.slug || service.category?.slug || 'services';
+      const categoryName = service.serviceCategory?.name || service.category?.name || 'Услуги';
 
-        // Если slug найден, используем полный URL, иначе перенаправляем на страницу услуг
-        const url = serviceSlug
-          ? `/services/${service.category.slug}/${serviceSlug}`
-          : `/services`;
+      results.push({
+        id: `service-${service.id}`,
+        title: service.title,
+        description: service.description,
+        category: categoryName,
+        url: `/services/${categorySlug}/${service.id}`,
+        type: "service",
+      });
+    });
 
-        return {
-          id: `service-${service.id}`,
-          title: service.title,
-          description: service.description,
-          category: service.category.name,
-          url,
-          type: "service" as const,
-        };
-      }),
+    // Форматируем специалистов
+    specialists.forEach((specialist) => {
+      const categorySlug = specialist.category?.slug || 'doctors';
+      const categoryName = specialist.category?.name || 'Специалисты';
 
-      ...specialists.map((specialist) => ({
+      results.push({
         id: `specialist-${specialist.id}`,
         title: specialist.name,
         description: `${specialist.specialization} • Стаж: ${specialist.experience} лет • ${specialist.qualification}`,
-        category: specialist.category.name,
-        url: `/doctors/${specialist.category.slug}/${specialist.id}`,
-        type: "specialist" as const,
-      })),
+        category: categoryName,
+        url: `/doctors/${categorySlug}/${specialist.id}`,
+        type: "specialist",
+      });
+    });
 
-      ...vacancies.map((vacancy) => ({
+    // Форматируем вакансии
+    vacancies.forEach((vacancy) => {
+      results.push({
         id: `vacancy-${vacancy.id}`,
         title: vacancy.name,
         description: vacancy.description,
         category: vacancy.category,
-        url: "/clinic/vacancies",
-        type: "vacancy" as const,
-      })),
+        url: `/clinic/vacancies`,
+        type: "vacancy",
+      });
+    });
 
-      ...faqs.map((faq) => ({
+    // Форматируем FAQ
+    faqs.forEach((faq) => {
+      // Если есть категория - используем новый формат URL
+      const categorySlug = faq.questionCategory?.slug;
+      const categoryName = faq.questionCategory?.name || "Общие вопросы";
+      const url = categorySlug
+        ? `/clinic/questions/${categorySlug}#faq-${faq.id}`
+        : `/clinic/questions`;
+
+      results.push({
         id: `faq-${faq.id}`,
         title: faq.question,
         description: faq.answer || "Ответ скоро будет добавлен",
-        category: faq.category || "Общие вопросы",
-        url: "/clinic",
-        type: "faq" as const,
-      })),
+        category: categoryName,
+        url: url,
+        type: "faq",
+      });
+    });
 
-      ...materials.map((material) => ({
+    // Форматируем материалы
+    materials.forEach((material) => {
+      results.push({
         id: `material-${material.id}`,
         title: material.title,
         description: material.content,
         category: `Материалы ${material.year}`,
-        url: "/account",
-        type: "material" as const,
-      })),
+        url: `/account`,
+        type: "material",
+      });
+    });
 
-      ...partners.map((partner) => ({
+    // Форматируем партнёров
+    partners.forEach((partner) => {
+      results.push({
         id: `partner-${partner.id}`,
         title: partner.name,
         description: partner.description,
-        category: partner.category.name,
-        url: "/clinic/partners",
-        type: "partner" as const,
-      })),
+        category: partner.category?.name || 'Партнёры',
+        url: `/clinic/partners`,
+        type: "partner",
+      });
+    });
 
-      ...contacts.map((contact) => ({
+    // Форматируем контакты
+    contacts.forEach((contact) => {
+      results.push({
         id: `contact-${contact.id}`,
         title: "Контакты клиники",
         description: `${contact.address} • Тел: ${contact.phone_number} • Email: ${contact.email}`,
         category: "Контактная информация",
         url: "/contacts",
-        type: "contact" as const,
-      })),
-    ];
+        type: "contact",
+      });
+    });
 
-    // Add static search results for Patient Information page
+    // Добавляем статические результаты для страницы "Пациенту"
     const patientPageKeywords = [
       {
         keywords: ["запись", "приём", "прием", "записаться", "визит"],
@@ -230,27 +311,35 @@ export async function GET(request: NextRequest) {
       },
     ];
 
-    const patientPageResults = patientPageKeywords
-      .filter((item) =>
-        item.keywords.some((keyword) =>
-          keyword.includes(searchTerm.toLowerCase()) ||
-          searchTerm.toLowerCase().includes(keyword)
-        )
-      )
-      .map((item, index) => ({
-        id: `patient-info-${index}`,
-        title: item.title,
-        description: item.description,
-        category: "Информация для пациентов",
-        url: "/patient",
-        type: "patient-info" as const,
-      }));
+    patientPageKeywords.forEach((item, index) => {
+      const matches = item.keywords.some((keyword) =>
+        keyword.includes(searchTerm.toLowerCase()) ||
+        searchTerm.toLowerCase().includes(keyword)
+      );
 
-    results.push(...patientPageResults);
+      if (matches) {
+        results.push({
+          id: `patient-info-${index}`,
+          title: item.title,
+          description: item.description,
+          category: "Информация для пациентов",
+          url: "/patient",
+          type: "patient-info",
+        });
+      }
+    });
+
+    // Поиск по динамическому меню услуг (категории и разделы из БД)
+    const servicesMenu = await getServicesMenuFromDB();
+    const serviceMenuResults = searchInServiceMenu(servicesMenu, searchTerm);
+
+    // Добавляем результаты поиска по категориям
+    // Меню содержит категории и разделы, БД содержит конкретные услуги
+    // Это разные типы результатов, поэтому показываем оба
+    results.push(...serviceMenuResults);
 
     return NextResponse.json({ results }, { status: 200 });
   } catch (error) {
-    console.error("Search error:", error);
     return NextResponse.json(
       { error: "Ошибка при поиске", results: [] },
       { status: 500 }

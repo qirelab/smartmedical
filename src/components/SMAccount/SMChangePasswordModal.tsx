@@ -1,18 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '../common/SMDialog/SMDialog';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '../common/SMButton/SMButton';
 import { Input } from '../common/SMInput/SMInput';
 import { Label } from '../common/SMLabel/SMLabel';
-import { Eye, EyeOff, Lock, Shield, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield, CheckCircle2, X } from 'lucide-react';
 import { useAlert } from '../common/SMAlert/AlertProvider';
 
 interface ChangePasswordModalProps {
@@ -101,7 +94,6 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
       handleClose();
     } catch (error) {
       alert.error('Ошибка при смене пароля. Попробуйте позже.', 'Ошибка');
-      console.error('Change password error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -127,43 +119,46 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
   const strength = passwordStrength(newPassword);
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md border-gray-200 bg-white">
-        <DialogHeader>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="flex items-center justify-center mb-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                  delay: 0.2,
-                  type: 'spring',
-                  stiffness: 200,
-                }}
-                className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-[#18A36C]/10"
-              >
-                <Shield className="w-8 h-8 text-[#18A36C]" />
-              </motion.div>
-            </div>
-            <DialogTitle className="text-center text-[#2E2E2E] text-2xl">
-              Смена пароля
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-600 mt-2">
-              Введите текущий пароль и новый пароль для подтверждения
-            </DialogDescription>
-          </motion.div>
-        </DialogHeader>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClose}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="space-y-5 mt-6"
-        >
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+          >
+            {/* Header */}
+            <div className="bg-[#18A36C] px-6 py-4 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-white" />
+                  <h2 className="text-xl font-semibold text-white">Смена пароля</h2>
+                </div>
+                <button
+                  onClick={handleClose}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors disabled:opacity-50"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-5">
           {/* Old Password */}
           <div className="space-y-2">
             <Label htmlFor="oldPassword" className="text-[#2E2E2E]">
@@ -312,13 +307,16 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             </Button>
           </div>
 
-          {/* Security Note */}
-          <div className="text-center text-xs text-gray-600 mt-4 p-3 bg-[#F4F4F4] rounded-lg">
-            <Shield className="w-4 h-4 inline mr-1" />
-            Для безопасности используйте пароль длиной минимум 8 символов с буквами и цифрами
-          </div>
-        </motion.div>
-      </DialogContent>
-    </Dialog>
+                {/* Security Note */}
+                <div className="text-center text-xs text-gray-600 mt-4 p-3 bg-[#F4F4F4] rounded-lg">
+                  <Shield className="w-4 h-4 inline mr-1" />
+                  Для безопасности используйте пароль длиной минимум 8 символов с буквами и цифрами
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

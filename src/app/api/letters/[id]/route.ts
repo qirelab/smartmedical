@@ -61,7 +61,6 @@ export async function GET(
 
     return NextResponse.json(letter);
   } catch (error) {
-    console.error("Error fetching letter:", error);
     return NextResponse.json(
       { error: "Ошибка при получении письма" },
       { status: 500 }
@@ -124,7 +123,6 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating letter:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении письма" },
       { status: 500 }
@@ -219,7 +217,6 @@ export async function POST(
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
-    console.error("Error sending message:", error);
     return NextResponse.json(
       { error: "Ошибка при отправке сообщения" },
       { status: 500 }

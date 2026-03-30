@@ -20,12 +20,18 @@ function SkeletonPulse({ className = '', style }: { className?: string; style?: 
   );
 }
 
-export function MenuItemSkeleton({ hasIcon = true }: { hasIcon?: boolean }) {
+// Предопределённые ширины для скелетонов (чтобы избежать hydration mismatch)
+const SKELETON_WIDTHS = ['55%', '65%', '70%', '60%', '75%', '58%', '68%', '62%'];
+
+export function MenuItemSkeleton({ hasIcon = true, index = 0 }: { hasIcon?: boolean; index?: number }) {
+  // Используем фиксированную ширину из массива вместо Math.random()
+  const width = SKELETON_WIDTHS[index % SKELETON_WIDTHS.length];
+
   return (
     <div className="px-2 mb-1">
       <div className="flex items-center gap-3 px-4 py-3 rounded-lg">
         {hasIcon && <SkeletonPulse className="w-4 h-4 rounded flex-shrink-0" />}
-        <SkeletonPulse className="h-4 flex-1" style={{ width: `${Math.random() * 30 + 50}%` }} />
+        <SkeletonPulse className="h-4 flex-1" style={{ width }} />
       </div>
     </div>
   );
@@ -74,7 +80,7 @@ export function MenuSkeleton({
 
       <div className="py-2 flex-1">
         {Array.from({ length: itemCount }).map((_, index) => (
-          <MenuItemSkeleton key={index} hasIcon={true} />
+          <MenuItemSkeleton key={index} hasIcon={true} index={index} />
         ))}
       </div>
 
@@ -92,7 +98,7 @@ export function MobileMenuSkeleton({ itemCount = 6 }: { itemCount?: number }) {
       </div>
       <div className="py-4 px-2">
         {Array.from({ length: itemCount }).map((_, index) => (
-          <MenuItemSkeleton key={index} />
+          <MenuItemSkeleton key={index} index={index} />
         ))}
       </div>
     </div>

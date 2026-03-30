@@ -7,7 +7,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Pagination } from '@/components/common/SMPagination/SMPagination';
 import { getClinicItemById, ClinicItem, Review } from '../../data/SMClinicData/SMClinicData';
 import { useRouter } from '@/components/SMRouter/SMRouter';
-import { Breadcrumb } from '../SMBreadcrumb/SMBreadcrumb';
 import { ImageWithFallback } from '../SMImage/ImageWithFallback';
 import { PartnerModal } from './SMPartnerModal';
 import { VacancyModal } from './SMVacancyModal';
@@ -15,6 +14,7 @@ import { LeaveReviewModal } from './LeaveReviewModal';
 import { useContacts } from '@/hooks/useContacts';
 import { AskQuestionModal } from '../AskQuestionModal/AskQuestionModal';
 import { useAskQuestionModal } from '@/hooks/useAskQuestionModal';
+import { useUrlPagination } from '@/hooks/useUrlPagination';
 import {
   PartnersListSkeleton,
   SinglePartnerSkeleton,
@@ -85,11 +85,12 @@ function TextSkeleton({ className = '' }: { className?: string }) {
 
 export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   const [activeTab, setActiveTab] = useState('info');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [vacanciesPage, setVacanciesPage] = useState(1);
+  const { currentPage: reviewsPage, setPage: setReviewsPage } = useUrlPagination(REVIEWS_PER_PAGE);
+  const { currentPage: vacanciesPage, setPage: setVacanciesPage } = useUrlPagination(VACANCIES_PER_PAGE);
   const [partnersPage, setPartnersPage] = useState(1);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
+  const [vacanciesTotal, setVacanciesTotal] = useState(0);
   const [singlePartner, setSinglePartner] = useState<Partner | null>(null);
   const [singleVacancy, setSingleVacancy] = useState<Vacancy | null>(null);
   const [clinicReviewsData, setClinicReviewsData] = useState<ClinicReview[]>([]);
@@ -110,24 +111,36 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   const categoryItem = categoryId !== itemId ? getClinicItemById(categoryId) : null;
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Проверяем наличие якоря в URL
+    const hash = window.location.hash;
+    if (hash) {
+      // Задержка для загрузки контента
+      setTimeout(() => {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Если это FAQ - открываем аккордеон
+          if (hash.startsWith('#faq-')) {
+            const trigger = element.querySelector('button[data-state]');
+            if (trigger) {
+              (trigger as HTMLButtonElement).click();
+            }
+          }
+        }
+      }, 500);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [itemId, categoryId]);
 
-  // Load partners for partner category pages
+  // Load partners for partner category pages (NOT for main partners page)
   useEffect(() => {
-    const isPartnerPage = ['medical-labs', 'insurance', 'dental-labs'].includes(itemId);
-    if (isPartnerPage) {
-      const categoryMap: Record<string, string> = {
-        'medical-labs': 'diagnostics',
-        'insurance': 'gynecology',
-        'dental-labs': 'ultrasound'
-      };
-
+    const isPartnerCategoryPage = ['medical-labs', 'insurance', 'dental-labs'].includes(itemId);
+    if (isPartnerCategoryPage) {
       setLoading(true);
-      fetch(`/api/partners?category=${categoryMap[itemId]}`)
+      fetch(`/api/partners?category=${itemId}`)
         .then(res => res.json())
         .then(data => setPartners(data))
-        .catch(err => console.error('Failed to load partners:', err))
         .finally(() => setLoading(false));
     }
   }, [itemId]);
@@ -139,7 +152,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
       fetch(`/api/partners/${itemId}`)
         .then(res => res.json())
         .then(data => setSinglePartner(data))
-        .catch(err => console.error('Failed to load partner:', err))
         .finally(() => setLoading(false));
     }
   }, [itemId, categoryId]);
@@ -148,28 +160,33 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   useEffect(() => {
     if (itemId === 'vacancies') {
       setLoading(true);
-      fetch('/api/vacancies')
+      fetch(`/api/vacancies?page=${vacanciesPage}&limit=${VACANCIES_PER_PAGE}`)
         .then(res => res.json())
-        .then(data => setVacancies(data))
-        .catch(err => console.error('Failed to load vacancies:', err))
+        .then(data => {
+          setVacancies(data.vacancies || data);
+          setVacanciesTotal(data.pagination?.total || data.length || 0);
+          // Smooth scroll to top on page change
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        })
         .finally(() => setLoading(false));
     }
-  }, [itemId]);
+  }, [itemId, vacanciesPage]);
 
   // Load clinic reviews
   useEffect(() => {
     if (itemId === 'reviews') {
       setLoading(true);
-      fetch(`/api/clinic-reviews?page=${currentPage}&limit=${REVIEWS_PER_PAGE}`)
+      fetch(`/api/clinic-reviews?page=${reviewsPage}&limit=${REVIEWS_PER_PAGE}`)
         .then(res => res.json())
         .then(data => {
           setClinicReviewsData(data.reviews);
           setReviewsTotal(data.pagination.total);
+          // Smooth scroll to top on page change
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         })
-        .catch(err => console.error('Failed to load clinic reviews:', err))
         .finally(() => setLoading(false));
     }
-  }, [itemId, currentPage]);
+  }, [itemId, reviewsPage]);
 
   // Load clinic FAQs for specific categories
   useEffect(() => {
@@ -182,7 +199,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
       fetch(`/api/clinic-faqs?category=${itemId}`)
         .then(res => res.json())
         .then(data => setClinicFaqsData(data))
-        .catch(err => console.error('Failed to load clinic FAQs:', err))
         .finally(() => setFaqLoading(false));
     }
   }, [itemId]);
@@ -194,7 +210,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
       fetch(`/api/vacancies/${itemId}`)
         .then(res => res.json())
         .then(data => setSingleVacancy(data))
-        .catch(err => console.error('Failed to load vacancy:', err))
         .finally(() => setLoading(false));
     }
   }, [itemId, categoryId]);
@@ -223,7 +238,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   if (itemId === 'medical-labs' || itemId === 'insurance' || itemId === 'dental-labs') {
     return (
       <>
-        <Breadcrumb items={breadcrumbItems} />
         <div className="p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <div
@@ -241,6 +255,16 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <PartnerCardSkeleton key={i} />
                 ))}
               </div>
+            ) : partners.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+                  <Users className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Партнёры не найдены</h3>
+                <p className="text-gray-500 text-center max-w-md mb-6">
+                  В данной категории пока нет партнёров. Мы работаем над расширением списка наших партнёров.
+                </p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,7 +273,8 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                     .map((partner) => (
                       <Card
                         key={partner.id}
-                        className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#18A36C] h-full"
+                        id={`partner-${partner.id}`}
+                        className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#18A36C] h-full scroll-mt-24"
                       >
                         <div className="p-6 h-full flex flex-col">
                           <div className="mb-4">
@@ -305,7 +330,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             )}
           </div>
 
-          <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+          <div className="mt-8 p-6 border border-gray-200 rounded-2xl">
             <div className="text-center">
               <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
               <h3 className="text-lg text-gray-600 mb-2">Не нашли ответа на свой вопрос?</h3>
@@ -328,6 +353,14 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           partner={selectedPartner}
           open={isPartnerModalOpen}
           onOpenChange={setIsPartnerModalOpen}
+        />
+
+        {/* Ask Question Modal */}
+        <AskQuestionModal
+          isOpen={askQuestionModal.isOpen}
+          onClose={askQuestionModal.close}
+          onComplete={() => {
+          }}
         />
       </>
     );
@@ -354,13 +387,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
     return (
       <>
-        <Breadcrumb items={[
-          { label: 'Главная', href: '/' },
-          { label: 'Клиника', href: '/clinic' },
-          { label: 'Партнёры', href: '/clinic/partners' },
-          { label: singlePartner.name }
-        ]} />
-
         <div className="p-4 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -403,7 +429,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
               </div>
             </div>
 
-            <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+            <div className="mt-8 p-6 border border-gray-200 rounded-2xl">
               <div className="text-center">
                 <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
                 <h3 className="text-lg text-gray-600 mb-2">Не нашли ответа на свой вопрос?</h3>
@@ -421,6 +447,14 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Ask Question Modal */}
+        <AskQuestionModal
+          isOpen={askQuestionModal.isOpen}
+          onClose={askQuestionModal.close}
+          onComplete={() => {
+          }}
+        />
       </>
     );
   }
@@ -431,22 +465,11 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
     return (
       <>
-        <Breadcrumb items={breadcrumbItems} />
-
         <div className="p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <div
               className="mb-6"
             >
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/clinic')}
-                className="mb-4 text-gray-600 hover:text-[#18A36C] hover:bg-[#18A36C]/5"
-              >
-                <ArrowLeft className="w-4 h-4 mr-[2.5px]" />
-                Вернуться к разделам клиники
-              </Button>
-
               <div className="mb-6">
                 <h1 className="text-2xl lg:text-3xl text-[#212121] mb-4">{clinicItem.title}</h1>
                 <p className="text-[#212121] leading-relaxed text-sm lg:text-base">
@@ -461,7 +484,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <h2 className="text-xl text-[#2E2E2E]">Отзывы пациентов</h2>
                   {!loading && (
                     <div className="text-sm text-gray-600">
-                      Страница {currentPage} из {totalPages} ({reviewsTotal} отзывов)
+                      Страница {reviewsPage} из {totalPages} ({reviewsTotal} отзывов)
                     </div>
                   )}
                 </div>
@@ -472,6 +495,23 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   {[1, 2, 3, 4, 5].map((i) => (
                     <ReviewItemSkeleton key={i} />
                   ))}
+                </div>
+              ) : currentReviews.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+                    <Star className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Отзывы не найдены</h3>
+                  <p className="text-gray-500 text-center max-w-md mb-6">
+                    Пока нет отзывов о клинике. Станьте первым, кто поделится своим опытом!
+                  </p>
+                  <Button
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="bg-[#18A36C] hover:bg-[#15905f] text-white shadow-lg shadow-[#18A36C]/20"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Оставить первый отзыв
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -519,7 +559,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                                 <Star
                                   key={i}
                                   className={`w-4 h-4 ${i < review.grade
-                                    ? 'fill-[#18A36C] text-[#18A36C]'
+                                    ? 'fill-yellow-400 text-yellow-400'
                                     : 'text-gray-300'
                                     }`}
                                 />
@@ -534,31 +574,33 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
                   {/* Pagination for reviews */}
                   <Pagination
-                    currentPage={currentPage}
+                    currentPage={reviewsPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setReviewsPage}
                     className="mt-8"
                   />
                 </>
               )}
             </Card>
 
-            <div className="mt-8 p-6 bg-[#18A36C]/5 rounded-2xl border border-[#18A36C]/20">
-              <div className="text-center">
-                <Star className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-800 mb-2">Поделитесь своим мнением</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Ваш отзыв поможет нам стать лучше и поможет другим пациентам сделать правильный выбор.
-                </p>
-                <Button
-                  onClick={() => setIsReviewModalOpen(true)}
-                  className="bg-[#18A36C] hover:bg-[#15905f] text-white shadow-lg shadow-[#18A36C]/20"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Оставить отзыв
-                </Button>
+            {currentReviews.length > 0 && (
+              <div className="mt-8 p-6 bg-[#18A36C]/5 rounded-2xl border border-[#18A36C]/20">
+                <div className="text-center">
+                  <Star className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Поделитесь своим мнением</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Ваш отзыв поможет нам стать лучше и поможет другим пациентам сделать правильный выбор.
+                  </p>
+                  <Button
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="bg-[#18A36C] hover:bg-[#15905f] text-white shadow-lg shadow-[#18A36C]/20"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Оставить отзыв
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Leave Review Modal */}
             <LeaveReviewModal
@@ -574,22 +616,11 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   if (itemId === 'vacancies') {
     return (
       <>
-        <Breadcrumb items={breadcrumbItems} />
-
         <div className="p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <div
               className="mb-6"
             >
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/clinic')}
-                className="mb-4 text-gray-600 hover:text-[#18A36C] hover:bg-[#18A36C]/5"
-              >
-                <ArrowLeft className="w-4 h-4 mr-[2.5px]" />
-                Вернуться к разделам клиники
-              </Button>
-
               <div className="mb-6">
                 <h1 className="text-2xl lg:text-3xl text-[#212121] mb-4">{clinicItem.title}</h1>
                 <p className="text-[#212121] leading-relaxed text-sm lg:text-base">
@@ -604,61 +635,73 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <VacancyCardSkeleton key={i} />
                 ))}
               </div>
+            ) : vacancies.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+                  <Briefcase className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Вакансии не найдены</h3>
+                <p className="text-gray-500 text-center max-w-md mb-6">
+                  В данный момент нет открытых вакансий. Следите за обновлениями или отправьте своё резюме на будущее.
+                </p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {vacancies
-                    .slice((vacanciesPage - 1) * VACANCIES_PER_PAGE, vacanciesPage * VACANCIES_PER_PAGE)
-                    .map((vacancy) => (
-                      <Card key={vacancy.id} className="p-6 hover:shadow-lg transition-all duration-300 h-full flex flex-col border-gray-200 hover:border-[#18A36C]">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-lg text-[#2E2E2E] mb-2">{vacancy.name}</h3>
-                            <p className="text-sm text-gray-600">{vacancy.category}</p>
-                          </div>
+                  {vacancies.map((vacancy) => (
+                    <Card
+                      key={vacancy.id}
+                      id={`vacancy-${vacancy.id}`}
+                      className="p-6 hover:shadow-lg transition-all duration-300 h-full flex flex-col border-gray-200 hover:border-[#18A36C] scroll-mt-24"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg text-[#2E2E2E] mb-2">{vacancy.name}</h3>
+                          <p className="text-sm text-gray-600">{vacancy.category}</p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-700 leading-relaxed mb-4 flex-grow">
+                        {vacancy.description}
+                      </p>
+
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center gap-2 text-sm">
+                          <DollarSign className="w-4 h-4 text-[#18A36C]" />
+                          <span>{vacancy.payment} BYN</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-[#18A36C]" />
+                          <span>Опыт: {vacancy.experience} {vacancy.experience === 1 ? 'год' : 'лет'}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-[#2E2E2E] mb-2">Требования:</h4>
+                          <p className="text-xs text-gray-600">{vacancy.requirements}</p>
                         </div>
 
-                        <p className="text-sm text-gray-700 leading-relaxed mb-4 flex-grow">
-                          {vacancy.description}
-                        </p>
-
-                        <div className="space-y-3 mb-4">
-                          <div className="flex items-center gap-2 text-sm">
-                            <DollarSign className="w-4 h-4 text-[#18A36C]" />
-                            <span>{vacancy.payment} BYN</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="w-4 h-4 text-[#18A36C]" />
-                            <span>Опыт: {vacancy.experience} {vacancy.experience === 1 ? 'год' : 'лет'}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="text-sm font-medium text-[#2E2E2E] mb-2">Требования:</h4>
-                            <p className="text-xs text-gray-600">{vacancy.requirements}</p>
-                          </div>
-
-                          <Button
-                            onClick={() => {
-                              setSelectedVacancy(vacancy);
-                              setIsVacancyModalOpen(true);
-                            }}
-                            className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
-                            size="sm"
-                          >
-                            Подробнее
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
+                        <Button
+                          onClick={() => {
+                            setSelectedVacancy(vacancy);
+                            setIsVacancyModalOpen(true);
+                          }}
+                          className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
+                          size="sm"
+                        >
+                          Подробнее
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
 
                 {/* Pagination for vacancies */}
-                {vacancies.length > VACANCIES_PER_PAGE && (
+                {vacanciesTotal > VACANCIES_PER_PAGE && (
                   <Pagination
                     currentPage={vacanciesPage}
-                    totalPages={Math.ceil(vacancies.length / VACANCIES_PER_PAGE)}
+                    totalPages={Math.ceil(vacanciesTotal / VACANCIES_PER_PAGE)}
                     onPageChange={setVacanciesPage}
                     className="mt-8"
                   />
@@ -667,7 +710,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             )}
 
             {/* Ask Question Footer */}
-            <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+            <div className="mt-8 p-6 border border-gray-200 rounded-2xl">
               <div className="text-center">
                 <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
                 <h3 className="text-lg text-gray-600 mb-2">Не нашли ответа на свой вопрос?</h3>
@@ -691,6 +734,14 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
           vacancy={selectedVacancy}
           open={isVacancyModalOpen}
           onOpenChange={setIsVacancyModalOpen}
+        />
+
+        {/* Ask Question Modal */}
+        <AskQuestionModal
+          isOpen={askQuestionModal.isOpen}
+          onClose={askQuestionModal.close}
+          onComplete={() => {
+          }}
         />
       </>
     );
@@ -717,79 +768,57 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
     return (
       <>
-        <Breadcrumb items={[
-          { label: 'Главная', href: '/' },
-          { label: 'Клиника', href: '/clinic' },
-          { label: 'Вакансии', href: '/clinic/vacancies' },
-          { label: singleVacancy.name }
-        ]} />
-
         <div className="p-4 lg:p-8">
           <div className="max-w-4xl mx-auto">
-            <div
-              className="mb-6"
-            >
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/clinic/vacancies')}
-                className="mb-4 text-gray-600 hover:text-[#18A36C] hover:bg-[#18A36C]/5"
-              >
-                <ArrowLeft className="w-4 h-4 mr-[2.5px]" />
-                Вернуться к вакансиям
-              </Button>
-            </div>
-
-            <div className="max-w-4xl mx-auto">
-              <Card className="p-6 lg:p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">{singleVacancy.name}</h1>
-                    <p className="text-gray-600 mb-2">{singleVacancy.category}</p>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {singleVacancy.payment} BYN
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        Опыт: {singleVacancy.experience} {singleVacancy.experience === 1 ? 'год' : 'лет'}
-                      </div>
+            <Card className="p-6 lg:p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">{singleVacancy.name}</h1>
+                  <p className="text-gray-600 mb-2">{singleVacancy.category}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-4 h-4" />
+                      {singleVacancy.payment} BYN
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      Опыт: {singleVacancy.experience} {singleVacancy.experience === 1 ? 'год' : 'лет'}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg text-[#2E2E2E] mb-3">Описание вакансии</h2>
-                    <p className="text-[#212121] leading-relaxed">
-                      {singleVacancy.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg text-[#2E2E2E] mb-3">Требования</h2>
-                    <p className="text-[#212121] leading-relaxed">
-                      {singleVacancy.requirements}
-                    </p>
-                  </div>
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg text-[#2E2E2E] mb-3">Описание вакансии</h2>
+                  <p className="text-[#212121] leading-relaxed">
+                    {singleVacancy.description}
+                  </p>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <div className="text-center">
-                    <Button className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8">
-                      <Mail className="w-4 h-4 mr-[2.5px]" />
-                      Откликнуться на вакансию
-                    </Button>
-                    <p className="text-sm text-gray-600 mt-3">
-                      Или свяжитесь с нами по телефону: +375-29-161-01-01
-                    </p>
-                  </div>
+                <div>
+                  <h2 className="text-lg text-[#2E2E2E] mb-3">Требования</h2>
+                  <p className="text-[#212121] leading-relaxed">
+                    {singleVacancy.requirements}
+                  </p>
                 </div>
-              </Card>
-            </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="text-center">
+                  <Button className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8">
+                    <Mail className="w-4 h-4 mr-[2.5px]" />
+                    Откликнуться на вакансию
+                  </Button>
+                  <p className="text-sm text-gray-600 mt-3">
+                    Или свяжитесь с нами по телефону: +375-29-161-01-01
+                  </p>
+                </div>
+              </div>
+            </Card>
 
             {/* Ask Question Footer */}
-            <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+            <div className="mt-8 p-6 border border-gray-200 rounded-2xl">
               <div className="text-center">
                 <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
                 <h3 className="text-lg text-gray-600 mb-2">Не нашли ответа на свой вопрос?</h3>
@@ -811,11 +840,51 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
     );
   }
 
+  // Handle partners category page - show subcategories as cards ONLY
+  if (itemId === 'partners' && clinicItem?.children) {
+    return (
+      <>
+        <div className="p-4 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-2xl lg:text-3xl text-[#212121] mb-4">{clinicItem.title}</h1>
+              <p className="text-[#212121] leading-relaxed text-sm lg:text-base">
+                {clinicItem.description}
+              </p>
+            </div>
+
+            {/* Категории партнёров */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {clinicItem.children.map((category) => (
+                <Card
+                  key={category.id}
+                  className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#18A36C] cursor-pointer"
+                  onClick={() => navigate(`/clinic/partners/${category.id}`)}
+                >
+                  <div className="p-6">
+                    <h3 className="text-xl text-[#2E2E2E] mb-3 group-hover:text-[#18A36C] transition-colors duration-300">
+                      {category.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {category.description}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Handle questions - note: the main questions page is handled by /clinic/questions/page.tsx
+  // Individual category pages like /clinic/questions/[slug] are also separate routes
+  // This component (SMClinicPage) handles other clinic items through /clinic/[...slug]
+
   // Default page layout for other items
   return (
     <>
-      <Breadcrumb items={breadcrumbItems} />
-
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <div
@@ -831,24 +900,78 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
           {/* Content based on item type */}
           {itemId === 'licenses' && (
-            <Card className="p-6 lg:p-8 border-gray-200">
-              {clinicItem.gallery && clinicItem.gallery.length > 0 && (
-                <div className="mb-6">
-                  <ImageWithFallback
-                    src={clinicItem.gallery[0]}
-                    alt="Лицензия клиники Doctor Family"
-                    className="w-full max-w-2xl mx-auto rounded-lg shadow-lg"
-                  />
-                </div>
-              )}
+            <Card className="p-6 border-gray-200">
+              <h2 className="text-xl text-[#2E2E2E] mb-6 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#18A36C]" />
+                Информация о лицензии
+              </h2>
 
-              {clinicItem.content && (
-                <div className="bg-[#F4F4F4] p-6 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-[#212121] leading-relaxed">
-                    {clinicItem.content}
-                  </pre>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* PDF лицензии */}
+                {clinicItem.gallery && clinicItem.gallery.length > 0 && clinicItem.gallery[0].endsWith('.pdf') ? (
+                  <div className="space-y-4">
+                    <div className="w-full rounded-lg shadow-lg border border-gray-200 overflow-hidden bg-white">
+                      <iframe
+                        src={clinicItem.gallery[0]}
+                        className="w-full h-[600px]"
+                        title="Лицензия клиники Doctor Family"
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        onClick={() => window.open(clinicItem.gallery![0], '_blank', 'noopener,noreferrer')}
+                        className="flex-1 bg-[#18A36C] hover:bg-[#15905f] text-white"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Открыть в новой вкладке
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = clinicItem.gallery![0];
+                          link.download = 'license.pdf';
+                          link.click();
+                        }}
+                        variant="outline"
+                        className="flex-1 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C]/5"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Скачать PDF
+                      </Button>
+                    </div>
+                  </div>
+                ) : clinicItem.gallery && clinicItem.gallery.length > 0 ? (
+                  <div className="space-y-4">
+                    <ImageWithFallback
+                      src={clinicItem.gallery[0]}
+                      alt="Лицензия клиники Doctor Family"
+                      className="w-full rounded-lg shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow duration-300"
+                      onClick={() => window.open(clinicItem.gallery![0], '_blank', 'noopener,noreferrer')}
+                    />
+                    <p className="text-xs text-gray-500 text-center">Нажмите на изображение для увеличения</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                    <FileText className="w-12 h-12 text-gray-300 mb-3" />
+                    <p className="text-sm text-gray-500">Лицензия недоступна</p>
+                  </div>
+                )}
+
+                {/* Текстовая информация */}
+                <div>
+                  {clinicItem.content ? (
+                    <div className="bg-[#F4F4F4] p-6 rounded-lg h-full">
+                      <pre className="whitespace-pre-wrap text-[#212121] leading-relaxed text-sm">
+                        {clinicItem.content}
+                      </pre>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-sm text-gray-500">Информация о лицензии отсутствует</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </Card>
           )}
 
@@ -860,55 +983,66 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                   <div className="space-y-3">
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">Полное наименование</span>
-                      <span className="text-[#212121]">Общество с ограниченной ответственностью «Смарт Медикал»</span>
+                      <span className="text-[#212121]">Общество с ограниченной ответственностью "Доктор Фемели"</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">Сокращенное наименование</span>
-                      <span className="text-[#212121]">ООО «Смарт Медикал»</span>
+                      <span className="text-[#212121]">ООО "Доктор Фемели"</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">УНП</span>
-                      <span className="text-[#212121]">193215226</span>
+                      <span className="text-[#212121]">391788009</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">Юридический адрес</span>
-                      <span className="text-[#212121]">
-                        {contactsLoading ? (
-                          <TextSkeleton className="w-64 h-5" />
-                        ) : (
-                          contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'
-                        )}
-                      </span>
+                      {contactsLoading ? (
+                        <TextSkeleton className="w-64 h-5" />
+                      ) : (
+                        <a
+                          href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer"
+                        >
+                          {contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'}
+                        </a>
+                      )}
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">Фактический адрес</span>
-                      <span className="text-[#212121]">
-                        {contactsLoading ? (
-                          <TextSkeleton className="w-64 h-5" />
-                        ) : (
-                          contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'
-                        )}
-                      </span>
+                      {contactsLoading ? (
+                        <TextSkeleton className="w-64 h-5" />
+                      ) : (
+                        <a
+                          href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer"
+                        >
+                          {contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'}
+                        </a>
+                      )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm text-gray-600 mb-1">Телефон</span>
-                      <span className="text-[#212121]">
-                        {contactsLoading ? (
-                          <TextSkeleton className="w-36 h-5" />
-                        ) : (
-                          contacts?.phone_number || '+375-29-161-01-01'
-                        )}
-                      </span>
+                      <span className="text-sm text-gray-600 mb-1">Расчётный счёт</span>
+                      <span className="text-[#212121]">BY67 BPSB 3012 3410 2901 4933 0000</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 mb-1">Банк</span>
+                      <span className="text-[#212121]">ОАО "Сбер Банк"</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600 mb-1">Электронная почта</span>
-                      <span className="text-[#212121]">
-                        {contactsLoading ? (
-                          <TextSkeleton className="w-48 h-5" />
-                        ) : (
-                          contacts?.email || 'smartmedical.by@gmail.com'
-                        )}
-                      </span>
+                      {contactsLoading ? (
+                        <TextSkeleton className="w-48 h-5" />
+                      ) : (
+                        <a
+                          href={`mailto:${contacts?.email || 'smartmedical.by@gmail.com'}`}
+                          className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer"
+                        >
+                          {contacts?.email || 'smartmedical.by@gmail.com'}
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -920,27 +1054,48 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                       <MapPin className="w-5 h-5 text-[#18A36C] mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-600">Адрес</p>
-                        <p className="text-[#212121]">
-                          {contactsLoading ? (
-                            <TextSkeleton className="w-64 h-5" />
-                          ) : (
-                            contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'
-                          )}
-                        </p>
+                        {contactsLoading ? (
+                          <TextSkeleton className="w-64 h-5" />
+                        ) : (
+                          <a
+                            href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer block"
+                          >
+                            {contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504'}
+                          </a>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
                       <Phone className="w-5 h-5 text-[#18A36C] mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-600">Телефон</p>
-                        <p className="text-[#212121]">
-                          {contactsLoading ? (
+                        <p className="text-sm text-gray-600">Телефоны</p>
+                        {contactsLoading ? (
+                          <div className="space-y-1">
                             <TextSkeleton className="w-36 h-5" />
-                          ) : (
-                            contacts?.phone_number || '+375-29-161-01-01'
-                          )}
-                        </p>
+                            <TextSkeleton className="w-36 h-5" />
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <a
+                              href={`tel:${(contacts?.phone_number || '+375296320707').replace(/[\s\-]/g, '')}`}
+                              className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer block"
+                            >
+                              {contacts?.phone_number || '+375296320707'}
+                            </a>
+                            {contacts?.phone_number_sec && (
+                              <a
+                                href={`tel:${contacts.phone_number_sec.replace(/[\s\-]/g, '')}`}
+                                className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer block"
+                              >
+                                {contacts.phone_number_sec}
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -948,21 +1103,16 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                       <Mail className="w-5 h-5 text-[#18A36C] mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-600">Email</p>
-                        <p className="text-[#212121]">
-                          {contactsLoading ? (
-                            <TextSkeleton className="w-48 h-5" />
-                          ) : (
-                            contacts?.email || 'smartmedical.by@gmail.com'
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Globe className="w-5 h-5 text-[#18A36C] mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-600">Сайт</p>
-                        <p className="text-[#212121]">smartmedical.by</p>
+                        {contactsLoading ? (
+                          <TextSkeleton className="w-48 h-5" />
+                        ) : (
+                          <a
+                            href={`mailto:${contacts?.email || 'smartmedical.by@gmail.com'}`}
+                            className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer block"
+                          >
+                            {contacts?.email || 'smartmedical.by@gmail.com'}
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1001,7 +1151,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
             </div>
           )}
 
-          {faqLoading ? (
+          {itemId !== 'licenses' && itemId !== 'requisites' && (faqLoading ? (
             <Card className="p-6 lg:p-8 border-gray-200">
               <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
               <div className="space-y-4">
@@ -1010,13 +1160,18 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                 ))}
               </div>
             </Card>
-          ) : (clinicFaqsData.length > 0 || (clinicItem.faq && clinicItem.faq.length > 0)) ? (
+          ) : clinicFaqsData.length > 0 ? (
             <Card className="p-6 lg:p-8 border-gray-200">
               <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
               <Accordion type="single" collapsible className="w-full">
-                {(clinicFaqsData.length > 0 ? clinicFaqsData : clinicItem.faq || []).map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C]">
+                {clinicFaqsData.map((item) => (
+                  <AccordionItem
+                    key={item.id}
+                    value={`item-${item.id}`}
+                    id={`faq-${item.id}`}
+                    className="scroll-mt-24"
+                  >
+                    <AccordionTrigger className="text-left text-[#212121] hover:text-[#18A36C] cursor-pointer">
                       {item.question}
                     </AccordionTrigger>
                     <AccordionContent className="text-[#212121] leading-relaxed">
@@ -1026,9 +1181,22 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                 ))}
               </Accordion>
             </Card>
-          ) : null}
+          ) : (
+            <Card className="p-6 lg:p-8 border-gray-200">
+              <h2 className="text-xl text-[#2E2E2E] mb-6">Часто задаваемые вопросы</h2>
+              <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <HelpCircle className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg sm:text-xl text-gray-800 mb-2">Вопросы отсутствуют</h3>
+                <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4">
+                  В данный момент нет часто задаваемых вопросов по этой теме.
+                </p>
+              </div>
+            </Card>
+          ))}
 
-          <div className="mt-8 p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+          <div className="mt-8 p-6 border border-gray-200 rounded-2xl">
             <div className="text-center">
               <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
               <h3 className="text-lg text-gray-600 mb-2">Не нашли ответа на свой вопрос?</h3>
@@ -1067,7 +1235,6 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
         onClose={askQuestionModal.close}
         onComplete={() => {
           // Здесь можно добавить логику для открытия чата или другого действия
-          console.log('AI помощник готов к работе');
         }}
       />
     </>

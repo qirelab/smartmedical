@@ -1,54 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { hasAdminAccess } from "@/utils/auth";
 
-const ADMIN_PASSWORD = "adminsmartmedical";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
-// POST - Проверка пароля для входа в админ-панель (только для существующих админов)
+// POST - Проверка пароля для входа в админ-панель
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET
-    });
-
-    if (!token || !token.id) {
-      return NextResponse.json(
-        { error: "Не авторизован" },
-        { status: 401 }
-      );
-    }
-
-    const userId = parseInt(token.id as string);
-
-    // Проверяем, что пользователь уже имеет роль ADMIN
-    const user = await prisma.patient.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
-
-    if (!user || !["ADMIN", "CHIEF_DOCTOR", "OPERATOR"].includes(user.role)) {
-      return NextResponse.json(
-        { error: "Нет прав доступа" },
-        { status: 403 }
-      );
-    }
-
-    // Операторы не требуют проверки пароля - у них доступ только к чату
-    if (user.role === "OPERATOR") {
-      return NextResponse.json({
-        success: true,
-        user,
-        message: "Вход выполнен успешно"
-      });
-    }
-
-    // Для ADMIN и CHIEF_DOCTOR требуется пароль
     const { password } = await request.json();
 
     if (password !== ADMIN_PASSWORD) {
@@ -60,11 +19,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user,
       message: "Вход выполнен успешно"
     });
   } catch (error) {
-    console.error("Admin auth error:", error);
     return NextResponse.json(
       { error: "Ошибка при авторизации" },
       { status: 500 }
@@ -72,49 +29,29 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Проверка роли текущего пользователя
+// GET - Проверка доступа пользователя к админ-панели на основе роли
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET
-    });
+    const session = await getServerSession(authOptions);
 
-    if (!token || !token.id) {
-      return NextResponse.json(
-        { isAdmin: false, error: "Не авторизован" },
-        { status: 401 }
-      );
+    // Если нет сессии или пользователя
+    if (!session || !session.user) {
+      return NextResponse.json({
+        isAdmin: false
+      });
     }
 
-    const userId = parseInt(token.id as string);
-
-    const user = await prisma.patient.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { isAdmin: false, error: "Пользователь не найден" },
-        { status: 404 }
-      );
-    }
+    // Проверяем роль пользователя
+    const userRole = session.user.role;
+    const isAdminUser = hasAdminAccess(userRole);
 
     return NextResponse.json({
-      isAdmin: ["ADMIN", "CHIEF_DOCTOR", "OPERATOR"].includes(user.role),
-      isChiefDoctor: user.role === "CHIEF_DOCTOR",
-      isOperator: user.role === "OPERATOR",
-      role: user.role
+      isAdmin: isAdminUser,
+      role: userRole
     });
   } catch (error) {
-    console.error("Admin check error:", error);
-    return NextResponse.json(
-      { isAdmin: false, error: "Ошибка при проверке роли" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      isAdmin: false
+    });
   }
 }

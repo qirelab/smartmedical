@@ -14,29 +14,32 @@ datasource db {
 }
 
 model Service {
-  id             Int                   @id @default(autoincrement()) @map("service_id")
-  title          String
-  subtitle       String
-  price          Int
-  video_url      String
-  description    String                @db.Text
-  image_url      String
-  image_url_1    String
-  image_url_2    String
-  image_url_3    String
-  image_url_4    String?
-  questions_id   Int
-  reviews_id     Int
-  category_id    Int
+  id                   Int                   @id @default(autoincrement()) @map("service_id")
+  title                String
+  subtitle             String
+  price                Int
+  video_url            String
+  description          String                @db.Text
+  image_url            String
+  image_url_1          String
+  image_url_2          String
+  image_url_3          String
+  image_url_4          String?
+  questions_id         Int
+  reviews_id           Int
+  category_id          Int
+  service_category_id  Int?                  // Связь с ServiceCategory (новая структура)
 
   // Отношения
-  category       Category              @relation(fields: [category_id], references: [id])
-  specialists    ServiceSpecialist[]   // M:N со специалистами
-  questions      Question[]            // 1:M с вопросами
-  feedbacks      Feedback[]            // 1:M с отзывами
+  category             Category              @relation(fields: [category_id], references: [id])
+  serviceCategory      ServiceCategory?      @relation(fields: [service_category_id], references: [id])
+  specialists          ServiceSpecialist[]   // M:N со специалистами
+  questions            Question[]            // 1:M с вопросами
+  feedbacks            Feedback[]            // 1:M с отзывами
 
   @@map("services")
   @@index([category_id])
+  @@index([service_category_id])
 }
 
 // Таблица связей many-to-many между услугами и специалистами
@@ -63,43 +66,94 @@ model Category {
   @@index([slug])
 }
 
+// Древовидная структура меню услуг (для навигации)
+model ServiceCategory {
+  id          Int                @id @default(autoincrement()) @map("service_category_id")
+  name        String             // Название категории
+  slug        String             @unique // URL-friendly ID
+  icon        String?            // Название иконки (например "Baby", "Smile")
+  description String?            @db.Text // Описание категории
+  parent_id   Int?               // ID родительской категории (null для корневых)
+  order       Int                @default(0) // Порядок сортировки
+  is_active   Boolean            @default(true) // Активна ли категория
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+
+  // Самоссылка для древовидной структуры
+  parent      ServiceCategory?   @relation("ServiceCategoryTree", fields: [parent_id], references: [id], onDelete: Cascade)
+  children    ServiceCategory[]  @relation("ServiceCategoryTree")
+  services    Service[]          // Услуги в этой категории
+  specialists Specialist[]       // Специалисты в этой категории
+
+  @@map("service_categories")
+  @@index([parent_id])
+  @@index([slug])
+  @@index([is_active])
+  @@index([order])
+}
+
 model Specialist {
-  id                 Int        @id @default(autoincrement()) @map("specialists_id")
-  category_id        Int        @map("categori_id")
-  name               String
-  specialization     String
-  qualification      String
-  experience         Int
-  grade              Int
-  image_url          String
-  activity_area      String?
-  education_details  String?   @db.Text
-  conferences        String[]   @default([])
+  id                   Int                  @id @default(autoincrement()) @map("specialists_id")
+  category_id          Int?                 @map("categori_id") // Теперь необязательное (для обратной совместимости)
+  service_category_id  Int?                 // Новое поле для привязки к категории услуг
+  name                 String
+  specialization       String
+  qualification        String
+  experience           Int
+  grade                Int
+  image_url            String
+  activity_area        String?
+  education_details    String?              @db.Text
+  conferences          String[]             @default([])
   // Поля для структуры about
-  specializations    String[]   @default([])
-  education          String[]   @default([])
-  work_examples      Json?      // Для хранения массива { title: string; images: string[] }[]
+  specializations      String[]             @default([])
+  education            String[]             @default([])
+  work_examples        Json?                // Для хранения массива { title: string; images: string[] }[]
 
   // relations
-  category           Category             @relation(fields: [category_id], references: [id])
-  services           ServiceSpecialist[]  // M:N с услугами
+  category             Category?            @relation(fields: [category_id], references: [id])
+  serviceCategory      ServiceCategory?     @relation(fields: [service_category_id], references: [id])
+  services             ServiceSpecialist[]  // M:N с услугами
 
   @@map("specialists")
   @@index([category_id])
+  @@index([service_category_id])
+}
+
+// Категории вопросов (одноуровневая структура, без подкатегорий)
+model QuestionCategory {
+  id          Int        @id @default(autoincrement()) @map("question_category_id")
+  name        String     // Название категории
+  slug        String     @unique // URL-friendly ID
+  description String?    @db.Text // Описание категории
+  order       Int        @default(0) // Порядок сортировки
+  is_active   Boolean    @default(true) // Активна ли категория
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  questions   Question[] // Вопросы в этой категории
+
+  @@map("question_categories")
+  @@index([slug])
+  @@index([is_active])
+  @@index([order])
 }
 
 model Question {
-  id              Int          @id @default(autoincrement()) @map("questions_id")
-  question        String
-  answer          String?      @db.Text
-  category        String?      // Категория FAQ (slug из захардкоженного списка)
-  service_id      Int?         // Необязательный - для привязки к услуге
+  id                    Int                @id @default(autoincrement()) @map("questions_id")
+  question              String
+  answer                String?            @db.Text
+  category              String?            // Старое поле (будет удалено после миграции)
+  service_id            Int?               // Для привязки к услуге
+  question_category_id  Int?               // Для привязки к категории вопросов клиники
 
-  service         Service?     @relation(fields: [service_id], references: [id])
+  service               Service?           @relation(fields: [service_id], references: [id])
+  questionCategory      QuestionCategory?  @relation(fields: [question_category_id], references: [id])
 
   @@map("questions")
   @@index([service_id])
   @@index([category])
+  @@index([question_category_id])
 }
 
 model Feedback {

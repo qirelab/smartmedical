@@ -286,7 +286,7 @@ export function SMAlert({
             transition={{ delay: 0.3 }}
             onClick={onClose}
             className={cn(
-              'flex-shrink-0 rounded-lg p-1.5 transition-all duration-200',
+              'flex-shrink-0 rounded-lg cursor-pointer p-1.5 transition-all duration-200',
               'hover:bg-white/20 backdrop-blur-sm',
               config.colors.iconColor
             )}

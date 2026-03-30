@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(partners, { status: 200 });
   } catch (error) {
-    console.error("Error fetching partners:", error);
     return NextResponse.json(
       { error: "Failed to fetch partners" },
       { status: 500 }

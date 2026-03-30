@@ -25,6 +25,7 @@ import { AdminAccessSkeleton } from '@/components/SMAdmin/SMAdminSkeleton';
 import { ConfirmDialog } from '@/components/SMAdmin/SMConfirmDialog';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useAlert } from '@/components/common/SMAlert';
+import { useServerPagination } from '@/hooks/useServerPagination';
 
 interface Partner {
   id: number;
@@ -50,10 +51,13 @@ export default function AdminPartnersPage() {
 
   // Data states
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
+  const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl } = useServerPagination(12);
 
   // Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,6 +69,7 @@ export default function AdminPartnersPage() {
     image_url: '',
     website_url: '',
     number: '1',
+    category_id: '',
   });
 
   // Check admin role
@@ -75,13 +80,6 @@ export default function AdminPartnersPage() {
       setHasAdminRole(false);
     }
   }, [status]);
-
-  // Load data when session is verified
-  useEffect(() => {
-    if (sessionVerified && hasAdminRole) {
-      loadData();
-    }
-  }, [sessionVerified, hasAdminRole]);
 
   const checkAdminRole = async () => {
     try {
@@ -97,43 +95,58 @@ export default function AdminPartnersPage() {
     verifySession();
   };
 
+  const loadCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      if (res.ok) {
+        const data = await res.json();
+        // Фильтруем только категории партнёров
+        const partnerCategories = data.filter((cat: { slug: string }) =>
+          ['medical-labs', 'insurance', 'dental-labs'].includes(cat.slug)
+        );
+        setCategories(partnerCategories);
+      }
+    } catch (error) {
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/partners');
+      const apiUrl = buildApiUrl('/api/admin/partners', searchQuery);
+
+      const res = await fetch(apiUrl);
       if (res.ok) {
-        const data = await res.json();
-        setPartners(data);
+        const response = await res.json();
+        setPartners(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      showError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered partners
-  const filteredPartners = useMemo(() => {
-    if (!searchQuery) return partners;
-    const query = searchQuery.toLowerCase();
-    return partners.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query)
-    );
-  }, [partners, searchQuery]);
+  // Load categories once when session is verified
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole) {
+      loadCategories();
+    }
+  }, [sessionVerified, hasAdminRole]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load data when session is verified or page/search changes
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole) {
+      loadData();
+    }
+  }, [sessionVerified, hasAdminRole, currentPage, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset page when search changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredPartners.length / ITEMS_PER_PAGE);
-  const paginatedPartners = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredPartners.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredPartners, currentPage]);
+    setPage(1);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Form handlers
   const resetForm = () => {
@@ -143,6 +156,7 @@ export default function AdminPartnersPage() {
       image_url: '',
       website_url: '',
       number: '1',
+      category_id: '',
     });
     setEditingPartner(null);
     setIsModalOpen(false);
@@ -161,6 +175,7 @@ export default function AdminPartnersPage() {
       image_url: partner.image_url,
       website_url: partner.website_url,
       number: partner.number.toString(),
+      category_id: partner.category_id.toString(),
     });
     setIsModalOpen(true);
   };
@@ -247,14 +262,14 @@ export default function AdminPartnersPage() {
           <AdminSection
             title="Партнёры"
             icon={Handshake}
-            count={partners.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
             onAdd={handleAdd}
             addButtonText="Добавить партнёра"
           >
-            {filteredPartners.length === 0 ? (
+            {partners.length === 0 ? (
               <EmptyState
                 icon={Handshake}
                 title="Партнёры не найдены"
@@ -266,7 +281,7 @@ export default function AdminPartnersPage() {
               <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <AnimatePresence>
-                  {paginatedPartners.map((partner) => (
+                  {partners.map((partner) => (
                     <ItemCard key={partner.id}>
                       <div className="flex gap-4">
                         {/* Logo */}
@@ -293,6 +308,9 @@ export default function AdminPartnersPage() {
 
                       {/* Tags */}
                       <div className="flex items-center gap-2 mt-3">
+                        <Badge variant="primary">
+                          {partner.category.name}
+                        </Badge>
                         <Badge variant="secondary">
                           <Hash className="w-3 h-3 mr-1" />
                           {partner.number}
@@ -326,7 +344,7 @@ export default function AdminPartnersPage() {
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={setPage}
                   className="mt-6"
                 />
               )}
@@ -341,7 +359,7 @@ export default function AdminPartnersPage() {
             title={editingPartner ? 'Редактирование партнёра' : 'Новый партнёр'}
             onSubmit={handleSave}
             loading={formLoading}
-            disabled={!formData.name || !formData.description}
+            disabled={!formData.name || !formData.description || !formData.category_id}
           >
             <div className="space-y-6">
               <FormField label="Название" required>
@@ -379,6 +397,21 @@ export default function AdminPartnersPage() {
                   onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                   placeholder="https://example.com"
                 />
+              </FormField>
+
+              <FormField label="Категория" required>
+                <select
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#18A36C]/20 focus:border-[#18A36C] transition-all"
+                >
+                  <option value="">Выберите категорию</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
               </FormField>
 
               <FormField label="Порядковый номер">

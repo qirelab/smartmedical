@@ -1,6 +1,5 @@
 'use client'
 
-import { Breadcrumb } from '../../components/SMBreadcrumb/SMBreadcrumb';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/common/SMTabs/SMTabs';
 import { Button } from '../../components/common/SMButton/SMButton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/common/SMAccordion/SMAccordion';
@@ -9,7 +8,7 @@ import { Badge } from '../../components/common/SMBadge/SMBadge';
 import { ImageWithFallback } from '../../components/SMImage/ImageWithFallback';
 import { NavigableServicesMenu } from '../../components/SMServices/SMNavigableServicesMenu';
 import { ServicesContent } from '../../components/SMServices/SMServicesContent';
-import { useRouter } from "@/components/SMRouter/SMRouter";
+import { usePathname, useRouter } from 'next/navigation';
 import { SpecialistCard } from '../../components/SMDoctor/SMSpecialistCard';
 
 import { Star, Play, FileText, HelpCircle, MessageSquare, Users, ArrowRight, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -21,6 +20,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AskQuestionModal } from '@/components/AskQuestionModal/AskQuestionModal';
 import { useAskQuestionModal } from '@/hooks/useAskQuestionModal';
+import { LeaveReviewModal } from '@/components/SMClinic/LeaveReviewModal';
 
 // Функция для конвертации YouTube URL в embed формат
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -154,9 +154,8 @@ function PhotoModal({ images, currentIndex, isOpen, onClose, onNext, onPrev, tit
                         for (let i = 0; i < -diff; i++) onPrev();
                       }
                     }}
-                    className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
-                      idx === currentIndex ? 'border-[#18A36C] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
-                    }`}
+                    className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${idx === currentIndex ? 'border-[#18A36C] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
+                      }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -176,15 +175,23 @@ interface ServicePageProps {
 }
 
 export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
+  const router = useRouter();
   const [serviceData, setServiceData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showAllSpecialists, setShowAllSpecialists] = useState(false);
   const askQuestionModal = useAskQuestionModal();
 
   // Photo modal state
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // Reset showAllSpecialists when service changes
+  useEffect(() => {
+    setShowAllSpecialists(false);
+  }, [serviceId, categoryId]);
 
   const openPhotoModal = useCallback((index: number) => {
     setCurrentPhotoIndex(index);
@@ -209,187 +216,175 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
 
   useEffect(() => {
     async function fetchServiceData() {
-      try {
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setServiceData(null); // Clear previous data to show skeleton
 
-        // Пытаемся получить услугу из API
-        const response = await fetch(`/api/services/by-category/${categoryId}/${serviceId}`);
-        
-        if (response.ok) {
-          const serviceFromDB: ServiceFromDB = await response.json();
-          const mappedData = mapServiceFromDBToServiceData(serviceFromDB);
-          setServiceData(mappedData);
-        } else if (response.status === 404) {
-          // Если услуга не найдена в БД, используем статический fallback
-          const fallbackData = getServiceData(serviceId, categoryId);
-          setServiceData(fallbackData);
-        } else {
-          throw new Error('Failed to fetch service');
-        }
-      } catch (err) {
-        console.error('Error fetching service:', err);
-        // В случае ошибки используем статический fallback
+      // Пытаемся получить услугу из API
+      const response = await fetch(`/api/services/by-category/${categoryId}/${serviceId}`);
+
+      if (response.ok) {
+        const serviceFromDB: ServiceFromDB = await response.json();
+        const mappedData = mapServiceFromDBToServiceData(serviceFromDB);
+        setServiceData(mappedData);
+      } else {
+        // Если услуга не найдена в БД, используем статический fallback
         const fallbackData = getServiceData(serviceId, categoryId);
         setServiceData(fallbackData);
-        setError('Не удалось загрузить данные из базы. Используются статические данные.');
-      } finally {
-        setLoading(false);
       }
+
+      setLoading(false);
     }
 
     if (serviceId && categoryId) {
       fetchServiceData();
     } else {
       // Если нет serviceId или categoryId, используем fallback
-      setLoading(false);
       const fallbackData = getServiceData(serviceId || '', categoryId || '');
       setServiceData(fallbackData);
+      setLoading(false);
     }
   }, [serviceId, categoryId]);
 
-  // Показываем скелетон только если данные еще не загружены
-  if (loading && !serviceData) {
+  // Показываем скелетон при загрузке или если данных нет
+  if (loading || !serviceData) {
     return <ServicePageSkeleton />;
   }
 
-  // Если данных нет после загрузки, показываем fallback
-  if (!serviceData) {
-    const fallbackData = getServiceData(serviceId || '', categoryId || '');
-    return (
-      <div className="min-h-screen bg-white">
-        <Breadcrumb />
-        <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
-          <p className="text-gray-600">Услуга не найдена</p>
-        </div>
-      </div>
-    );
-  }
+  // Формируем breadcrumbs
+  const breadcrumbItems = [
+    { label: 'Услуги', href: '/services' },
+    { label: serviceData.category, href: `/services/${categoryId}` },
+    { label: serviceData.title }
+  ];
 
   return (
     <div className="min-h-screen bg-white">
-      {error && (
-        <div className="max-w-6xl mx-auto px-4 pt-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-yellow-800">{error}</p>
-          </div>
-        </div>
-      )}
-      <Breadcrumb />
-      
       <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
         <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6 lg:p-8 border border-gray-100">
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Badge variant="secondary" className="bg-[#18A36C]/10 text-[#18A36C]">
-                    {serviceData.category}
+          <div className="bg-white rounded-lg shadow-sm p-6 lg:p-8 border border-gray-100">
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <Badge variant="secondary" className="bg-[#18A36C]/10 text-[#18A36C]">
+                  {serviceData.category}
+                </Badge>
+                {serviceData.price && (
+                  <Badge className="bg-[#18A36C] text-white text-lg px-4 py-1">
+                    {serviceData.price}
                   </Badge>
-                  {serviceData.price && (
-                    <Badge className="bg-[#18A36C] text-white text-lg px-4 py-1">
-                      {serviceData.price}
-                    </Badge>
-                  )}
-                </div>
-                <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-4">{serviceData.title}</h1>
-                <p className="text-gray-600 leading-relaxed">
-                  {serviceData.description}
-                </p>
+                )}
               </div>
-
-              {/* Images Section */}
-              <div className="mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Main Image - always visible */}
-                  <div className="border border-[#E8E6E3] rounded-lg overflow-hidden">
-                    <ImageWithFallback
-                      src={serviceData.image}
-                      alt={serviceData.title}
-                      className="w-full h-64 md:h-80 object-cover"
-                    />
-                  </div>
-
-                  {/* Secondary Image - tablet and desktop, from gallery if available */}
-                  {serviceData.gallery && serviceData.gallery.length > 0 && (
-                    <div className="hidden md:block border border-[#E8E6E3] rounded-lg overflow-hidden">
-                      <ImageWithFallback
-                        src={serviceData.gallery[0]}
-                        alt={`${serviceData.title} - дополнительное изображение`}
-                        className="w-full h-80 object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-4">{serviceData.title}</h1>
+              <p className="text-gray-600 leading-relaxed">
+                {serviceData.description}
+              </p>
             </div>
 
-            <Card className="overflow-hidden border border-gray-100">
-              <Tabs defaultValue="description" className="w-full">
-                <div className="border-b border-gray-200">
-                  <TabsList className="grid w-full grid-cols-3 bg-white p-2 rounded-none h-auto gap-2">
-                    <TabsTrigger 
-                      value="description" 
-                      className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        Описание
-                        <FileText className="w-5 h-5" />
-                      </span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="faq" 
-                      className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="hidden sm:inline">Вопросы и ответы</span>
-                        <span className="sm:hidden">Вопросы</span>
-                        <HelpCircle className="w-5 h-5" />
-                      </span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="reviews" 
-                      className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        Отзывы
-                        <MessageSquare className="w-5 h-5" />
-                      </span>
-                    </TabsTrigger>
-                  </TabsList>
+            {/* Images Section */}
+            <div className="mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Main Image - always visible */}
+                <div className="border border-[#E8E6E3] rounded-lg overflow-hidden">
+                  <ImageWithFallback
+                    src={serviceData.image}
+                    alt={serviceData.title}
+                    className="w-full h-64 md:h-80 object-cover"
+                  />
                 </div>
-                
-                <TabsContent value="description" className="p-6 lg:p-8">
+
+                {/* Secondary Image - tablet and desktop, from gallery if available */}
+                {serviceData.gallery && serviceData.gallery.length > 0 && (
+                  <div className="hidden md:block border border-[#E8E6E3] rounded-lg overflow-hidden">
+                    <ImageWithFallback
+                      src={serviceData.gallery[0]}
+                      alt={`${serviceData.title} - дополнительное изображение`}
+                      className="w-full h-80 object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Card className="overflow-hidden border border-gray-100">
+            <Tabs defaultValue="description" className="w-full">
+              <div className="border-b border-gray-200">
+                <TabsList className="grid w-full grid-cols-3 bg-white p-2 rounded-none h-auto gap-2">
+                  <TabsTrigger
+                    value="description"
+                    className="data-[state=active]:bg-[#18A36C] focus:cursor-default data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all cursor-pointer duration-300 rounded-lg py-3 px-4"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      Описание
+                      <FileText className="w-5 h-5" />
+                    </span>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="faq"
+                    className="data-[state=active]:bg-[#18A36C] cursor-pointer focus:cursor-default data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="hidden sm:inline">Вопросы и ответы</span>
+                      <span className="sm:hidden">Вопросы</span>
+                      <HelpCircle className="w-5 h-5" />
+                    </span>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="reviews"
+                    className="data-[state=active]:bg-[#18A36C] cursor-pointer focus:cursor-default data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      Отзывы
+                      <MessageSquare className="w-5 h-5" />
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="description" className="p-6 lg:p-8">
+                {!serviceData.fullDescription || serviceData.fullDescription.trim() === '' ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Описание пока не добавлено
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4">
+                      Мы работаем над наполнением этого раздела. Пожалуйста, вернитесь позже.
+                    </p>
+                  </div>
+                ) : (
                   <div className="space-y-6">
                     <div className="prose max-w-none">
                       <p className="text-[#2E2E2E] leading-relaxed whitespace-pre-line">
                         {serviceData.fullDescription}
                       </p>
                     </div>
-                    
-                    {/* Секция видео - показываем только если есть валидное видео */}
-                    {(() => {
-                      const embedUrl = serviceData.videoUrl ? getYouTubeEmbedUrl(serviceData.videoUrl) : null;
-                      if (!embedUrl) return null;
 
-                      return (
-                        <div>
-                          <h3 className="text-lg text-[#2E2E2E] mb-4">Видео о процедуре</h3>
-                          <div className="relative">
-                            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                              <iframe
-                                src={embedUrl}
-                                className="w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                title="Видео о процедуре"
-                              />
-                            </div>
+                  {/* Секция видео - показываем только если есть валидное видео */}
+                  {(() => {
+                    const embedUrl = serviceData.videoUrl ? getYouTubeEmbedUrl(serviceData.videoUrl) : null;
+                    if (!embedUrl) return null;
+
+                    return (
+                      <div>
+                        <h3 className="text-lg text-[#2E2E2E] mb-4">Видео о процедуре</h3>
+                        <div className="relative">
+                          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                            <iframe
+                              src={embedUrl}
+                              className="w-full h-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              title="Видео о процедуре"
+                            />
                           </div>
                         </div>
-                      );
-                    })()}
+                      </div>
+                    );
+                  })()}
 
                     {/* Секция фотографий - показываем только если есть фото (кроме заглавной) */}
                     {serviceData.gallery && serviceData.gallery.length > 0 && (
@@ -422,9 +417,23 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
                       </div>
                     )}
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="faq" className="p-6 lg:p-8">
+                )}
+              </TabsContent>
+
+              <TabsContent value="faq" className="p-6 lg:p-8">
+                {!serviceData.faq || serviceData.faq.length === 0 ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <HelpCircle className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Вопросы пока не добавлены
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4">
+                      Мы работаем над наполнением этого раздела. Пожалуйста, вернитесь позже.
+                    </p>
+                  </div>
+                ) : (
                   <Accordion type="single" collapsible className="w-full">
                     {serviceData.faq.map((item, index) => (
                       <AccordionItem key={index} value={`item-${index}`}>
@@ -437,9 +446,30 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
                       </AccordionItem>
                     ))}
                   </Accordion>
-                </TabsContent>
-                
-                <TabsContent value="reviews" className="p-6 lg:p-8">
+                )}
+              </TabsContent>
+
+              <TabsContent value="reviews" className="p-6 lg:p-8">
+                {!serviceData.reviews || serviceData.reviews.length === 0 ? (
+                  <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl text-gray-800 mb-2">
+                      Отзывы пока не добавлены
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto px-4 mb-6">
+                      Станьте первым, кто оставит отзыв об этой услуге!
+                    </p>
+                    <Button
+                      onClick={() => setIsReviewModalOpen(true)}
+                      className="bg-[#18A36C] hover:bg-[#15905f] text-white px-6 sm:px-8 py-3 h-auto rounded-lg transition-all duration-300 cursor-pointer"
+                    >
+                      <Star className="w-5 h-5 mr-2" />
+                      Оставить отзыв
+                    </Button>
+                  </div>
+                ) : (
                   <div className="space-y-6">
                     {serviceData.reviews.map((review) => {
                       // Генерация инициалов из имени
@@ -452,116 +482,117 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
                       };
 
                       return (
-                      <div key={review.id} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center overflow-hidden">
-                              {review.image_url ? (
-                                <img
-                                  src={review.image_url}
-                                  alt={review.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-[#18A36C] font-medium">
-                                  {getInitials(review.name)}
-                                </span>
-                              )}
+                        <div key={review.id} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center overflow-hidden">
+                                {review.image_url ? (
+                                  <img
+                                    src={review.image_url}
+                                    alt={review.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-[#18A36C] font-medium">
+                                    {getInitials(review.name)}
+                                  </span>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-700">{review.name}</h4>
+                                <p className="text-sm text-gray-500">{review.date}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-gray-700">{review.name}</h4>
-                              <p className="text-sm text-gray-500">{review.date}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < review.rating
                                     ? 'fill-[#18A36C] text-[#18A36C]'
                                     : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
+                                    }`}
+                                />
+                              ))}
+                            </div>
                           </div>
+                          <p className="text-gray-700 leading-relaxed">{review.text}</p>
                         </div>
-                        <p className="text-gray-700 leading-relaxed">{review.text}</p>
-                      </div>
                       );
                     })}
-                    
+
                     <div className="text-center pt-6">
-                      <Button variant="outline" className="border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white">
+                      <Button variant="outline" className="border-[#18A36C] text-[#18A36C] hover:shadow-lg hover:shadow-[#18A36C]/20">
                         Показать все отзывы
                       </Button>
                     </div>
                   </div>
-                </TabsContent>
-              </Tabs>
-            </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+          </Card>
 
-            {serviceData.specialists.length > 0 && (
-              <Card className="p-6 lg:p-8 border border-gray-100">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl text-[#2E2E2E] mb-2">Наши специалисты</h3>
-                  <p className="text-gray-600">Профессиональная команда врачей высшей категории</p>
-                </div>
+          {serviceData.specialists.length > 0 && (
+            <Card className="p-6 lg:p-8 border border-gray-100">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl text-[#2E2E2E] mb-2">Наши специалисты</h3>
+                <p className="text-gray-600">Профессиональная команда врачей высшей категории</p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(showAllSpecialists ? serviceData.specialists : serviceData.specialists.slice(0, 2)).map((specialist, index) => (
-                    <SpecialistCard
-                      key={specialist.id}
-                      specialist={specialist}
-                      index={index}
-                      onDoctorClick={(doctorId) => {
-                        // Navigate to doctor page if needed
-                        console.log('Doctor clicked:', doctorId);
-                      }}
-                      onBookAppointment={(doctorId, doctorName) => {
-                        // Handle booking appointment
-                        console.log('Book appointment for:', doctorId, doctorName);
-                      }}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(showAllSpecialists ? serviceData.specialists : serviceData.specialists.slice(0, 2)).map((specialist, index) => (
+                  <SpecialistCard
+                    key={specialist.id}
+                    specialist={specialist}
+                    index={index}
+                    onDoctorClick={(doctorId) => {
+                      // Navigate to doctor page if needed
+                    }}
+                    onBookAppointment={(doctorId, doctorName) => {
+                      // Handle booking appointment
+                    }}
+                  />
+                ))}
+              </div>
 
-                <div className="flex flex-col items-center gap-4 mt-8">
-                  {serviceData.specialists.length > 2 && !showAllSpecialists && (
-                    <Button
-                      onClick={() => setShowAllSpecialists(true)}
-                      variant="outline"
-                      className="border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto transition-all duration-300"
-                    >
-                      Все специалисты по этой услуге
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  )}
+              <div className="flex flex-col items-center gap-4 mt-8">
+                {serviceData.specialists.length > 2 && !showAllSpecialists && (
+                  <Button
+                    onClick={() => setShowAllSpecialists(true)}
+                    variant="outline"
+                    className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto hover:shadow-xl hover:shadow-[#18A36C]/20"
+                  >
+                    Все специалисты по этой услуге
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                )}
 
-                  <Link href="/doctors" className="inline-flex items-center gap-2 text-[#18A36C] hover:text-[#18A36C]/80 transition-colors">
-                    <Users className="w-5 h-5" />
-                    <span className="text-lg">Показать всех специалистов</span>
-                  </Link>
-                </div>
-              </Card>
-            )}
-
-            <div className="p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
-              <div className="text-center">
-                <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
-                <h3 className="text-lg text-gray-700 mb-2">Не нашли ответа на свой вопрос?</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Свяжитесь с нами, и мы предоставим необходимую информацию.
-                </p>
                 <Button
-                  onClick={askQuestionModal.open}
-                  className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto"
+                  onClick={() => router.push('/doctors')}
+                  className="bg-[#18A36C] hover:bg-[#15905f] text-white px-8 py-4 h-auto rounded-xl transition-all duration-300 cursor-pointer"
                 >
-                  Задать вопрос
-                  <MessageSquare className="w-4 h-4 ml-[2.5px]" />
+                  <Users className="w-5 h-5 mr-2" />
+                  <span className="text-lg">Показать всех специалистов</span>
                 </Button>
               </div>
+            </Card>
+          )}
+
+          <div className="p-6 bg-gradient-to-r from-[#F4F4F4] to-white rounded-2xl border border-gray-100">
+            <div className="text-center">
+              <HelpCircle className="w-12 h-12 text-[#18A36C] mx-auto mb-3" />
+              <h3 className="text-lg text-gray-700 mb-2">Не нашли ответа на свой вопрос?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Свяжитесь с нами, и мы предоставим необходимую информацию.
+              </p>
+              <Button
+                onClick={askQuestionModal.open}
+                className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto"
+              >
+                Задать вопрос
+                <MessageSquare className="w-4 h-4 ml-[2.5px]" />
+              </Button>
             </div>
+          </div>
         </div>
       </div>
 
@@ -584,16 +615,22 @@ export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
         onClose={askQuestionModal.close}
         onComplete={() => {
           // Здесь можно добавить логику для открытия чата или другого действия
-          console.log('AI помощник готов к работе');
         }}
+      />
+
+      {/* Leave Review Modal */}
+      <LeaveReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
       />
     </div>
   );
 }
 
 export default function SMServicesPage() {
-  const { currentRoute } = useRouter();
-  const pathParts = currentRoute.replace(/^\/+|\/+$/g, '').split('/');
+  const pathname = usePathname();
+
+  const pathParts = pathname.replace(/^\/+|\/+$/g, '').split('/');
 
   let categoryId = '';
   let serviceId = '';
@@ -604,7 +641,7 @@ export default function SMServicesPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-        <NavigableServicesMenu />
+      <NavigableServicesMenu />
       <div className="flex-1">
         {categoryId && serviceId ? (
           <ServicePage categoryId={categoryId} serviceId={serviceId} />

@@ -65,7 +65,6 @@ export async function PUT(
 
     return NextResponse.json(feedback);
   } catch (error) {
-    console.error("Update feedback error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении отзыва" },
       { status: 500 }
@@ -93,7 +92,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Отзыв удален" });
   } catch (error) {
-    console.error("Delete feedback error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении отзыва" },
       { status: 500 }

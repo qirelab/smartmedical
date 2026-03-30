@@ -5,31 +5,39 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "6");
+    const skip = (page - 1) * limit;
 
-    let vacancies;
-
+    // Формируем условие фильтрации
+    const where: any = {};
     if (category) {
-      // Get vacancies by category
-      vacancies = await prisma.vacancy.findMany({
-        where: {
-          category: category
-        },
-        orderBy: {
-          id: 'desc'
-        }
-      });
-    } else {
-      // Get all vacancies
-      vacancies = await prisma.vacancy.findMany({
-        orderBy: {
-          id: 'desc'
-        }
-      });
+      where.category = category;
     }
 
-    return NextResponse.json(vacancies, { status: 200 });
+    // Получаем вакансии с пагинацией
+    const [vacancies, total] = await Promise.all([
+      prisma.vacancy.findMany({
+        where,
+        orderBy: {
+          id: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      prisma.vacancy.count({ where })
+    ]);
+
+    return NextResponse.json({
+      vacancies,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching vacancies:", error);
     return NextResponse.json(
       { error: "Failed to fetch vacancies" },
       { status: 500 }

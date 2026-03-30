@@ -19,7 +19,8 @@ import {
   TestTube,
   Activity,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Eye
 } from "lucide-react";
 import { Button } from "../common/SMButton/SMButton";
 import { useRouter as useSMRouter } from "../SMRouter/SMRouter";
@@ -28,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../common/SMTabs/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../common/SMCard/card";
 import { Alert, AlertDescription } from "../common/SMAlert/alert";
 import patientContentConfig from "@/config/patientContent.json";
+import { DocumentModal } from "./SMDocumentModal";
 
 interface ContactData {
   phone_number: string;
@@ -44,6 +46,10 @@ export function SMPatientContent() {
   const router = useRouter();
   const [contacts, setContacts] = useState<ContactData | null>(null);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
+  const [documentModal, setDocumentModal] = useState<{
+    isOpen: boolean;
+    type: 'contract' | 'privacy' | 'consent' | null;
+  }>({ isOpen: false, type: null });
 
   // Load contacts from API
   useEffect(() => {
@@ -52,13 +58,10 @@ export function SMPatientContent() {
         const response = await fetch('/api/contacts');
         if (response.ok) {
           const data = await response.json();
-          console.log('Loaded contacts from API:', data);
           setContacts(data);
         } else {
-          console.error('Failed to load contacts:', response.status);
         }
       } catch (error) {
-        console.error('Error loading contacts:', error);
       } finally {
         setIsLoadingContacts(false);
       }
@@ -103,7 +106,7 @@ export function SMPatientContent() {
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-2 bg-white rounded-lg gap-2">
           <TabsTrigger
             value="appointment"
-            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 data-[state=inactive]:cursor-pointer transition-all duration-300 rounded-lg py-3 px-4"
           >
             <span className="hidden sm:inline">{patientContentConfig.tabs.appointment.label}</span>
             <span className="sm:hidden">{patientContentConfig.tabs.appointment.labelShort}</span>
@@ -111,7 +114,7 @@ export function SMPatientContent() {
           </TabsTrigger>
           <TabsTrigger
             value="preparation"
-            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 data-[state=inactive]:cursor-pointer transition-all duration-300 rounded-lg py-3 px-4"
           >
             <span className="hidden sm:inline">{patientContentConfig.tabs.preparation.label}</span>
             <span className="sm:hidden">{patientContentConfig.tabs.preparation.labelShort}</span>
@@ -119,7 +122,7 @@ export function SMPatientContent() {
           </TabsTrigger>
           <TabsTrigger
             value="documents"
-            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 data-[state=inactive]:cursor-pointer transition-all duration-300 rounded-lg py-3 px-4"
           >
             <span className="hidden sm:inline">{patientContentConfig.tabs.documents.label}</span>
             <span className="sm:hidden">{patientContentConfig.tabs.documents.labelShort}</span>
@@ -127,7 +130,7 @@ export function SMPatientContent() {
           </TabsTrigger>
           <TabsTrigger
             value="payment"
-            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 transition-all duration-300 rounded-lg py-3 px-4"
+            className="data-[state=active]:bg-[#18A36C] data-[state=active]:text-white data-[state=active]:border-[#18A36C] data-[state=inactive]:text-[#2E2E2E] data-[state=inactive]:hover:text-[#18A36C] data-[state=inactive]:hover:bg-[#18A36C]/5 data-[state=inactive]:hover:border-[#18A36C] data-[state=inactive]:border-2 data-[state=inactive]:border-gray-300 data-[state=inactive]:cursor-pointer transition-all duration-300 rounded-lg py-3 px-4"
           >
             {patientContentConfig.tabs.payment.label}
             <CreditCard className="w-5 h-5 ml-[2.5px]" />
@@ -274,7 +277,7 @@ export function SMPatientContent() {
                 <p className="text-gray-600 mb-8 text-lg">{patientContentConfig.appointment.ctaSubtitle}</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button
-                    className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#18A36C] hover:bg-[#15905f] text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     onClick={() => {
                       if (contacts?.phone_number) {
                         const phoneNumber = contacts.phone_number.replace(/[\s\-()]/g, '');
@@ -289,7 +292,7 @@ export function SMPatientContent() {
                   <Button
                     onClick={() => router.push('/contacts')}
                     variant="outline"
-                    className="border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300"
+                    className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20"
                   >
                     {patientContentConfig.appointment.onlineBookingButton}
                     <ArrowRight className="w-5 h-5 ml-[2.5px]" />
@@ -445,11 +448,11 @@ export function SMPatientContent() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 mt-auto"
-                    onClick={() => window.open('/documents/contract.pdf', '_blank')}
+                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                    onClick={() => setDocumentModal({ isOpen: true, type: 'contract' })}
                   >
                     {patientContentConfig.documentsTab.contractButton}
-                    <Download className="w-5 h-5 ml-[2.5px]" />
+                    <Eye className="w-5 h-5 ml-[2.5px]" />
                   </Button>
                 </CardContent>
               </Card>
@@ -470,11 +473,11 @@ export function SMPatientContent() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 mt-auto"
-                    onClick={() => window.open('/documents/privacy-policy.pdf', '_blank')}
+                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                    onClick={() => setDocumentModal({ isOpen: true, type: 'privacy' })}
                   >
                     {patientContentConfig.documentsTab.privacyPolicyButton}
-                    <ExternalLink className="w-5 h-5 ml-[2.5px]" />
+                    <Eye className="w-5 h-5 ml-[2.5px]" />
                   </Button>
                 </CardContent>
               </Card>
@@ -517,11 +520,11 @@ export function SMPatientContent() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 mt-auto"
-                    onClick={() => window.open('/documents/consent-form.pdf', '_blank')}
+                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                    onClick={() => setDocumentModal({ isOpen: true, type: 'consent' })}
                   >
                     {patientContentConfig.documentsTab.consentButton}
-                    <Download className="w-5 h-5 ml-[2.5px]" />
+                    <Eye className="w-5 h-5 ml-[2.5px]" />
                   </Button>
                 </CardContent>
               </Card>
@@ -582,8 +585,8 @@ export function SMPatientContent() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 mt-auto"
-                    onClick={() => navigate('/prices')}
+                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                    onClick={() => router.push('/services')}
                   >
                     {patientContentConfig.payment.pricesButton}
                     <ArrowRight className="w-5 h-5 ml-[2.5px]" />
@@ -607,8 +610,8 @@ export function SMPatientContent() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 mt-auto"
-                    onClick={() => navigate('/clinic/partners/insurance')}
+                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                    onClick={() => router.push('/clinic/partners/insurance')}
                   >
                     {patientContentConfig.payment.insuranceButton}
                     <ArrowRight className="w-5 h-5 ml-[2.5px]" />
@@ -619,6 +622,15 @@ export function SMPatientContent() {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      {/* Document Modal */}
+      {documentModal.type && (
+        <DocumentModal
+          isOpen={documentModal.isOpen}
+          onClose={() => setDocumentModal({ isOpen: false, type: null })}
+          documentType={documentModal.type}
+        />
+      )}
     </div>
   );
 }

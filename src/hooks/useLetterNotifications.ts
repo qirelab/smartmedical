@@ -103,7 +103,6 @@ export function useLetterNotifications() {
       // Update last check time
       localStorage.setItem(LAST_CHECK_KEY, new Date().toISOString());
     } catch (error) {
-      console.error('Error checking for letter notifications:', error);
     }
   }, [session, status, alert, playNotificationSound]);
 

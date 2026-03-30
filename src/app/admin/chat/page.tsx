@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +12,7 @@ import { Button } from '@/components/common/SMButton/SMButton';
 import { ChatModal } from '@/components/SMAdmin/ChatModal';
 import { useAlert } from '@/components/common/SMAlert/AlertProvider';
 import { Pagination } from '@/components/common/SMPagination/SMPagination';
+import { useUrlPagination } from '@/hooks/useUrlPagination';
 
 interface ChatMessage {
   id: number;
@@ -67,7 +70,8 @@ export default function AdminChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'WAITING' | 'ACTIVE' | 'CLOSED' | 'BLOCKED'>('ALL');
   const [unblockingUserId, setUnblockingUserId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination hook
+  const { currentPage, setPage, paginateData } = useUrlPagination(9);
   const ITEMS_PER_PAGE = 9;
 
   // Check admin role
@@ -78,7 +82,6 @@ export default function AdminChatPage() {
       const data = await res.json();
       setHasAdminRole(data.isAdmin || false);
     } catch (error) {
-      console.error('Error checking admin role:', error);
       setHasAdminRole(false);
     } finally {
       setIsCheckingRole(false);
@@ -106,7 +109,6 @@ export default function AdminChatPage() {
         alert.error('Не удалось загрузить чаты', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error loading chats:', error);
       alert.error('Ошибка при загрузке чатов', 'Ошибка');
     } finally {
       setLoading(false);
@@ -124,7 +126,6 @@ export default function AdminChatPage() {
         alert.error('Не удалось загрузить заблокированных пользователей', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error loading blocked users:', error);
       alert.error('Ошибка при загрузке заблокированных пользователей', 'Ошибка');
     }
   }, [alert]);
@@ -147,7 +148,6 @@ export default function AdminChatPage() {
         alert.error(data.error || 'Не удалось разблокировать пользователя', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error unblocking user:', error);
       alert.error('Ошибка при разблокировке пользователя', 'Ошибка');
     } finally {
       setUnblockingUserId(null);
@@ -171,8 +171,8 @@ export default function AdminChatPage() {
 
   // Reset page when filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filterStatus]);
+    setPage(1);
+  }, [filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show loading skeleton while checking role
   if (status === 'loading' || hasAdminRole === null || isCheckingRole) {
@@ -190,7 +190,7 @@ export default function AdminChatPage() {
       case 'WAITING':
         return <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">Ожидает</Badge>;
       case 'ACTIVE':
-        return <Badge variant="default" className="bg-emerald-500 text-white border-transparent shadow-sm">Активный</Badge>;
+        return <Badge variant="default" className="bg-[#18A36C] text-white border-transparent shadow-sm">Активный</Badge>;
       case 'CLOSED':
         return <Badge variant="secondary" className="bg-gray-200 text-gray-700">Закрыт</Badge>;
       default:
@@ -241,7 +241,7 @@ export default function AdminChatPage() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center shadow-md">
                 <MessagesSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
@@ -252,7 +252,7 @@ export default function AdminChatPage() {
             <Button
               variant="outline"
               onClick={() => router.push('/admin')}
-              className="flex items-center gap-2 hover:bg-gray-50 self-start sm:self-auto"
+              className="flex items-center gap-2 hover:bg-gray-50 self-start sm:self-auto cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Назад в админ-панель</span>
@@ -265,35 +265,35 @@ export default function AdminChatPage() {
             <Button
               variant={filterStatus === 'ALL' ? 'default' : 'outline'}
               onClick={() => setFilterStatus('ALL')}
-              className={filterStatus === 'ALL' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-sm text-white' : 'hover:bg-gray-50'}
+              className={filterStatus === 'ALL' ? 'bg-[#18A36C] hover:bg-[#15905f] shadow-sm text-white cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'}
             >
               Все ({chats.length})
             </Button>
             <Button
               variant={filterStatus === 'WAITING' ? 'default' : 'outline'}
               onClick={() => setFilterStatus('WAITING')}
-              className={filterStatus === 'WAITING' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-sm text-white' : 'hover:bg-gray-50'}
+              className={filterStatus === 'WAITING' ? 'bg-[#18A36C] hover:bg-[#15905f] shadow-sm text-white cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'}
             >
               Ожидают ({waitingCount})
             </Button>
             <Button
               variant={filterStatus === 'ACTIVE' ? 'default' : 'outline'}
               onClick={() => setFilterStatus('ACTIVE')}
-              className={filterStatus === 'ACTIVE' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-sm text-white' : 'hover:bg-gray-50'}
+              className={filterStatus === 'ACTIVE' ? 'bg-[#18A36C] hover:bg-[#15905f] shadow-sm text-white cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'}
             >
               Активные ({activeCount})
             </Button>
             <Button
               variant={filterStatus === 'CLOSED' ? 'default' : 'outline'}
               onClick={() => setFilterStatus('CLOSED')}
-              className={filterStatus === 'CLOSED' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-sm text-white' : 'hover:bg-gray-50'}
+              className={filterStatus === 'CLOSED' ? 'bg-[#18A36C] hover:bg-[#15905f] shadow-sm text-white cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'}
             >
               Закрытые
             </Button>
             <Button
               variant={filterStatus === 'BLOCKED' ? 'default' : 'outline'}
               onClick={() => setFilterStatus('BLOCKED')}
-              className={filterStatus === 'BLOCKED' ? 'bg-red-500 hover:bg-red-600 shadow-sm text-white' : 'hover:bg-gray-50 text-red-600 border-red-300'}
+              className={filterStatus === 'BLOCKED' ? 'bg-red-500 hover:bg-red-600 shadow-sm text-white cursor-pointer' : 'hover:bg-gray-50 text-red-600 border-red-300 cursor-pointer'}
             >
               Заблокированные ({blockedCount})
             </Button>
@@ -371,7 +371,7 @@ export default function AdminChatPage() {
                     <Button
                       onClick={() => handleUnblockUser(user.id)}
                       disabled={unblockingUserId === user.id}
-                      className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1.5 flex items-center gap-1.5"
+                      className="bg-[#18A36C] hover:bg-[#15905f] text-white text-xs px-3 py-1.5 flex items-center gap-1.5 cursor-pointer"
                     >
                       {unblockingUserId === user.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -390,7 +390,7 @@ export default function AdminChatPage() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalBlockedPages}
-                onPageChange={setCurrentPage}
+                onPageChange={setPage}
                 className="mt-6"
               />
             )}
@@ -422,8 +422,8 @@ export default function AdminChatPage() {
                   key={chat.id}
                   className={`bg-white rounded-xl p-5 border-2 transition-all cursor-pointer ${
                     chat.has_unread_operator
-                      ? 'border-emerald-400 bg-emerald-50/30 shadow-sm hover:shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:shadow-md'
+                      ? 'border-[#18A36C] bg-[#18A36C]/5 shadow-sm hover:shadow-md'
+                      : 'border-gray-200 hover:border-[#18A36C]/50 hover:shadow-md'
                   }`}
                   onClick={() => setSelectedChatId(chat.id)}
                 >
@@ -437,7 +437,7 @@ export default function AdminChatPage() {
                           className="w-12 h-12 rounded-full object-cover shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-full flex items-center justify-center shadow-sm">
                           <User className="w-6 h-6 text-white" />
                         </div>
                       )}
@@ -477,7 +477,7 @@ export default function AdminChatPage() {
                       <span>{chat.last_message_at ? getTimeAgo(chat.last_message_at) : 'Нет сообщений'}</span>
                     </div>
                     {chat.has_unread_operator ? (
-                      <span className="text-emerald-600 font-semibold">Новое</span>
+                      <span className="text-[#18A36C] font-semibold">Новое</span>
                     ) : (
                       <CheckCheck className="w-4 h-4 text-gray-400" />
                     )}
@@ -491,7 +491,7 @@ export default function AdminChatPage() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalChatPages}
-                onPageChange={setCurrentPage}
+                onPageChange={setPage}
                 className="mt-6"
               />
             )}

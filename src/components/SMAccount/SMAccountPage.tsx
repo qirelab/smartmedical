@@ -63,10 +63,8 @@ export function SMAccountPage() {
         const data = await response.json();
         setUser(data.user);
       } else {
-        console.error("Failed to fetch user data");
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -245,7 +243,7 @@ export function SMAccountPage() {
                     <p className="text-[#2E2E2E] text-lg">{user.login || "Не указано"}</p>
                   </div>
                 </div>
-                <Button className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white">
+                <Button className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white cursor-pointer">
                   Редактировать профиль
                 </Button>
               </CardContent>
@@ -295,7 +293,7 @@ export function SMAccountPage() {
                       {appointment.status === "confirmed" && (
                         <Button
                           variant="outline"
-                          className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                          className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white cursor-pointer"
                         >
                           <XCircle className="w-4 h-4 mr-2" />
                           Отменить
@@ -308,7 +306,7 @@ export function SMAccountPage() {
             ))}
             <Button
               onClick={() => router.push('/contacts')}
-              className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
+              className="w-full bg-[#18A36C] hover:bg-[#18A36C]/90 text-white cursor-pointer"
             >
               Связаться с нами
             </Button>
@@ -341,7 +339,7 @@ export function SMAccountPage() {
                     </div>
                     <Button
                       variant="outline"
-                      className="border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white"
+                      className="border-[#18A36C] text-[#18A36C] cursor-pointer"
                     >
                       Скачать
                     </Button>
@@ -369,20 +367,20 @@ export function SMAccountPage() {
                 <div className="space-y-4">
                   <Button
                     variant="outline"
-                    className="w-full justify-start border-gray-300 text-[#2E2E2E] hover:border-[#18A36C] hover:text-[#18A36C]"
+                    className="w-full justify-start border-gray-300 text-[#2E2E2E] hover:border-[#18A36C] hover:text-[#18A36C] cursor-pointer"
                   >
                     Изменить пароль
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full justify-start border-gray-300 text-[#2E2E2E] hover:border-[#18A36C] hover:text-[#18A36C]"
+                    className="w-full justify-start border-gray-300 text-[#2E2E2E] hover:border-[#18A36C] hover:text-[#18A36C] cursor-pointer"
                   >
                     Настройки уведомлений
                   </Button>
                   <Button
                     onClick={handleLogoutClick}
                     variant="outline"
-                    className="w-full justify-start border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500"
+                    className="w-full justify-start border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Выйти из аккаунта

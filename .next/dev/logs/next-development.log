@@ -1,0 +1,54 @@
+[00:00:01.336] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.532] Server  LOG      ✓ Ready in 1209ms
+[00:00:05.455] Server  LOG      ○ Compiling / ...
+[00:00:07.098] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.834] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:08.017] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:08.184] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:09.572] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:09.601] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
+https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCTYPE "... is not valid JSON {"error":{"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","name":"SyntaxError","stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"},"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","url":"/api/auth/session"}
+[00:00:09.711] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:09.809] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:09.857] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.050] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:44.221] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.263] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.363] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.403] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.489] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.549] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:44.556] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
+https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCTYPE "... is not valid JSON {"error":{"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","name":"SyntaxError","stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"},"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","url":"/api/auth/session"}
+[00:00:44.590] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:47.469] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:00:47.526] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:15.115] Server  LOG      ✓ Compiled in 366ms
+[00:07:15.618] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:15.827] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:15.898] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:15.937] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:16.047] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:16.131] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:16.182] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:07:16.730] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
+https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCTYPE "... is not valid JSON {"error":{"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","name":"SyntaxError","stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"},"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","url":"/api/auth/session"}
+[00:08:17.637] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:08:17.697] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:08:17.776] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:08:17.817] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:51.700] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:52.084] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.129] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.214] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.252] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.324] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.395] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.424] Server  ERROR    ⨯ Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+[00:09:52.720] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
+https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCTYPE "... is not valid JSON {"error":{"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","name":"SyntaxError","stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"},"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","url":"/api/auth/session"}
+[00:27:23.282] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:27:23.292] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:27:23.326] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:27:23.356] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:27:24.463] Server  LOG      ✓ Compiled in 843ms

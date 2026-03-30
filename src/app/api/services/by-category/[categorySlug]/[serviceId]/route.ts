@@ -9,17 +9,26 @@ export async function GET(
   try {
     const { categorySlug, serviceId } = await params;
 
-    // Сначала находим категорию по slug
-    const category = await prisma.category.findUnique({
+    // Сначала пытаемся найти в новой структуре ServiceCategory
+    // @ts-ignore
+    const serviceCategory = await prisma.serviceCategory.findUnique({
       where: { slug: categorySlug },
     });
 
-    if (!category) {
+    // Если не нашли в ServiceCategory, ищем в старой структуре Category
+    const category = serviceCategory ? null : await prisma.category.findUnique({
+      where: { slug: categorySlug },
+    });
+
+    if (!serviceCategory && !category) {
       return NextResponse.json(
         { error: 'Category not found' },
         { status: 404 }
       );
     }
+
+    // Определяем какой category_id использовать для поиска услуг
+    const categoryIdForSearch = serviceCategory ? serviceCategory.id : category?.id;
 
     // Пытаемся определить, является ли serviceId числом (id) или строкой (название)
     const serviceIdNumber = parseInt(serviceId);
@@ -29,13 +38,18 @@ export async function GET(
 
     if (isNumericId) {
       // Если serviceId - число, ищем по id
+      // Ищем либо по category_id (старая структура) либо по service_category_id (новая структура)
       service = await prisma.service.findFirst({
         where: {
           id: serviceIdNumber,
-          category_id: category.id,
+          OR: [
+            { category_id: category?.id },
+            { service_category_id: serviceCategory?.id },
+          ].filter(condition => Object.values(condition)[0] !== undefined),
         },
         include: {
           category: true,
+          serviceCategory: true,
           specialists: {
             include: {
               specialist: {
@@ -68,10 +82,14 @@ export async function GET(
       // Получаем все услуги категории
       const servicesRaw = await prisma.service.findMany({
         where: {
-          category_id: category.id,
+          OR: [
+            { category_id: category?.id },
+            { service_category_id: serviceCategory?.id },
+          ].filter(condition => Object.values(condition)[0] !== undefined),
         },
         include: {
           category: true,
+          serviceCategory: true,
           specialists: {
             include: {
               specialist: {
@@ -216,7 +234,6 @@ export async function GET(
 
     return NextResponse.json(service);
   } catch (error) {
-    console.error('Error fetching service:', error);
     return NextResponse.json(
       { error: 'Failed to fetch service' },
       { status: 500 }

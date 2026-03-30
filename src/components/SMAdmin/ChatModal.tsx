@@ -80,7 +80,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error('Не удалось загрузить чат', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error loading chat:', error);
       alert.error('Ошибка при загрузке чата', 'Ошибка');
     } finally {
       setLoading(false);
@@ -113,7 +112,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error('Не удалось взять чат', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error taking chat:', error);
       alert.error('Ошибка при взятии чата', 'Ошибка');
     }
   };
@@ -133,7 +131,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error('Не удалось закрыть чат', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error closing chat:', error);
       alert.error('Ошибка при закрытии чата', 'Ошибка');
     }
   };
@@ -174,7 +171,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error(data.error || 'Не удалось ' + (action === 'block' ? 'заблокировать' : 'разблокировать') + ' пользователя', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error blocking/unblocking user:', error);
       alert.error('Ошибка при блокировке/разблокировке', 'Ошибка');
     } finally {
       setBlocking(false);
@@ -204,7 +200,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error(data.error || 'Не удалось удалить чат', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error deleting chat:', error);
       alert.error('Ошибка при удалении чата', 'Ошибка');
     } finally {
       setDeleting(false);
@@ -230,7 +225,6 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
         alert.error(data.error || 'Не удалось отправить сообщение', 'Ошибка');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
       alert.error('Ошибка при отправке сообщения', 'Ошибка');
     } finally {
       setSending(false);
@@ -249,7 +243,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
       case 'WAITING':
         return <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">Ожидает</Badge>;
       case 'ACTIVE':
-        return <Badge variant="default" className="bg-emerald-500 text-white border-transparent shadow-sm">Активный</Badge>;
+        return <Badge variant="default" className="bg-[#18A36C] text-white border-transparent shadow-sm">Активный</Badge>;
       case 'CLOSED':
         return <Badge variant="secondary" className="bg-gray-200 text-gray-700">Закрыт</Badge>;
       default:
@@ -321,7 +315,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                       {chat.status === 'WAITING' && (
                         <Button
                           onClick={handleTakeChat}
-                          className="bg-[#18A36C] text-white hover:bg-[#15905f] shadow-sm"
+                          className="bg-[#18A36C] text-white hover:bg-[#15905f] shadow-sm cursor-pointer"
                         >
                           Взять чат
                         </Button>
@@ -330,7 +324,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                         <Button
                           onClick={handleCloseChat}
                           variant="outline"
-                          className="text-gray-700 border-gray-300 hover:bg-gray-50"
+                          className="text-gray-700 border-gray-300 cursor-pointer"
                         >
                           Закрыть чат
                         </Button>
@@ -340,15 +334,15 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                   <button
                     onClick={handleDeleteChat}
                     title="Удалить чат"
-                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-all bg-red-50 text-red-600 hover:bg-red-100"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-all bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleBlockUser}
                     title={chat.patient.is_messages_blocked ? 'Разблокировать' : 'Заблокировать'}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${chat.patient.is_messages_blocked
-                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer ${chat.patient.is_messages_blocked
+                      ? 'bg-[#18A36C]/10 text-[#18A36C] hover:bg-[#18A36C]/20'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
@@ -360,7 +354,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                   </button>
                   <button
                     onClick={onClose}
-                    className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                    className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -385,7 +379,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                     ) : (
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.sender_type === 'operator'
-                          ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                          ? 'bg-gradient-to-br from-[#18A36C] to-[#15905f]'
                           : 'bg-gradient-to-br from-gray-400 to-gray-500'
                           }`}
                       >
@@ -399,7 +393,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                     <div className={`max-w-[70%] ${msg.sender_type === 'operator' ? 'items-end' : 'items-start'} flex flex-col`}>
                       <div
                         className={`rounded-2xl p-4 shadow-sm ${msg.sender_type === 'operator'
-                          ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white'
+                          ? 'bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white'
                           : 'bg-white text-gray-800 border border-gray-200'
                           }`}
                       >
@@ -409,7 +403,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                         <Clock className="w-3 h-3 text-gray-400" />
                         <span className="text-xs text-gray-500">{formatTime(msg.created_at)}</span>
                         {msg.sender_type === 'operator' && msg.is_read && (
-                          <CheckCheck className="w-4 h-4 text-emerald-500" />
+                          <CheckCheck className="w-4 h-4 text-[#18A36C]" />
                         )}
                       </div>
                     </div>
@@ -429,12 +423,12 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                       onKeyPress={handleKeyPress}
                       placeholder="Напишите сообщение..."
                       disabled={sending}
-                      className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all disabled:opacity-50"
+                      className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#18A36C] focus:border-transparent transition-all disabled:opacity-50"
                     />
                     <button
                       onClick={handleSendMessage}
                       disabled={sending || !message.trim()}
-                      className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center text-white hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
                     >
                       {sending ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -506,7 +500,7 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                   variant="outline"
                   onClick={() => setShowBlockConfirm(false)}
                   disabled={blocking}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
                 >
                   Отмена
                 </Button>
@@ -515,8 +509,8 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                   disabled={blocking}
                   className={
                     chat.patient.is_messages_blocked
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-md flex items-center gap-2'
-                      : 'bg-gray-700 hover:bg-gray-800 text-white shadow-md flex items-center gap-2'
+                      ? 'bg-[#18A36C] hover:bg-[#15905f] text-white shadow-md flex items-center gap-2 cursor-pointer'
+                      : 'bg-gray-700 hover:bg-gray-800 text-white shadow-md flex items-center gap-2 cursor-pointer'
                   }
                 >
                   {blocking && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -571,14 +565,14 @@ export function ChatModal({ chatId, onClose }: ChatModalProps) {
                   variant="outline"
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
                 >
                   Отмена
                 </Button>
                 <Button
                   onClick={confirmDeleteChat}
                   disabled={deleting}
-                  className="bg-red-500 hover:bg-red-600 text-white shadow-md flex items-center gap-2"
+                  className="bg-red-500 hover:bg-red-600 text-white shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Удалить

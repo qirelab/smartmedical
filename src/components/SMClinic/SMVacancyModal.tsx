@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { DollarSign, Briefcase, Clock, CheckCircle2, Phone, Mail, X, Gift } from 'lucide-react';
+import { useContacts } from '@/hooks/useContacts';
 
 interface Vacancy {
   id: number;
@@ -20,10 +21,18 @@ interface VacancyModalProps {
 }
 
 export function VacancyModal({ vacancy, open, onOpenChange }: VacancyModalProps) {
+  const { contacts } = useContacts();
+
   if (!vacancy) return null;
 
   // Разбираем требования на массив
   const requirementsList = vacancy.requirements.split('\n').filter(r => r.trim());
+
+  // Подготавливаем контактные данные
+  const phoneNumber = contacts?.phone_number || '+375(29)161-01-01';
+  const email = contacts?.email || 'smartmedical.by@gmail.com';
+  const phoneLink = phoneNumber.replace(/[^\d+]/g, '');
+  const phoneDisplay = phoneNumber;
 
   return (
     <AnimatePresence>
@@ -186,7 +195,7 @@ export function VacancyModal({ vacancy, open, onOpenChange }: VacancyModalProps)
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <a
-                    href="tel:+375291610101"
+                    href={`tel:${phoneLink}`}
                     className="flex items-center gap-3 text-[#18A36C] hover:text-[#18A36C]/80 transition-all duration-200 group bg-gradient-to-br from-[#18A36C]/5 to-transparent p-4 rounded-xl border border-[#18A36C]/10 hover:border-[#18A36C]/30"
                   >
                     <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
@@ -194,12 +203,12 @@ export function VacancyModal({ vacancy, open, onOpenChange }: VacancyModalProps)
                     </div>
                     <div>
                       <div className="text-sm text-gray-600">Телефон</div>
-                      <div className="font-semibold">+375(29)161-01-01</div>
+                      <div className="font-semibold">{phoneDisplay}</div>
                     </div>
                   </a>
 
                   <a
-                    href={`mailto:smartmedical.by@gmail.com?subject=Отклик на вакансию: ${vacancy.name}`}
+                    href={`mailto:${email}?subject=Отклик на вакансию: ${vacancy.name}`}
                     className="flex items-center gap-3 text-[#18A36C] hover:text-[#18A36C]/80 transition-all duration-200 group bg-gradient-to-br from-[#18A36C]/5 to-transparent p-4 rounded-xl border border-[#18A36C]/10 hover:border-[#18A36C]/30"
                   >
                     <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
@@ -207,7 +216,7 @@ export function VacancyModal({ vacancy, open, onOpenChange }: VacancyModalProps)
                     </div>
                     <div>
                       <div className="text-sm text-gray-600">Email</div>
-                      <div className="font-semibold text-sm">smartmedical.by@gmail.com</div>
+                      <div className="font-semibold text-sm">{email}</div>
                     </div>
                   </a>
                 </div>
@@ -221,14 +230,14 @@ export function VacancyModal({ vacancy, open, onOpenChange }: VacancyModalProps)
                 className="pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-3"
               >
                 <button
-                  onClick={() => window.location.href = 'tel:+375291610101'}
+                  onClick={() => window.location.href = `tel:${phoneLink}`}
                   className="w-full bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#18A36C] text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Phone className="w-5 h-5" />
                   Позвонить
                 </button>
                 <button
-                  onClick={() => window.location.href = `mailto:smartmedical.by@gmail.com?subject=Отклик на вакансию: ${vacancy.name}`}
+                  onClick={() => window.location.href = `mailto:${email}?subject=Отклик на вакансию: ${vacancy.name}`}
                   className="w-full bg-white hover:bg-gradient-to-r hover:from-[#18A36C] hover:to-[#15905f] border-2 border-[#18A36C] text-[#18A36C] hover:text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Mail className="w-5 h-5" />

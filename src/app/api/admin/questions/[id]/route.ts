@@ -47,17 +47,20 @@ export async function PUT(
         answer: data.answer || null,
         category: data.category || null,
         service_id: data.service_id ? parseInt(data.service_id) : null,
+        question_category_id: data.question_category_id ? parseInt(data.question_category_id) : null,
       },
       include: {
         service: {
           select: { id: true, title: true },
+        },
+        questionCategory: {
+          select: { id: true, name: true },
         },
       },
     });
 
     return NextResponse.json(question);
   } catch (error) {
-    console.error("Update question error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении вопроса" },
       { status: 500 }
@@ -85,7 +88,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Вопрос удален" });
   } catch (error) {
-    console.error("Delete question error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении вопроса" },
       { status: 500 }

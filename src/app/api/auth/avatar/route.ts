@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
         const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ''); // убираем расширение
         await cloudinary.uploader.destroy(publicId);
       } catch (deleteError) {
-        console.error("Error deleting old avatar from Cloudinary:", deleteError);
         // Продолжаем загрузку нового аватара даже если удаление не удалось
       }
     }
@@ -107,7 +106,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Avatar upload error:", error);
     return NextResponse.json(
       { error: "Ошибка при загрузке аватара" },
       { status: 500 }
@@ -147,7 +145,6 @@ export async function DELETE(request: NextRequest) {
         const publicId = `smartmedical/avatars/${folderAndFile.split('/').pop()?.replace(/\.[^/.]+$/, '')}`;
         await cloudinary.uploader.destroy(publicId);
       } catch (deleteError) {
-        console.error("Error deleting avatar from Cloudinary:", deleteError);
       }
     }
 
@@ -162,7 +159,6 @@ export async function DELETE(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Avatar delete error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении аватара" },
       { status: 500 }

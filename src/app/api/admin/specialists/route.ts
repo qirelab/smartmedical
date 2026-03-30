@@ -1,35 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getToken } from "next-auth/jwt";
-
-// Middleware для проверки админа
-async function checkAdmin(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET
-  });
-
-  if (!token || !token.id) {
-    return { isAdmin: false, error: "Не авторизован" };
-  }
-
-  const userId = parseInt(token.id as string);
-  const user = await prisma.patient.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-
-  if (!user || (user.role !== "ADMIN" && user.role !== "CHIEF_DOCTOR")) {
-    return { isAdmin: false, error: "Нет прав доступа" };
-  }
-
-  return { isAdmin: true };
-}
+import { checkFullAdminAccess } from "@/utils/api-auth";
 
 // GET - Получить всех специалистов
 export async function GET(request: NextRequest) {
   try {
-    const adminCheck = await checkAdmin(request);
+    const adminCheck = await checkFullAdminAccess(request);
     if (!adminCheck.isAdmin) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
@@ -43,13 +19,19 @@ export async function GET(request: NextRequest) {
             slug: true,
           },
         },
+        serviceCategory: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
       },
       orderBy: { id: "desc" },
     });
 
     return NextResponse.json(specialists);
   } catch (error) {
-    console.error("Get specialists error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении специалистов" },
       { status: 500 }
@@ -60,12 +42,18 @@ export async function GET(request: NextRequest) {
 // POST - Создать нового специалиста
 export async function POST(request: NextRequest) {
   try {
-    const adminCheck = await checkAdmin(request);
+    const adminCheck = await checkFullAdminAccess(request);
     if (!adminCheck.isAdmin) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
 
     const data = await request.json();
+
+    console.log('Creating specialist with data:', {
+      ...data,
+      category_id: data.category_id ? parseInt(data.category_id) : null,
+      service_category_id: data.service_category_id ? parseInt(data.service_category_id) : null,
+    });
 
     const specialist = await prisma.specialist.create({
       data: {
@@ -77,22 +65,26 @@ export async function POST(request: NextRequest) {
         image_url: data.image_url || "/images/default-doctor.jpg",
         activity_area: data.activity_area || null,
         education_details: data.education_details || null,
-        conferences: data.conferences || [],
+        doctor_category: data.doctor_category || null,
+        academic_degree: data.academic_degree || null,
+        additional_education: data.additional_education || [],
         specializations: data.specializations || [],
         education: data.education || [],
         work_examples: data.work_examples || null,
-        category_id: parseInt(data.category_id),
+        category_id: data.category_id ? parseInt(data.category_id) : null,
+        service_category_id: data.service_category_id ? parseInt(data.service_category_id) : null,
       },
       include: {
         category: true,
+        serviceCategory: true,
       },
     });
 
     return NextResponse.json(specialist, { status: 201 });
   } catch (error) {
-    console.error("Create specialist error:", error);
+    console.error('Error creating specialist:', error);
     return NextResponse.json(
-      { error: "Ошибка при создании специалиста" },
+      { error: "Ошибка при создании специалиста", details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

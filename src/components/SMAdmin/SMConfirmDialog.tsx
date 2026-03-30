@@ -82,7 +82,7 @@ export function ConfirmDialog({
                   <button
                     onClick={onClose}
                     disabled={loading}
-                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -102,14 +102,14 @@ export function ConfirmDialog({
                   onClick={onClose}
                   disabled={loading}
                   variant="ghost"
-                  className="px-5 py-2.5"
+                  className="px-5 py-2.5 cursor-pointer"
                 >
                   {cancelText}
                 </Button>
                 <button
                   onClick={handleConfirm}
                   disabled={loading}
-                  className={`px-5 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`px-5 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
                     variant === 'danger'
                       ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30'
                       : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-600/30'

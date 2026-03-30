@@ -54,7 +54,6 @@ export async function PUT(
 
     return NextResponse.json(vacancy);
   } catch (error) {
-    console.error("Update vacancy error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении вакансии" },
       { status: 500 }
@@ -82,7 +81,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Вакансия удалена" });
   } catch (error) {
-    console.error("Delete vacancy error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении вакансии" },
       { status: 500 }

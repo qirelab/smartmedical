@@ -37,7 +37,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(transformedServices);
   } catch (error) {
-    console.error('Error fetching services:', error);
     return NextResponse.json(
       { error: 'Failed to fetch services' },
       { status: 500 }

@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../common/SMDialog/SMDialog';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '../common/SMButton/SMButton';
 import { Input } from '../common/SMInput/SMInput';
 import { Label } from '../common/SMLabel/SMLabel';
@@ -21,7 +14,8 @@ import {
   Trash2,
   Save,
   Loader2,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 import { useAlert } from '../common/SMAlert/AlertProvider';
 import { AvatarCropModal } from './SMAvatarCropModal';
@@ -216,18 +210,43 @@ export function EditProfileModal({ isOpen, onClose, user, onProfileUpdate }: Edi
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-[#2E2E2E]">
-              Редактирование профиля
-            </DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Измените данные вашего профиля
-            </DialogDescription>
-          </DialogHeader>
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            />
 
-          <div className="space-y-6 py-4">
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="bg-[#18A36C] px-6 py-4 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-white">Редактирование профиля</h2>
+                  <button
+                    onClick={onClose}
+                    disabled={isLoading}
+                    className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto flex-1">
+                <div className="space-y-6">
             {/* Avatar Section */}
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
@@ -265,7 +284,7 @@ export function EditProfileModal({ isOpen, onClose, user, onProfileUpdate }: Edi
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingAvatar}
-                  className="border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white"
+                  className="border-[#18A36C] text-[#18A36C]"
                 >
                   <Camera className="w-4 h-4 mr-2" />
                   Загрузить фото
@@ -357,37 +376,41 @@ export function EditProfileModal({ isOpen, onClose, user, onProfileUpdate }: Edi
                 <Lock className="w-4 h-4 mr-2" />
                 Сменить пароль
               </Button>
-            </div>
-          </div>
+                  </div>
+                </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:gap-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="w-full sm:w-auto border-gray-300"
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full sm:w-auto bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Сохранение...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Сохранить
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                {/* Footer Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    onClick={onClose}
+                    className="w-full sm:w-auto border-gray-300"
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                    className="w-full sm:w-auto bg-[#18A36C] hover:bg-[#18A36C]/90 text-white"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Сохранить
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Avatar Crop Modal */}
       <AvatarCropModal

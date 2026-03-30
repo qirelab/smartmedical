@@ -33,18 +33,48 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
 
+    // Получаем параметры пагинации и поиска
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const search = searchParams.get('search') || '';
+
+    // Формируем условия поиска
+    const whereCondition: any = {};
+    if (search) {
+      whereCondition.OR = [
+        { question: { contains: search, mode: 'insensitive' } },
+        { answer: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Подсчитываем общее количество
+    const totalCount = await prisma.question.count({ where: whereCondition });
+
+    // Получаем вопросы для текущей страницы
     const questions = await prisma.question.findMany({
+      where: whereCondition,
       include: {
         service: {
           select: { id: true, title: true },
         },
+        questionCategory: {
+          select: { id: true, name: true },
+        },
       },
       orderBy: { id: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json(questions);
+    return NextResponse.json({
+      data: questions,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
-    console.error("Get questions error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении вопросов" },
       { status: 500 }
@@ -68,17 +98,20 @@ export async function POST(request: NextRequest) {
         answer: data.answer || null,
         category: data.category || null,
         service_id: data.service_id ? parseInt(data.service_id) : null,
+        question_category_id: data.question_category_id ? parseInt(data.question_category_id) : null,
       },
       include: {
         service: {
           select: { id: true, title: true },
+        },
+        questionCategory: {
+          select: { id: true, name: true },
         },
       },
     });
 
     return NextResponse.json(question, { status: 201 });
   } catch (error) {
-    console.error("Create question error:", error);
     return NextResponse.json(
       { error: "Ошибка при создании вопроса" },
       { status: 500 }

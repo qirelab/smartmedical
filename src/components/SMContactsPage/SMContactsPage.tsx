@@ -63,9 +63,14 @@ export function SMContactsPage() {
                 <h3 className="text-lg text-[#2E2E2E] mb-2">
                   {contactsPageConfig.contactInfo.address.title}
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <a
+                  href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || contactsPageConfig.contactInfo.address.main)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-[#18A36C] transition-colors text-sm leading-relaxed cursor-pointer block"
+                >
                   {contacts?.address || contactsPageConfig.contactInfo.address.main}
-                </p>
+                </a>
                 <p className="text-[#2E2E2E] text-sm mt-1">
                   {contactsPageConfig.contactInfo.address.metro}
                 </p>
@@ -120,7 +125,7 @@ export function SMContactsPage() {
                     <a
                       key={index}
                       href={`tel:${phone.replace(/-/g, "")}`}
-                      className="block text-[#2E2E2E] hover:text-[#18A36C] transition-colors text-sm"
+                      className="block text-[#2E2E2E] hover:text-[#18A36C] transition-colors text-sm cursor-pointer"
                     >
                       {phone}
                     </a>
@@ -142,7 +147,7 @@ export function SMContactsPage() {
                 </h3>
                 <a
                   href={`mailto:${contacts?.email || contactsPageConfig.contactInfo.email.address}`}
-                  className="text-[#2E2E2E] hover:text-[#18A36C] transition-colors text-sm"
+                  className="text-[#2E2E2E] hover:text-[#18A36C] transition-colors text-sm cursor-pointer"
                 >
                   {contacts?.email || contactsPageConfig.contactInfo.email.address}
                 </a>
@@ -169,7 +174,10 @@ export function SMContactsPage() {
               </Button>
               <Button
                 variant="outline"
-                className="border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300 flex-1"
+                className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 flex-1"
+                onClick={() =>
+                  window.location.href = `mailto:${contacts?.email || contactsPageConfig.contactInfo.email.address}`
+                }
               >
                 {contactsPageConfig.appointmentSection.onlineButton}
                 <ArrowRight className="w-5 h-5 ml-[2.5px]" />
@@ -206,22 +214,6 @@ export function SMContactsPage() {
         </motion.div>
       </div>
 
-      {/* Additional Information */}
-      <motion.div
-        className="mt-6 lg:mt-10 bg-white rounded-lg p-6 lg:p-8 border border-[#E8E6E3]"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-      >
-        <div className="text-center max-w-2xl mx-auto">
-          <h3 className="text-xl text-[#2E2E2E] mb-4">
-            {contactsPageConfig.locationInfo.title}
-          </h3>
-          <p className="text-gray-600 text-sm lg:text-base leading-relaxed">
-            {contactsPageConfig.locationInfo.description}
-          </p>
-        </div>
-      </motion.div>
     </div>
   );
 }

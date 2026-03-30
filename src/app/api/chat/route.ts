@@ -5,9 +5,6 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 async function parseCardsInMessage(message: string) {
-  console.log("🔍 Parsing message for cards:", message);
-  console.log("🔍 Message length:", message.length);
-  console.log("🔍 Message includes [CARD:", message.includes("[CARD:"));
 
   // Ищем маркеры с учетом возможных пробелов и переносов строк
   const cardRegex = /\[CARD:(SPECIALIST|SERVICE):(\d+)\]/gi;
@@ -17,7 +14,6 @@ async function parseCardsInMessage(message: string) {
   while ((match = cardRegex.exec(message)) !== null) {
     const [fullMatch, type, id] = match;
     const cardId = parseInt(id);
-    console.log(`📌 Found card marker: ${fullMatch}, type: ${type}, id: ${cardId}`);
 
     try {
       if (type === "SPECIALIST") {
@@ -40,7 +36,6 @@ async function parseCardsInMessage(message: string) {
         });
 
         if (specialist) {
-          console.log(`✅ Found specialist:`, specialist);
           cards.push({
             type: "specialist",
             data: {
@@ -50,7 +45,6 @@ async function parseCardsInMessage(message: string) {
             placeholder: fullMatch,
           });
         } else {
-          console.log(`❌ Specialist ${cardId} not found in DB`);
         }
       } else if (type === "SERVICE") {
         const service = await prisma.service.findUnique({
@@ -70,7 +64,6 @@ async function parseCardsInMessage(message: string) {
         });
 
         if (service) {
-          console.log(`✅ Found service:`, service);
           // Нормализуем данные: category из объекта в строку + добавляем slug
           const normalizedService = {
             ...service,
@@ -83,25 +76,19 @@ async function parseCardsInMessage(message: string) {
             placeholder: fullMatch,
           });
         } else {
-          console.log(`❌ Service ${cardId} not found in DB`);
         }
       }
     } catch (error) {
-      console.error(`❌ Error loading card ${type}:${id}:`, error);
     }
   }
 
-  console.log(`📦 Total cards found: ${cards.length}`, cards);
   return { message, cards };
 }
 
 async function getClinicContext() {
   try {
-    console.log("getClinicContext: Fetching contacts...");
     const contacts = await prisma.contacts.findFirst();
-    console.log("getClinicContext: Contacts fetched:", contacts ? "✓" : "✗");
 
-    console.log("getClinicContext: Fetching services...");
     const services = await prisma.service.findMany({
       select: {
         id: true,
@@ -114,9 +101,7 @@ async function getClinicContext() {
         },
       },
     });
-    console.log("getClinicContext: Services fetched:", services.length);
 
-    console.log("getClinicContext: Fetching specialists...");
     const specialists = await prisma.specialist.findMany({
       select: {
         id: true,
@@ -126,7 +111,6 @@ async function getClinicContext() {
         specialization: true,
       },
     });
-    console.log("getClinicContext: Specialists fetched:", specialists.length);
 
     // Нормализуем данные: преобразуем вложенные объекты в строки
     const normalizedServices = services.map((s) => ({
@@ -140,10 +124,7 @@ async function getClinicContext() {
       specialists,
     };
   } catch (error) {
-    console.error("Error fetching clinic context:", error);
     if (error instanceof Error) {
-      console.error("Error details:", error.message);
-      console.error("Error stack:", error.stack);
     }
     return null;
   }
@@ -201,11 +182,100 @@ function buildSystemPrompt(clinicData: any) {
 
 ВАЖНЫЕ ПРАВИЛА:
 1. Отвечай на вопросы о клинике, услугах, специалистах, контактах, записи на приём
-2. НЕ давай медицинских советов и не ставь диагнозы - рекомендуй записаться к врачу
-3. НЕ рассказывай про админ-панель или внутренние системы
-4. Будь вежливым, дружелюбным и профессиональным
-5. Отвечай на русском языке
-6. Если не знаешь ответа - предложи позвонить в клинику
+2. НЕ рассказывай про админ-панель или внутренние системы
+3. Будь вежливым, дружелюбным и профессиональным
+4. Отвечай на русском языке
+5. Если не знаешь ответа - предложи позвонить в клинику
+
+🚨 КРИТИЧЕСКИ ВАЖНО - МЕДИЦИНСКАЯ БЕЗОПАСНОСТЬ:
+
+КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО:
+❌ Ставить диагнозы, даже предположительные
+❌ Давать советы по лечению или приему лекарств
+❌ Интерпретировать симптомы или анализы
+❌ Рекомендовать дозировки или изменения в лечении
+❌ Давать советы по самолечению
+❌ Отвечать "это может быть..." или "возможно у вас..."
+❌ Говорить что-то "не опасно" или "не серьезно"
+
+⚠️ ЭКСТРЕННЫЕ СИТУАЦИИ (требуют НЕМЕДЛЕННОГО реагирования):
+Если пользователь описывает:
+- Сильную боль в груди, удушье, потерю сознания
+- Серьезную травму, кровотечение
+- Острую боль в животе, высокую температуру
+- Суицидальные мысли или намерения
+- Проблемы с дыханием
+
+ТВОЙ ОТВЕТ ДОЛЖЕН БЫТЬ:
+"⚠️ Это экстренная ситуация! Немедленно:
+1. Вызовите скорую помощь: 103
+2. Если в Минске: также можно позвонить 112
+3. До приезда скорой оставайтесь на связи с диспетчером
+
+Наша клиника работает в плановом режиме и не предназначена для экстренных случаев."
+
+📋 КАК ОТВЕЧАТЬ НА МЕДИЦИНСКИЕ ВОПРОСЫ:
+
+Пользователь: "У меня болит голова уже 3 дня, что это может быть?"
+НЕПРАВИЛЬНО: "Возможно это мигрень или повышенное давление..."
+ПРАВИЛЬНО: "Головная боль может иметь различные причины, которые нужно выяснить на очном осмотре. Рекомендую записаться к нашему терапевту или неврологу для профессиональной диагностики. Записаться можно по телефону ${clinicData.contacts?.phone_number || "уточните на сайте"}."
+
+Пользователь: "Можно ли мне принимать ибупрофен при моих симптомах?"
+НЕПРАВИЛЬНО: "Да, ибупрофен обычно помогает..."
+ПРАВИЛЬНО: "Вопросы о приеме лекарств должен решать врач с учетом вашего анамнеза, аллергий и других факторов. Я не могу давать рекомендации по медикаментам. Пожалуйста, проконсультируйтесь с врачом - можем записать вас на ближайшее время."
+
+Пользователь: "Посмотри мои анализы, всё ли нормально?"
+ПРАВИЛЬНО: "Интерпретацию результатов анализов должен проводить квалифицированный врач на очном приеме, учитывая полную клиническую картину. Я могу помочь записать вас к специалисту, который профессионально оценит ваши результаты."
+
+Пользователь: "Это опасно/серьезно?"
+ПРАВИЛЬНО: "Оценку серьезности симптомов может дать только врач при осмотре. Рекомендую не откладывать визит к специалисту. Могу помочь записать вас на прием."
+
+🎯 ПРАВИЛЬНАЯ ТАКТИКА:
+1. Признай обеспокоенность пациента
+2. Объясни, что диагностика требует очного осмотра
+3. Порекомендуй конкретного специалиста из нашей клиники
+4. Предложи записаться на прием
+5. Укажи контакты для срочной записи
+
+👶 ОСОБЫЕ ГРУППЫ ПАЦИЕНТОВ:
+При вопросах о детях, беременных, пожилых - ВСЕГДА направляй к врачу:
+"Вопросы, касающиеся [детей/беременных/пожилых пациентов], требуют особого внимания специалиста. Рекомендую записаться на консультацию к нашему врачу, который учтет все особенности."
+
+💊 ВОПРОСЫ О ЛЕКАРСТВАХ:
+Если спрашивают о:
+- Взаимодействии лекарств
+- Побочных эффектах
+- Можно ли заменить препарат
+- Дозировках
+
+ВСЕГДА отвечай: "Вопросы о медикаментах должен решать лечащий врач с учетом полной картины вашего здоровья. Это важно для вашей безопасности. Могу записать вас на консультацию."
+
+🧠 ПСИХОЛОГИЧЕСКИЕ ВОПРОСЫ:
+При упоминании:
+- Депрессии, тревоги, панических атак
+- Суицидальных мыслей (ЭКСТРЕННО → скорая 103)
+- Проблем со сном, стрессом
+
+Направляй к психотерапевту/психиатру из клиники, НО не давай советов по самопомощи.
+
+⚠️ КОГДА ПЕРЕНАПРАВЛЯТЬ К ОПЕРАТОРУ:
+Если пользователь спрашивает о темах, НЕ связанных с клиникой, или хочет пообщаться с живым человеком, используй специальный маркер [NEED_OPERATOR] в КОНЦЕ твоего ответа.
+
+Примеры когда нужен оператор:
+- "Я хочу поговорить с менеджером"
+- "Мне нужна помощь оператора"
+- "Хочу пообщаться с живым человеком"
+- "Вопросы о работе/вакансиях в клинике"
+- "Жалобы или сложные вопросы, требующие вмешательства человека"
+- "Вопросы о партнерстве, сотрудничестве"
+- Любые темы НЕ относящиеся к услугам клиники
+
+Формат ответа с перенаправлением:
+"[Твой ответ о том, что поможет оператор]. [NEED_OPERATOR]"
+
+Пример:
+Пользователь: "Я хочу узнать о работе в клинике"
+Ответ: "Понимаю, у вас вопрос о трудоустройстве. Сейчас я переключу вас на нашего оператора, который сможет предоставить всю необходимую информацию о вакансиях. [NEED_OPERATOR]"
 
 ИНФОРМАЦИЯ О КЛИНИКЕ:
 
@@ -252,38 +322,45 @@ ${specialistsText || "Информация загружается..."}
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Chat API: Starting request...");
 
     // Проверяем подключение к Prisma
     try {
       await prisma.$connect();
-      console.log("Chat API: Prisma connected ✓");
     } catch (dbError) {
-      console.error("Chat API: Prisma connection failed:", dbError);
     }
 
     if (!OPENROUTER_API_KEY) {
-      console.error("Chat API: OpenRouter API key is not configured");
       return NextResponse.json(
         { error: "OpenRouter API key not configured. Please add OPENROUTER_API_KEY to your .env file." },
-        { status: 500 }
+        {
+          status: 500,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
     const body = await request.json();
-    console.log("Chat API: Request body received");
 
     const { messages } = body;
 
     if (!messages || !Array.isArray(messages)) {
-      console.error("Chat API: Invalid messages format", messages);
       return NextResponse.json(
         { error: "Invalid messages format" },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
-    console.log("Chat API: Fetching clinic context...");
     // Получаем контекст клиники
     const clinicData = await getClinicContext();
 
@@ -301,14 +378,11 @@ export async function POST(request: NextRequest) {
     };
 
     if (!clinicData) {
-      console.warn("Chat API: Using fallback clinic data (DB connection failed)");
     }
 
-    console.log("Chat API: Building system prompt...");
     // Создаём системный промпт
     const systemPrompt = buildSystemPrompt(finalClinicData);
 
-    console.log("Chat API: Sending request to OpenRouter...");
     // Отправляем запрос в OpenRouter
     const response = await fetch(OPENROUTER_URL, {
       method: "POST",
@@ -332,52 +406,80 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    console.log("Chat API: OpenRouter response status:", response.status);
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("OpenRouter API error:", error);
       return NextResponse.json(
         { error: `Failed to get response from AI: ${error.substring(0, 100)}` },
-        { status: response.status }
+        {
+          status: response.status,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
     const data = await response.json();
-    console.log("Chat API: OpenRouter response received");
 
     const assistantMessage = data.choices?.[0]?.message?.content;
 
     if (!assistantMessage) {
-      console.error("Chat API: No message in response", data);
       return NextResponse.json(
         { error: "No response from AI" },
-        { status: 500 }
+        {
+          status: 500,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
-    console.log("Chat API: Parsing cards in message...");
     const { message: cleanMessage, cards } = await parseCardsInMessage(assistantMessage);
-    console.log("Chat API: Found cards:", cards.length);
+
+    // Проверяем наличие маркера [NEED_OPERATOR]
+    const needOperator = cleanMessage.includes("[NEED_OPERATOR]");
 
     // Удаляем плейсхолдеры карточек из сообщения
     let finalMessage = cleanMessage;
     cards.forEach((card) => {
       finalMessage = finalMessage.replace(card.placeholder, "");
     });
-    finalMessage = finalMessage.trim();
 
-    console.log("Chat API: Success!");
-    return NextResponse.json({
-      message: finalMessage,
-      cards: cards,
-    });
+    // Удаляем маркер оператора из сообщения
+    finalMessage = finalMessage.replace("[NEED_OPERATOR]", "").trim();
+
+    return NextResponse.json(
+      {
+        message: finalMessage,
+        cards: cards,
+        needOperator: needOperator,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (error) {
-    console.error("Chat API error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { error: `Internal server error: ${errorMessage}` },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
     );
   }
 }

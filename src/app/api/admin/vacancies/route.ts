@@ -33,13 +33,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: adminCheck.error }, { status: 403 });
     }
 
+    // Получаем параметры пагинации и поиска
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const search = searchParams.get('search') || '';
+
+    // Формируем условия поиска
+    const whereCondition: any = {};
+    if (search) {
+      whereCondition.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { requirements: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Подсчитываем общее количество
+    const totalCount = await prisma.vacancy.count({ where: whereCondition });
+
+    // Получаем вакансии для текущей страницы
     const vacancies = await prisma.vacancy.findMany({
+      where: whereCondition,
       orderBy: { id: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json(vacancies);
+    return NextResponse.json({
+      data: vacancies,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
-    console.error("Get vacancies error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении вакансий" },
       { status: 500 }
@@ -70,7 +99,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(vacancy, { status: 201 });
   } catch (error) {
-    console.error("Create vacancy error:", error);
     return NextResponse.json(
       { error: "Ошибка при создании вакансии" },
       { status: 500 }

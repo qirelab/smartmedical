@@ -37,15 +37,15 @@ export function ServicesContent() {
             return (
               <Card
                 key={index}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border border-[#E8E6E3] hover:border-[#18A36C] rounded-lg"
+                className="border border-[#E8E6E3] rounded-lg"
               >
                 <div className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C]/20 transition-all duration-300 flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Icon className="w-6 h-6 text-[#18A36C]" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg text-[#2E2E2E] mb-2 group-hover:text-[#18A36C] transition-colors duration-300">
+                      <h3 className="text-lg text-[#2E2E2E] mb-2">
                         {service.name}
                       </h3>
                       <p className="text-sm text-gray-600 leading-relaxed">
@@ -73,7 +73,7 @@ export function ServicesContent() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 lg:gap-6">
             <Button
               onClick={() => router.push('/contacts')}
-              className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto rounded-lg transition-all duration-300"
+              className="bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto rounded-lg transition-all duration-300 cursor-pointer"
             >
               {servicesContentConfig.ctaSection.buttons.online}
               <ArrowRight className="w-5 h-5 ml-[2.5px]" />
@@ -81,7 +81,7 @@ export function ServicesContent() {
             <Button
               onClick={() => router.push('/contacts')}
               variant="outline"
-              className="border-2 border-[#18A36C] text-[#18A36C] hover:bg-[#18A36C] hover:text-white px-8 py-4 h-auto rounded-lg transition-all duration-300"
+              className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 cursor-pointer"
             >
               {servicesContentConfig.ctaSection.buttons.call}
               <Phone className="w-5 h-5 ml-[2.5px]" />

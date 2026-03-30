@@ -27,6 +27,7 @@ import { AdminAccessSkeleton, AdminFeedbacksGridSkeleton } from '@/components/SM
 import { ConfirmDialog } from '@/components/SMAdmin/SMConfirmDialog';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useAlert } from '@/components/common/SMAlert';
+import { useServerPagination } from '@/hooks/useServerPagination';
 import { useUnreadCountsContext } from '@/contexts/UnreadCountsContext';
 
 interface Feedback {
@@ -58,18 +59,24 @@ export default function AdminFeedbacksPage() {
   const { success, error: showError } = useAlert();
   const { refetch: refetchUnreadCounts } = useUnreadCountsContext();
 
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl, itemsPerPage } = useServerPagination(12);
+  const ITEMS_PER_PAGE = itemsPerPage;
+
   // Data states
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<'pending' | 'approved'>('pending');
   const [viewingFeedback, setViewingFeedback] = useState<Feedback | null>(null);
   const [approvingFeedback, setApprovingFeedback] = useState<Feedback | null>(null);
   const [approveData, setApproveData] = useState({ service_id: '', verified: true });
   const [approveLoading, setApproveLoading] = useState(false);
-  const ITEMS_PER_PAGE = 12;
 
   // Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -118,17 +125,44 @@ export default function AdminFeedbacksPage() {
     verifySession();
   };
 
+  const loadCounts = async () => {
+    try {
+      // Fetch counts for both statuses
+      const [pendingRes, approvedRes] = await Promise.all([
+        fetch('/api/admin/feedbacks?page=1&limit=1&status=pending'),
+        fetch('/api/admin/feedbacks?page=1&limit=1&status=approved'),
+      ]);
+
+      if (pendingRes.ok) {
+        const data = await pendingRes.json();
+        setPendingCount(data.totalCount || 0);
+      }
+
+      if (approvedRes.ok) {
+        const data = await approvedRes.json();
+        setApprovedCount(data.totalCount || 0);
+      }
+    } catch (error) {
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
+      const apiUrl = buildApiUrl('/api/admin/feedbacks', searchQuery) +
+        `&status=${filterStatus}`;
+
       const [feedbacksRes, servicesRes] = await Promise.all([
-        fetch('/api/admin/feedbacks'),
+        fetch(apiUrl),
         fetch('/api/services'),
+        loadCounts(), // Load counts in parallel
       ]);
 
       if (feedbacksRes.ok) {
-        const data = await feedbacksRes.json();
-        setFeedbacks(data);
+        const response = await feedbacksRes.json();
+        setFeedbacks(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
       }
 
       if (servicesRes.ok) {
@@ -136,53 +170,22 @@ export default function AdminFeedbacksPage() {
         setServices(data);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered feedbacks
-  const filteredFeedbacks = useMemo(() => {
-    let result = feedbacks;
-
-    // Filter by status
-    if (filterStatus === 'pending') {
-      result = result.filter(f => !f.verified);
-    } else {
-      result = result.filter(f => f.verified);
+  // Load data when session is verified or page/search/filter changes
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole) {
+      loadData();
     }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (f) =>
-          f.name.toLowerCase().includes(query) ||
-          f.text.toLowerCase().includes(query) ||
-          f.service?.title.toLowerCase().includes(query)
-      );
-    }
-
-    return result;
-  }, [feedbacks, searchQuery, filterStatus]);
-
-  // Count pending reviews
-  const pendingCount = useMemo(() => {
-    return feedbacks.filter(f => !f.verified).length;
-  }, [feedbacks]);
+  }, [sessionVerified, hasAdminRole, currentPage, searchQuery, filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset page when search or filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterStatus]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredFeedbacks.length / ITEMS_PER_PAGE);
-  const paginatedFeedbacks = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredFeedbacks.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredFeedbacks, currentPage]);
+    setPage(1);
+  }, [searchQuery, filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Form handlers
   const resetForm = () => {
@@ -357,7 +360,7 @@ export default function AdminFeedbacksPage() {
           <AdminSection
             title="Отзывы"
             icon={MessageSquare}
-            count={feedbacks.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
@@ -369,7 +372,7 @@ export default function AdminFeedbacksPage() {
             <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={() => setFilterStatus('pending')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterStatus === 'pending'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterStatus === 'pending'
                     ? 'bg-amber-500 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
@@ -387,7 +390,7 @@ export default function AdminFeedbacksPage() {
               </button>
               <button
                 onClick={() => setFilterStatus('approved')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterStatus === 'approved'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterStatus === 'approved'
                     ? 'bg-[#18A36C] text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
@@ -397,7 +400,7 @@ export default function AdminFeedbacksPage() {
               </button>
             </div>
 
-            {filteredFeedbacks.length === 0 ? (
+            {feedbacks.length === 0 ? (
               <EmptyState
                 icon={MessageSquare}
                 title="Отзывы не найдены"
@@ -409,7 +412,7 @@ export default function AdminFeedbacksPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <AnimatePresence>
-                    {paginatedFeedbacks.map((feedback) => {
+                    {feedbacks.map((feedback) => {
                       // Генерация инициалов из имени
                       const getInitials = (name: string) => {
                         const parts = name.trim().split(/\s+/);
@@ -482,7 +485,7 @@ export default function AdminFeedbacksPage() {
                             {!feedback.verified ? (
                               <button
                                 onClick={() => openApproveModal(feedback)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18A36C] text-white text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18A36C] text-white text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors cursor-pointer"
                               >
                                 <Check className="w-4 h-4" />
                                 Одобрить
@@ -494,7 +497,7 @@ export default function AdminFeedbacksPage() {
                               {!feedback.verified ? (
                                 <button
                                   onClick={() => setViewingFeedback(feedback)}
-                                  className="p-2 text-gray-400 hover:text-[#18A36C] hover:bg-[#18A36C]/10 rounded-lg transition-colors"
+                                  className="p-2 text-gray-400 hover:text-[#18A36C] hover:bg-[#18A36C]/10 rounded-lg transition-colors cursor-pointer"
                                   title="Просмотреть"
                                 >
                                   <Eye className="w-4 h-4" />
@@ -508,7 +511,7 @@ export default function AdminFeedbacksPage() {
                               {!feedback.verified && (
                                 <button
                                   onClick={() => handleDelete(feedback.id, feedback.name)}
-                                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                   title="Удалить"
                                 >
                                   <X className="w-4 h-4" />
@@ -527,7 +530,7 @@ export default function AdminFeedbacksPage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setPage}
                     className="mt-6"
                   />
                 )}
@@ -615,7 +618,7 @@ export default function AdminFeedbacksPage() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, verified: !formData.verified })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.verified ? 'bg-[#18A36C]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${formData.verified ? 'bg-[#18A36C]' : 'bg-gray-300'
                     }`}
                 >
                   <span
@@ -653,7 +656,7 @@ export default function AdminFeedbacksPage() {
                       <h2 className="text-xl font-semibold text-white">Просмотр отзыва</h2>
                       <button
                         onClick={() => setViewingFeedback(null)}
-                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <X className="w-5 h-5 text-white" />
                       </button>
@@ -711,7 +714,7 @@ export default function AdminFeedbacksPage() {
                           openApproveModal(viewingFeedback);
                           setViewingFeedback(null);
                         }}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors cursor-pointer"
                       >
                         <Check className="w-4 h-4" />
                         Одобрить
@@ -721,7 +724,7 @@ export default function AdminFeedbacksPage() {
                           handleDelete(viewingFeedback.id, viewingFeedback.name);
                           setViewingFeedback(null);
                         }}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                         Отклонить
@@ -756,7 +759,7 @@ export default function AdminFeedbacksPage() {
                       <h2 className="text-xl font-semibold text-white">Одобрение отзыва</h2>
                       <button
                         onClick={() => !approveLoading && setApprovingFeedback(null)}
-                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <X className="w-5 h-5 text-white" />
                       </button>
@@ -796,7 +799,7 @@ export default function AdminFeedbacksPage() {
                       <button
                         type="button"
                         onClick={() => setApproveData({ ...approveData, verified: !approveData.verified })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${approveData.verified ? 'bg-[#18A36C]' : 'bg-gray-300'
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${approveData.verified ? 'bg-[#18A36C]' : 'bg-gray-300'
                           }`}
                       >
                         <span
@@ -814,14 +817,14 @@ export default function AdminFeedbacksPage() {
                       <button
                         onClick={() => setApprovingFeedback(null)}
                         disabled={approveLoading}
-                        className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         Отмена
                       </button>
                       <button
                         onClick={handleApproveSubmit}
                         disabled={approveLoading}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {approveLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

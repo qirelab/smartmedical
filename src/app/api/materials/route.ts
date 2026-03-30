@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Get materials error:", error);
     return NextResponse.json(
       { error: "Ошибка при получении материалов" },
       { status: 500 }

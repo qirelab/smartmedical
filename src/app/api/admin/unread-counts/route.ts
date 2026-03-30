@@ -57,7 +57,6 @@ export async function GET() {
       chats: unreadChatsCount,
     });
   } catch (error) {
-    console.error('Error fetching unread counts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch unread counts' },
       { status: 500 }

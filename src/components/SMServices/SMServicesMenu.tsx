@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
 import { iconMap, IconName } from '@/utils/iconMapper';
 import servicesMenuConfig from '@/config/servicesMenu.json';
-import servicesMenuData from '@/data/SMServicesData/SMServicesMenuData.json';
 
 interface MenuItem {
   id: string;
@@ -120,6 +119,28 @@ function MenuItemComponent({
 export function ServicesMenu() {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [menuData, setMenuData] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load menu data from API
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/services-menu');
+        if (response.ok) {
+          const data = await response.json();
+          setMenuData(data.menuData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching services menu:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuData();
+  }, []);
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
@@ -153,17 +174,27 @@ export function ServicesMenu() {
       </div>
 
       <div className="py-2">
-        {servicesMenuData.menuData.map((item) => (
-          <MenuItemComponent
-            key={item.id}
-            item={item}
-            level={0}
-            activeItem={activeItem}
-            onItemClick={handleItemClick}
-            expandedItems={expandedItems}
-            onToggleExpand={handleToggleExpand}
-          />
-        ))}
+        {loading ? (
+          <div className="px-4 py-6 text-center text-sm text-gray-500">
+            Загрузка меню...
+          </div>
+        ) : menuData.length > 0 ? (
+          menuData.map((item) => (
+            <MenuItemComponent
+              key={item.id}
+              item={item}
+              level={0}
+              activeItem={activeItem}
+              onItemClick={handleItemClick}
+              expandedItems={expandedItems}
+              onToggleExpand={handleToggleExpand}
+            />
+          ))
+        ) : (
+          <div className="px-4 py-6 text-center text-sm text-gray-500">
+            Услуги не найдены
+          </div>
+        )}
       </div>
 
       <div className="p-3 lg:p-4 mt-2 lg:mt-4 border-t border-[#CACACA] bg-[#F4F4F4]/50">

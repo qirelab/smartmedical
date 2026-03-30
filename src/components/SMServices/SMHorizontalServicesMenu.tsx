@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '../common/SMButton/SMButton';
-import servicesMenuData from '@/data/SMServicesData/SMServicesMenuData.json';
 import servicesMenuConfig from '@/config/servicesMenu.json';
 import { iconMap, IconName } from '@/utils/iconMapper';
 
@@ -94,10 +93,47 @@ function DropdownMenu({ item, activeItem, onItemClick }: DropdownMenuProps) {
 
 export function HorizontalServicesMenu() {
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [menuData, setMenuData] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load menu data from API
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/services-menu');
+        if (response.ok) {
+          const data = await response.json();
+          setMenuData(data.menuData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching services menu:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuData();
+  }, []);
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white border-b border-[#CACACA] shadow-sm relative z-40">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="py-3 md:py-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+              <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border-b border-[#CACACA] shadow-sm relative z-40">
@@ -113,7 +149,7 @@ export function HorizontalServicesMenu() {
           </div>
 
           <div className="flex flex-wrap gap-1 md:gap-2">
-            {servicesMenuData.menuData.map((item) => (
+            {menuData.map((item) => (
               <DropdownMenu
                 key={item.id}
                 item={item}

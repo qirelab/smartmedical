@@ -182,8 +182,6 @@ export function ReviewsSkeleton() {
 export function ServicePageSkeleton() {
   return (
     <div className="min-h-screen bg-white">
-      <BreadcrumbSkeleton />
-
       <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
         <div className="space-y-6">
           <ServiceHeroSkeleton />

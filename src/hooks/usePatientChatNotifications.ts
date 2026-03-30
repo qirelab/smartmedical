@@ -115,7 +115,6 @@ export function usePatientChatNotifications() {
         );
       }
     } catch (error) {
-      console.error('Error checking for patient chat notifications:', error);
     }
   }, [session, status, alert, playNotificationSound]);
 

@@ -26,7 +26,7 @@ async function checkAdmin(request: NextRequest) {
   return { isAdmin: true };
 }
 
-// GET - получить все услуги
+// GET - получить услуги с пагинацией
 export async function GET(request: NextRequest) {
   try {
     const adminCheck = await checkAdmin(request);
@@ -34,9 +34,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: adminCheck.error }, { status: 401 });
     }
 
+    // Получаем параметры пагинации и поиска
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const search = searchParams.get('search') || '';
+
+    // Формируем условия поиска
+    const whereCondition = search
+      ? {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { subtitle: { contains: search, mode: 'insensitive' as const } },
+            { serviceCategory: { name: { contains: search, mode: 'insensitive' as const } } },
+          ],
+        }
+      : {};
+
+    // Подсчитываем общее количество
+    const totalCount = await prisma.service.count({
+      where: whereCondition,
+    });
+
+    // Получаем услуги для текущей страницы
     const services = await prisma.service.findMany({
+      where: whereCondition,
       include: {
         category: true,
+        serviceCategory: true,
         specialists: {
           include: {
             specialist: true,
@@ -46,6 +71,8 @@ export async function GET(request: NextRequest) {
       orderBy: {
         title: 'asc',
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     // Transform data to match expected format
@@ -54,9 +81,14 @@ export async function GET(request: NextRequest) {
       specialists: service.specialists.map(ss => ss.specialist),
     }));
 
-    return NextResponse.json(transformedServices);
+    return NextResponse.json({
+      data: transformedServices,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
-    console.error('Error fetching services:', error);
     return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
   }
 }
@@ -76,20 +108,29 @@ export async function POST(request: NextRequest) {
       price,
       video_url,
       description,
-      specialist_ids, // Changed from specialists_id to specialist_ids (array)
+      specialist_ids,
       image_url,
       image_url_1,
       image_url_2,
       image_url_3,
       image_url_4,
-      category_id,
+      service_category_id,
     } = body;
 
     // Валидация обязательных полей
-    if (!title || !subtitle || !price || !category_id || !specialist_ids || specialist_ids.length === 0) {
+    if (!title || !subtitle || !price || !service_category_id || !specialist_ids || specialist_ids.length === 0) {
       return NextResponse.json(
         { error: 'Название, подзаголовок, цена, категория и хотя бы один специалист обязательны' },
         { status: 400 }
+      );
+    }
+
+    // Получаем первую категорию для совместимости (category_id not nullable в БД)
+    const firstCategory = await prisma.category.findFirst();
+    if (!firstCategory) {
+      return NextResponse.json(
+        { error: 'Не найдена категория по умолчанию' },
+        { status: 500 }
       );
     }
 
@@ -107,7 +148,8 @@ export async function POST(request: NextRequest) {
         image_url_4: image_url_4 || null,
         questions_id: 1,
         reviews_id: 1,
-        category_id: parseInt(category_id),
+        category_id: firstCategory.id, // Используем первую категорию для совместимости
+        service_category_id: parseInt(service_category_id),
         specialists: {
           create: specialist_ids.map((id: string) => ({
             specialist_id: parseInt(id),
@@ -116,6 +158,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         category: true,
+        serviceCategory: true,
         specialists: {
           include: {
             specialist: true,
@@ -132,7 +175,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transformedService, { status: 201 });
   } catch (error) {
-    console.error('Error creating service:', error);
     return NextResponse.json({ error: 'Failed to create service' }, { status: 500 });
   }
 }

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Star, Calendar, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
-import { Button } from '../common/SMButton/SMButton';
+import { Users, Star, Calendar, Phone, Mail, MapPin } from 'lucide-react';
 import { Card } from '../common/SMCard/SMCard';
 import { useRouter as useSMRouter } from '@/components/SMRouter/SMRouter';
 import { useRouter } from 'next/navigation';
 import { ImageWithFallback } from '../SMImage/ImageWithFallback';
-import { getCategoryIdBySlug } from '@/utils/categoryMapper';
 import { SpecialistCardSkeleton } from './SMDoctorSkeleton';
+import { useContacts } from '@/hooks/useContacts';
 
 interface Specialist {
   id: number;
@@ -19,41 +18,49 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
-  category: {
+  category?: {
     id: number;
     name: string;
     slug: string;
-  };
+  } | null;
+  serviceCategory?: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
 }
 
-interface Category {
+interface ServiceCategory {
   id: number;
   name: string;
   slug: string;
+  icon: string | null;
 }
 
 export function DoctorsContent() {
   const { currentRoute, navigate } = useSMRouter();
   const router = useRouter();
+  const { contacts } = useContacts();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories');
-        if (!response.ok) throw new Error('Failed to fetch categories');
+        const response = await fetch('/api/service-categories');
+        if (!response.ok) throw new Error('Failed to fetch service categories');
         const data = await response.json();
         setCategories(data);
       } catch (err) {
-        console.error('Error fetching categories:', err);
         setError('Не удалось загрузить категории');
       }
     };
@@ -72,7 +79,7 @@ export function DoctorsContent() {
 
   useEffect(() => {
     const fetchSpecialists = async () => {
-      if (!selectedCategory || categories.length === 0) {
+      if (!selectedCategory) {
         setSpecialists([]);
         return;
       }
@@ -81,20 +88,12 @@ export function DoctorsContent() {
       setError(null);
 
       try {
-        // selectedCategory теперь это slug из URL
-        const categoryId = getCategoryIdBySlug(selectedCategory, categories);
-        if (!categoryId) {
-          setSpecialists([]);
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`/api/specialists?categoryId=${categoryId}`);
+        // Используем slug категории услуг для фильтрации
+        const response = await fetch(`/api/specialists?serviceCategorySlug=${selectedCategory}`);
         if (!response.ok) throw new Error('Failed to fetch specialists');
         const data = await response.json();
         setSpecialists(data);
       } catch (err) {
-        console.error('Error fetching specialists:', err);
         setError('Не удалось загрузить специалистов');
         setSpecialists([]);
       } finally {
@@ -103,7 +102,7 @@ export function DoctorsContent() {
     };
 
     fetchSpecialists();
-  }, [selectedCategory, categories]);
+  }, [selectedCategory]);
 
   const selectedCategoryData = selectedCategory
     ? categories.find(cat => cat.slug === selectedCategory) || null
@@ -124,25 +123,6 @@ export function DoctorsContent() {
     navigate(`/doctors/${selectedCategory}/${doctorId}`);
   };
 
-  const handleBookAppointment = (doctorId: number, doctorName: string) => {
-    // TODO: Implement booking functionality
-  };
-
-  // Преобразование имени специалиста (полное имя) в имя и фамилию
-  const parseName = (fullName: string) => {
-    const parts = fullName.trim().split(' ');
-    if (parts.length >= 2) {
-      return {
-        name: parts[1] || '',
-        surname: parts[0] || '',
-      };
-    }
-    return {
-      name: fullName,
-      surname: '',
-    };
-  };
-
   if (!selectedCategory) {
     return (
       <div className="p-4 lg:p-8">
@@ -160,7 +140,7 @@ export function DoctorsContent() {
                 Наши специалисты
               </h1>
               <p className="text-sm lg:text-base text-gray-600 leading-relaxed">
-                Команда высококвалифицированных врачей Doctor Family готова оказать вам профессиональную медицинскую помощь. 
+                Команда высококвалифицированных врачей Doctor Family готова оказать вам профессиональную медицинскую помощь.
                 Выберите нужную специализацию в меню слева.
               </p>
             </div>
@@ -207,22 +187,65 @@ export function DoctorsContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-[#18A36C] rounded-lg p-6 text-white"
+            className="border border-gray-200 rounded-2xl p-6 lg:p-8"
           >
-            <h2 className="text-xl mb-4">Связаться с нами</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                <span>+375 29 161-01-01</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <span>smartmedical.by@gmail.com</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>г. Минск, пр. Победителей, д. 119, пом. 504</span>
-              </div>
+            <div className="text-center mb-6">
+              <h2 className="text-xl lg:text-2xl text-[#2E2E2E] mb-2">Связаться с нами</h2>
+              <p className="text-sm lg:text-base text-gray-600">
+                Мы всегда рады ответить на ваши вопросы
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+              <a
+                href={`tel:${(contacts?.phone_number || '+375 29 161-01-01').replace(/[\s\-()]/g, '')}`}
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <Phone className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Телефон</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors">
+                      {contacts?.phone_number || '+375 29 161-01-01'}
+                    </p>
+                  </div>
+                </div>
+              </a>
+              <a
+                href={`mailto:${contacts?.email || 'smartmedical.by@gmail.com'}`}
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <Mail className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Email</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors break-all">
+                      {contacts?.email || 'smartmedical.by@gmail.com'}
+                    </p>
+                  </div>
+                </div>
+              </a>
+              <a
+                href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 bg-[#18A36C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#18A36C] transition-colors">
+                    <MapPin className="w-5 h-5 text-[#18A36C] group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Адрес</p>
+                    <p className="text-sm font-medium text-[#2E2E2E] group-hover:text-[#18A36C] group-hover:underline transition-colors">
+                      {contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504'}
+                    </p>
+                  </div>
+                </div>
+              </a>
             </div>
           </motion.div>
         </div>
@@ -279,13 +302,13 @@ export function DoctorsContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group border border-[#E8E6E3] hover:border-[#18A36C] rounded-lg">
+                  <Card
+                    onClick={() => handleDoctorClick(specialist.id)}
+                    className="p-6 hover:shadow-lg transition-all duration-300 group border border-[#E8E6E3] hover:border-[#18A36C] rounded-lg cursor-pointer"
+                  >
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="flex-shrink-0 mx-auto sm:mx-0">
-                        <div 
-                          className="w-24 h-24 rounded-lg overflow-hidden transition-all duration-300"
-                          onClick={() => handleDoctorClick(specialist.id)}
-                        >
+                        <div className="w-24 h-24 rounded-lg overflow-hidden transition-all duration-300">
                           <ImageWithFallback
                             src={specialist.image_url}
                             alt={specialist.name}
@@ -295,31 +318,28 @@ export function DoctorsContent() {
                       </div>
 
                       <div className="flex-1 text-center sm:text-left">
-                        <div 
-                          className="cursor-pointer"
-                          onClick={() => handleDoctorClick(specialist.id)}
-                        >
+                        <div>
                           <h3 className="text-lg text-[#2E2E2E] mb-1 group-hover:text-[#18A36C] transition-colors">
                             {specialist.name}
                           </h3>
                           <p className="text-sm text-gray-600 mb-2">{specialist.specialization}</p>
-                          
+
                           <div className="text-sm text-gray-600 mb-3 flex flex-col gap-1 items-center sm:items-start">
                             <span>{specialist.qualification}</span>
                             <span>Стаж: {specialist.experience} {specialist.experience === 1 ? 'год' : specialist.experience < 5 ? 'года' : 'лет'}</span>
                           </div>
 
-                          <div className="flex items-center gap-1 justify-center sm:justify-start mb-4">
+                          <div className="flex items-center gap-1 justify-center sm:justify-start">
                             {[...Array(specialist.grade)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                className="w-4 h-4 fill-[#18A36C] text-[#18A36C]" 
+                              <Star
+                                key={i}
+                                className="w-4 h-4 fill-yellow-400 text-yellow-400"
                               />
                             ))}
                             {[...Array(5 - specialist.grade)].map((_, i) => (
-                              <Star 
-                                key={i + specialist.grade} 
-                                className="w-4 h-4 fill-gray-200 text-gray-200" 
+                              <Star
+                                key={i + specialist.grade}
+                                className="w-4 h-4 fill-gray-200 text-gray-200"
                               />
                             ))}
                             <span className="text-sm text-gray-600 ml-1">
@@ -327,14 +347,6 @@ export function DoctorsContent() {
                             </span>
                           </div>
                         </div>
-
-                        <Button
-                          onClick={() => router.push('/contacts')}
-                          className="w-full sm:w-auto bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300"
-                        >
-                          Связаться с нами
-                          <ArrowRight className="w-5 h-5 ml-[2.5px]" />
-                        </Button>
                       </div>
                     </div>
                   </Card>

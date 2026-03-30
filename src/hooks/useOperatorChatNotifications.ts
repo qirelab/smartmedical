@@ -107,7 +107,6 @@ export function useOperatorChatNotifications() {
         );
       }
     } catch (error) {
-      console.error('Error checking for chat notifications:', error);
     }
   }, [session, status, alert, playNotificationSound]);
 

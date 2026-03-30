@@ -81,7 +81,6 @@ export async function PATCH(
       blocked: action === 'block'
     });
   } catch (error) {
-    console.error("Error blocking/unblocking patient:", error);
     return NextResponse.json(
       { error: "Ошибка при блокировке/разблокировке" },
       { status: 500 }

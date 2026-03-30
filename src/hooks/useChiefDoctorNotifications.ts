@@ -45,7 +45,6 @@ export function useChiefDoctorNotifications() {
     // Проверяем только если пользователь - главный врач
     if (status !== 'authenticated' || !session) return;
 
-    // @ts-expect-error - role может быть undefined
     const userRole = session?.user?.role;
     if (userRole !== 'CHIEF_DOCTOR') return;
 
@@ -116,7 +115,6 @@ export function useChiefDoctorNotifications() {
         );
       }
     } catch (error) {
-      console.error('Error checking for chief doctor notifications:', error);
     }
   }, [session, status, alert, playNotificationSound]);
 
@@ -124,7 +122,6 @@ export function useChiefDoctorNotifications() {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    // @ts-expect-error - role может быть undefined
     const userRole = session?.user?.role;
     if (userRole !== 'CHIEF_DOCTOR') return;
 
@@ -146,7 +143,6 @@ export function useChiefDoctorNotifications() {
       return;
     }
 
-    // @ts-expect-error - role может быть undefined
     const userRole = session?.user?.role;
     if (userRole !== 'CHIEF_DOCTOR') return;
 

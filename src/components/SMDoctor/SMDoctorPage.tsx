@@ -5,7 +5,6 @@ import { Button } from '../common/SMButton/SMButton';
 import { Card } from '../common/SMCard/SMCard';
 import { useRouter as useSMRouter } from '../SMRouter/SMRouter';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '../SMBreadcrumb/SMBreadcrumb';
 import { ImageWithFallback } from '../SMImage/ImageWithFallback';
 import commonConfig from '@/config/common.json';
 import { DoctorPageSkeleton } from './SMDoctorSkeleton';
@@ -25,15 +24,22 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
-  category: {
+  category?: {
     id: number;
     name: string;
     slug: string;
-  };
+  } | null;
+  serviceCategory?: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
 }
 
 export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
@@ -45,11 +51,11 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     const fetchDoctor = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const id = parseInt(doctorId);
         if (isNaN(id)) {
@@ -71,13 +77,13 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
 
         const data = await response.json();
         setDoctor(data);
-        
+
         // Обновляем title страницы
         if (data) {
-          document.title = `${data.name} - ${data.category.name} | Медицинский центр Doctor Family`;
+          const categoryName = data.serviceCategory?.name || data.category?.name || 'Специалисты';
+          document.title = `${data.name} - ${categoryName} | Медицинский центр Doctor Family`;
         }
       } catch (err) {
-        console.error('Error fetching specialist:', err);
         setError('Не удалось загрузить данные специалиста');
       } finally {
         setLoading(false);
@@ -110,16 +116,13 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
   }
 
   const handleBookAppointment = () => {
-    console.log(`Booking appointment with ${doctor.name}`);
   };
 
-  // conferences уже массив из БД
-  const conferencesList = doctor.conferences?.filter(Boolean) || [];
+  // additional_education уже массив из БД
+  const additionalEducationList = doctor.additional_education?.filter(Boolean) || [];
 
   return (
     <>
-      <Breadcrumb />
-      
       <div className="p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -128,66 +131,65 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
             className="mb-8"
           >
             <div className="bg-white rounded-lg border border-[#E8E6E3] p-6 lg:p-8">
-              <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-            <div className="flex-shrink-0 mx-auto lg:mx-0">
-              <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-lg overflow-hidden">
-                <ImageWithFallback
-                  src={doctor.image_url}
-                  alt={doctor.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 text-center lg:text-left">
-              <div className="mb-4">
-                <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">
-                  {doctor.name}
-                </h1>
-                <p className="text-lg text-gray-600 mb-3">{doctor.specialization}</p>
-                
-                <div className="text-gray-600 mb-4 flex flex-col gap-1 items-center lg:items-start">
-                  <span>{doctor.qualification}</span>
-                  <span>Стаж: {doctor.experience} {doctor.experience === 1 ? 'год' : doctor.experience < 5 ? 'года' : 'лет'}</span>
+              <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-6">
+                <div className="flex-shrink-0 mx-auto lg:mx-0">
+                  <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-lg overflow-hidden">
+                    <ImageWithFallback
+                      src={doctor.image_url}
+                      alt={doctor.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 justify-center lg:justify-start mb-6">
-                  {[...Array(doctor.grade)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#18A36C] text-[#18A36C]" />
-                  ))}
-                  {[...Array(5 - doctor.grade)].map((_, i) => (
-                    <Star key={i + doctor.grade} className="w-5 h-5 fill-gray-200 text-gray-200" />
-                  ))}
-                  <span className="text-gray-600 ml-2">
-                    {doctor.grade}/5
-                  </span>
+                <div className="flex-1 text-center lg:text-left">
+                  <h1 className="text-2xl lg:text-3xl text-[#2E2E2E] mb-2">
+                    {doctor.name}
+                  </h1>
+                  <p className="text-lg text-gray-600 mb-3">{doctor.specialization}</p>
+
+                  <div className="text-gray-600 mb-4 flex flex-col gap-1 items-center lg:items-start">
+                    <span>{doctor.qualification}</span>
+                    {doctor.doctor_category && <span>Категория: {doctor.doctor_category}</span>}
+                    {doctor.academic_degree && <span>{doctor.academic_degree}</span>}
+                    <span>Стаж: {doctor.experience} {doctor.experience === 1 ? 'год' : doctor.experience < 5 ? 'года' : 'лет'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1 justify-center lg:justify-start">
+                    {[...Array(doctor.grade)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    ))}
+                    {[...Array(5 - doctor.grade)].map((_, i) => (
+                      <Star key={i + doctor.grade} className="w-5 h-5 fill-gray-200 text-gray-200" />
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-lg text-[#2E2E2E] mb-3">
-                  {commonConfig.messages.booking.title}
-                </h3>
-                <Button
-                  onClick={() => router.push('/contacts')}
-                  className="w-full lg:w-auto bg-[#18A36C] hover:bg-[#18A36C]/90 text-white px-8 py-4 h-auto text-lg rounded-lg transition-all duration-300"
-                >
-                  {commonConfig.messages.booking.buttonText}
-                  <Calendar className="w-5 h-5 ml-[2.5px]" />
-                </Button>
+              <div className="w-full rounded-xl p-8 border border-gray-200">
+                <div className="text-center">
+                  <h3 className="text-lg text-gray-700 mb-4">
+                    Чтобы попасть к этому специалисту на запись, свяжитесь с нами
+                  </h3>
+                  <Button
+                    onClick={() => router.push('/contacts')}
+                    className="bg-[#18A36C] hover:bg-[#15905f] text-white px-8 py-4 h-auto text-lg rounded-xl transition-all duration-300 cursor-pointer"
+                  >
+                    Связаться с нами
+                    <Calendar className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="space-y-6">
-              <Card className="p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="space-y-6">
+              <Card className="p-6 border-gray-200 hover:border-[#18A36C] transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center">
                     <Award className="w-5 h-5 text-[#18A36C]" />
@@ -208,7 +210,7 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
                 </ul>
               </Card>
 
-              <Card className="p-6">
+              <Card className="p-6 border-gray-200 hover:border-[#18A36C] transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center">
                     <GraduationCap className="w-5 h-5 text-[#18A36C]" />
@@ -234,18 +236,19 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
                 </ul>
               </Card>
 
-              <Card className="p-6">
+              <Card className="p-6 border-gray-200 hover:border-[#18A36C] transition-all duration-300
+              ">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-[#18A36C]/10 rounded-full flex items-center justify-center">
                     <Users className="w-5 h-5 text-[#18A36C]" />
                   </div>
-                  <h2 className="text-xl text-[#2E2E2E]">Участие в конференциях</h2>
+                  <h2 className="text-xl text-[#2E2E2E]">Дополнительное образование</h2>
                 </div>
                 <ul className="space-y-3">
-                  {conferencesList.length > 0 ? (
-                    conferencesList.map((conf, index) => (
+                  {additionalEducationList.length > 0 ? (
+                    additionalEducationList.map((edu, index) => (
                       <li key={index} className="text-gray-700 border-l-2 border-[#18A36C]/20 pl-4">
-                        {conf}
+                        {edu}
                       </li>
                     ))
                   ) : (
@@ -282,8 +285,8 @@ export function DoctorPage({ doctorId, categorySlug }: DoctorPageProps) {
                   </div>
                 </Card>
               )}
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </>

@@ -4,9 +4,20 @@ import { ClinicPage } from "@/components/SMClinic/SMClinicPage";
 import { ClinicContent } from "@/components/SMClinic/SMClinicContent";
 import { NavigableClinicMenu } from "@/components/SMClinic/SMNavigableClinicMenu";
 import { useRouter } from "@/components/SMRouter/SMRouter";
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Clinic() {
-    const { currentRoute } = useRouter();
+    const { currentRoute, navigate } = useRouter();
+    const pathname = usePathname();
+
+    // Синхронизируем Next.js pathname с SMRouter при изменении pathname
+    useEffect(() => {
+        if (pathname && pathname !== currentRoute) {
+            navigate(pathname);
+        }
+    }, [pathname]);
+
     const pathParts = currentRoute.replace(/^\/+|\/+$/g, '').split('/');
 
     let categoryId = '';

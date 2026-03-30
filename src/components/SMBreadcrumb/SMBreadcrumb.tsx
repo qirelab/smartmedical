@@ -1,7 +1,8 @@
 'use client';
 
 import { ChevronRight, Home, Menu, ChevronDown } from 'lucide-react';
-import { useRouter } from '@/components/SMRouter/SMRouter';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { generateBreadcrumbsFromUrl } from '@/utils/breadcrumbConfig';
 
@@ -15,12 +16,13 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ items: customItems }: BreadcrumbProps) {
-  const { navigate, currentRoute } = useRouter();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Генерируем breadcrumbs из URL, если не переданы кастомные
-  const items = customItems || generateBreadcrumbsFromUrl(currentRoute);
+  const items = customItems || generateBreadcrumbsFromUrl(pathname);
 
   // Закрываем dropdown при клике вне его
   useEffect(() => {
@@ -46,7 +48,7 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps) {
 
   const handleNavigate = (href?: string) => {
     if (href) {
-      navigate(href);
+      router.push(href);
       setIsOpen(false);
     }
   };
@@ -63,12 +65,12 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps) {
             </div>
 
             {/* Правая часть - Кнопка меню навигации */}
-            <div className="relative ml-4" ref={dropdownRef}>
+            <div className="relative ml-4 cursor-pointer" ref={dropdownRef}>
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-4 py-2 text-[#212121] hover:text-[#18A36C] hover:bg-[#18A36C]/5 rounded-lg transition-all border border-[#CACACA] hover:border-[#18A36C]"
+                className="flex items-center cursor-pointer gap-2 px-4 py-2 text-[#212121] hover:text-[#18A36C] hover:bg-[#18A36C]/5 rounded-lg transition-all border border-[#CACACA] hover:border-[#18A36C]"
               >
-                <Menu className="w-4 h-4" />
+                <Menu className="w-4 h-4 cursor-pointer" />
                 <span className="hidden sm:inline">Навигация</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -89,11 +91,10 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps) {
                           <button
                             onClick={() => handleNavigate(item.href)}
                             disabled={!item.href || isCurrent}
-                            className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                              isCurrent
-                                ? 'bg-[#18A36C]/10 text-[#18A36C] cursor-default'
-                                : 'hover:bg-gray-50 text-[#212121] hover:text-[#18A36C]'
-                            }`}
+                            className={`w-full text-left px-4 py-3 flex items-center cursor-pointer gap-3 transition-colors ${isCurrent
+                              ? 'bg-[#18A36C]/10 text-[#18A36C] cursor-default'
+                              : 'hover:bg-gray-50 text-[#212121] hover:text-[#18A36C]'
+                              }`}
                           >
                             {/* Индикатор уровня */}
                             <div className="flex items-center gap-2 min-w-0 flex-1">

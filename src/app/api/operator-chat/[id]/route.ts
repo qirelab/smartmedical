@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getToken } from "next-auth/jwt";
 
+// Заголовки для предотвращения кэширования
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
+
 // GET - Получить чат с сообщениями
 export async function GET(
   request: NextRequest,
@@ -16,7 +23,7 @@ export async function GET(
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        { status: 401, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -65,7 +72,7 @@ export async function GET(
     if (!chat) {
       return NextResponse.json(
         { error: "Чат не найден" },
-        { status: 404 }
+        { status: 404, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -73,7 +80,7 @@ export async function GET(
     if (user?.role === 'USER' && chat.patient_id !== userId) {
       return NextResponse.json(
         { error: "Нет доступа" },
-        { status: 403 }
+        { status: 403, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -112,12 +119,11 @@ export async function GET(
       ]);
     }
 
-    return NextResponse.json({ chat });
+    return NextResponse.json({ chat }, { headers: NO_CACHE_HEADERS });
   } catch (error) {
-    console.error("Error fetching chat:", error);
     return NextResponse.json(
       { error: "Ошибка при получении чата" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
@@ -136,7 +142,7 @@ export async function POST(
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        { status: 401, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -148,7 +154,7 @@ export async function POST(
     if (!content || content.trim().length < 1) {
       return NextResponse.json(
         { error: "Сообщение не может быть пустым" },
-        { status: 400 }
+        { status: 400, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -160,7 +166,7 @@ export async function POST(
     if (user?.is_messages_blocked && user.role === 'USER') {
       return NextResponse.json(
         { error: "Вы заблокированы и не можете отправлять сообщения" },
-        { status: 403 }
+        { status: 403, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -171,7 +177,7 @@ export async function POST(
     if (!chat) {
       return NextResponse.json(
         { error: "Чат не найден" },
-        { status: 404 }
+        { status: 404, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -179,7 +185,7 @@ export async function POST(
     if (user?.role === 'USER' && chat.patient_id !== userId) {
       return NextResponse.json(
         { error: "Нет доступа" },
-        { status: 403 }
+        { status: 403, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -217,12 +223,11 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ message }, { status: 201 });
+    return NextResponse.json({ message }, { status: 201, headers: NO_CACHE_HEADERS });
   } catch (error) {
-    console.error("Error sending message:", error);
     return NextResponse.json(
       { error: "Ошибка при отправке сообщения" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
@@ -241,7 +246,7 @@ export async function PATCH(
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        { status: 401, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -258,7 +263,7 @@ export async function PATCH(
     if (!user || !['OPERATOR', 'ADMIN', 'CHIEF_DOCTOR'].includes(user.role)) {
       return NextResponse.json(
         { error: "Нет доступа" },
-        { status: 403 }
+        { status: 403, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -269,7 +274,7 @@ export async function PATCH(
     if (!chat) {
       return NextResponse.json(
         { error: "Чат не найден" },
-        { status: 404 }
+        { status: 404, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -325,16 +330,15 @@ export async function PATCH(
     } else {
       return NextResponse.json(
         { error: "Неверное действие" },
-        { status: 400 }
+        { status: 400, headers: NO_CACHE_HEADERS }
       );
     }
 
-    return NextResponse.json({ chat: updatedChat });
+    return NextResponse.json({ chat: updatedChat }, { headers: NO_CACHE_HEADERS });
   } catch (error) {
-    console.error("Error updating chat:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении чата" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
@@ -353,7 +357,7 @@ export async function DELETE(
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        { status: 401, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -369,7 +373,7 @@ export async function DELETE(
     if (!user || !['OPERATOR', 'ADMIN', 'CHIEF_DOCTOR'].includes(user.role)) {
       return NextResponse.json(
         { error: "Нет доступа" },
-        { status: 403 }
+        { status: 403, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -380,7 +384,7 @@ export async function DELETE(
     if (!chat) {
       return NextResponse.json(
         { error: "Чат не найден" },
-        { status: 404 }
+        { status: 404, headers: NO_CACHE_HEADERS }
       );
     }
 
@@ -389,12 +393,14 @@ export async function DELETE(
       where: { id: chatId },
     });
 
-    return NextResponse.json({ success: true, message: "Чат удален" });
+    return NextResponse.json(
+      { success: true, message: "Чат удален" },
+      { headers: NO_CACHE_HEADERS }
+    );
   } catch (error) {
-    console.error("Error deleting chat:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении чата" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }

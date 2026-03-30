@@ -42,7 +42,6 @@ export function useAdminSession() {
           setSessionVerified(false);
         }
       } catch (error) {
-        console.error('Error loading admin session:', error);
         setSessionVerified(false);
       } finally {
         setIsLoading(false);
@@ -61,7 +60,6 @@ export function useAdminSession() {
       };
       localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
     } catch (error) {
-      console.error('Error updating admin session:', error);
     }
   }, []);
 

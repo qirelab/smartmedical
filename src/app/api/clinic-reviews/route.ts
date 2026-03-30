@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
       }
     }, { status: 200 });
   } catch (error) {
-    console.error('Error fetching clinic reviews:', error);
     return NextResponse.json(
       { error: "Failed to fetch clinic reviews" },
       { status: 500 }

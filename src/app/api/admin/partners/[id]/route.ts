@@ -48,7 +48,7 @@ export async function PUT(
         image_url: data.image_url || '',
         website_url: data.website_url || '',
         number: parseInt(data.number) || 1,
-        // category_id не меняем - оставляем существующую
+        category_id: data.category_id ? parseInt(data.category_id) : undefined,
       },
       include: {
         category: true,
@@ -57,7 +57,6 @@ export async function PUT(
 
     return NextResponse.json(partner);
   } catch (error) {
-    console.error("Update partner error:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении партнёра" },
       { status: 500 }
@@ -85,7 +84,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Партнёр удален" });
   } catch (error) {
-    console.error("Delete partner error:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении партнёра" },
       { status: 500 }

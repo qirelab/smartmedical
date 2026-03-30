@@ -84,7 +84,7 @@ function MenuItemComponent({
     <div className={level === 0 ? 'mb-1' : ''}>
       <button
         onClick={handleToggle}
-        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-all duration-300 group rounded-lg mx-1 ${
+        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-all duration-300 group rounded-lg mx-1 cursor-pointer ${
           isSelected
             ? 'bg-[#18A36C]/10 text-[#18A36C] shadow-sm'
             : 'hover:bg-gray-50'

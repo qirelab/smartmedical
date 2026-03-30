@@ -20,6 +20,7 @@ import { AdminAccessSkeleton } from '@/components/SMAdmin/SMAdminSkeleton';
 import { ConfirmDialog } from '@/components/SMAdmin/SMConfirmDialog';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useAlert } from '@/components/common/SMAlert';
+import { useServerPagination } from '@/hooks/useServerPagination';
 import { useUnreadCountsContext } from '@/contexts/UnreadCountsContext';
 
 interface LetterMessage {
@@ -60,17 +61,22 @@ export default function AdminLettersPage() {
   const { success, error: showError } = useAlert();
   const { refetch: refetchUnreadCounts } = useUnreadCountsContext();
 
+  // Pagination hook
+  const { currentPage, setPage, buildApiUrl } = useServerPagination(12);
+
   // Data states
   const [letters, setLetters] = useState<Letter[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [repliedCount, setRepliedCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<'unread' | 'replied' | 'all'>('unread');
   const [viewingLetter, setViewingLetter] = useState<Letter | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replyLoading, setReplyLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
-  const ITEMS_PER_PAGE = 12;
 
   // Check admin role
   useEffect(() => {
@@ -80,13 +86,6 @@ export default function AdminLettersPage() {
       setHasAdminRole(false);
     }
   }, [status]);
-
-  // Load data when session is verified (only for chief doctor)
-  useEffect(() => {
-    if (sessionVerified && hasAdminRole && isChiefDoctor) {
-      loadData();
-    }
-  }, [sessionVerified, hasAdminRole, isChiefDoctor]);
 
   const checkAdminRole = async () => {
     try {
@@ -103,13 +102,43 @@ export default function AdminLettersPage() {
     verifySession();
   };
 
+  const loadCounts = async () => {
+    try {
+      // Fetch counts for both statuses
+      const [unreadRes, repliedRes] = await Promise.all([
+        fetch('/api/admin/letters?page=1&limit=1&status=unread'),
+        fetch('/api/admin/letters?page=1&limit=1&status=replied'),
+      ]);
+
+      if (unreadRes.ok) {
+        const data = await unreadRes.json();
+        setUnreadCount(data.totalCount || 0);
+      }
+
+      if (repliedRes.ok) {
+        const data = await repliedRes.json();
+        setRepliedCount(data.totalCount || 0);
+      }
+    } catch (error) {
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/letters');
+      const apiUrl = buildApiUrl('/api/admin/letters', searchQuery) +
+        `&status=${filterStatus}`;
+
+      const [res] = await Promise.all([
+        fetch(apiUrl),
+        loadCounts(), // Load counts in parallel
+      ]);
+
       if (res.ok) {
-        const data = await res.json();
-        setLetters(data);
+        const response = await res.json();
+        setLetters(response.data || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.totalCount || 0);
 
         // Помечаем все письма как прочитанные после загрузки
         await fetch('/api/admin/letters/mark-all-read', {
@@ -120,54 +149,23 @@ export default function AdminLettersPage() {
         await refetchUnreadCounts();
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      showError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered letters
-  const filteredLetters = useMemo(() => {
-    let result = letters;
-
-    // Filter by status
-    if (filterStatus === 'unread') {
-      result = result.filter(l => !l.reply || l.has_new_patient_message);
-    } else if (filterStatus === 'replied') {
-      result = result.filter(l => l.reply && !l.has_new_patient_message);
+  // Load data when session is verified or page/search/filter changes
+  useEffect(() => {
+    if (sessionVerified && hasAdminRole && isChiefDoctor) {
+      loadData();
     }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.subject.toLowerCase().includes(query) ||
-          l.content.toLowerCase().includes(query) ||
-          l.patient.name.toLowerCase().includes(query) ||
-          l.patient.email.toLowerCase().includes(query)
-      );
-    }
-
-    return result;
-  }, [letters, searchQuery, filterStatus]);
-
-  // Count unread letters (without reply OR with new patient message)
-  const unreadCount = useMemo(() => {
-    return letters.filter(l => !l.reply || l.has_new_patient_message).length;
-  }, [letters]);
+  }, [sessionVerified, hasAdminRole, isChiefDoctor, currentPage, searchQuery, filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset page when search or filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterStatus]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredLetters.length / ITEMS_PER_PAGE);
-  const paginatedLetters = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredLetters.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredLetters, currentPage]);
+    setPage(1);
+  }, [searchQuery, filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleViewLetter = async (letter: Letter) => {
     setViewingLetter(letter);
@@ -182,7 +180,6 @@ export default function AdminLettersPage() {
           l.id === letter.id ? { ...l, is_read: true } : l
         ));
       } catch (error) {
-        console.error('Error marking letter as read:', error);
       }
     }
   };
@@ -320,7 +317,7 @@ export default function AdminLettersPage() {
           <AdminSection
             title="Письма главному врачу"
             icon={Mail}
-            count={letters.length}
+            count={totalCount}
             loading={loading}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
@@ -329,7 +326,7 @@ export default function AdminLettersPage() {
             <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={() => setFilterStatus('unread')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterStatus === 'unread'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterStatus === 'unread'
                     ? 'bg-amber-500 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
@@ -347,7 +344,7 @@ export default function AdminLettersPage() {
               </button>
               <button
                 onClick={() => setFilterStatus('replied')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterStatus === 'replied'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterStatus === 'replied'
                     ? 'bg-[#18A36C] text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
@@ -357,7 +354,7 @@ export default function AdminLettersPage() {
               </button>
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filterStatus === 'all'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${filterStatus === 'all'
                     ? 'bg-gray-700 text-white shadow-md'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
@@ -367,7 +364,7 @@ export default function AdminLettersPage() {
               </button>
             </div>
 
-            {filteredLetters.length === 0 ? (
+            {letters.length === 0 ? (
               <EmptyState
                 icon={Mail}
                 title="Письма не найдены"
@@ -377,7 +374,7 @@ export default function AdminLettersPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <AnimatePresence>
-                    {paginatedLetters.map((letter) => (
+                    {letters.map((letter) => (
                       <ItemCard key={letter.id}>
                         <div className="flex gap-4">
                           {/* Avatar */}
@@ -444,14 +441,14 @@ export default function AdminLettersPage() {
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                           <button
                             onClick={() => handleViewLetter(letter)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18A36C] text-white text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18A36C] text-white text-sm font-medium rounded-lg hover:bg-[#15905f] transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                             {letter.reply ? 'Просмотреть' : 'Ответить'}
                           </button>
                           <button
                             onClick={() => handleDelete(letter.id, letter.subject)}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             title="Удалить"
                           >
                             <X className="w-4 h-4" />
@@ -467,7 +464,7 @@ export default function AdminLettersPage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setPage}
                     className="mt-6"
                   />
                 )}
@@ -498,7 +495,7 @@ export default function AdminLettersPage() {
                       <h2 className="text-xl font-semibold text-white">Письмо</h2>
                       <button
                         onClick={() => !replyLoading && setViewingLetter(null)}
-                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <X className="w-5 h-5 text-white" />
                       </button>
@@ -538,7 +535,7 @@ export default function AdminLettersPage() {
                       <button
                         onClick={() => handleToggleBlock(viewingLetter.patient.id, viewingLetter.patient.is_messages_blocked)}
                         disabled={blockLoading}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer ${
                           viewingLetter.patient.is_messages_blocked
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
@@ -688,14 +685,14 @@ export default function AdminLettersPage() {
                       <button
                         onClick={() => setViewingLetter(null)}
                         disabled={replyLoading}
-                        className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         Закрыть
                       </button>
                       <button
                         onClick={handleSendReply}
                         disabled={replyLoading || !replyText.trim()}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#18A36C] text-white font-medium rounded-xl hover:bg-[#15905f] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {replyLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

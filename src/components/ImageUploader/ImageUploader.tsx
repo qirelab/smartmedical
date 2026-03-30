@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, X, Loader2, CheckCircle } from "lucide-react";
+import { Upload, X, Loader2, CheckCircle, RefreshCw } from "lucide-react";
 import { useAlert } from "@/components/common/SMAlert/AlertProvider";
 
 interface ImageUploaderProps {
@@ -96,7 +96,7 @@ export function ImageUploader({
   };
 
   return (
-    <div className={`flex items-start gap-4 ${className}`}>
+    <div className={`flex items-center justify-center ${className}`}>
       <input
         ref={inputRef}
         type="file"
@@ -106,14 +106,27 @@ export function ImageUploader({
       />
 
       {/* Preview Card - 192x192 (w-48 h-48) */}
-      <div className="relative">
+      <div className="relative justify-start items-start">
         {preview ? (
-          <div className="relative w-48 h-48 rounded-2xl overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
+          <div
+            onClick={() => status !== "uploading" && inputRef.current?.click()}
+            className="relative w-48 h-48 rounded-2xl overflow-hidden bg-gray-100 shadow-sm border border-gray-200 cursor-pointer group"
+          >
             <img
               src={preview}
               alt="Preview"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
+
+            {/* Hover overlay with replace hint */}
+            {status !== "uploading" && (
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div className="text-center">
+                  <RefreshCw className="w-8 h-8 text-white mx-auto mb-2" />
+                  <span className="text-white text-sm font-medium">Заменить фото</span>
+                </div>
+              </div>
+            )}
 
             {/* Loading overlay */}
             {status === "uploading" && (
@@ -145,38 +158,15 @@ export function ImageUploader({
         {preview && status !== "uploading" && (
           <button
             type="button"
-            onClick={handleRemove}
-            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemove();
+            }}
+            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors z-10 cursor-pointer"
           >
             <X className="w-4 h-4 text-white" />
           </button>
         )}
-      </div>
-
-      {/* Info & Button */}
-      <div className="flex-1 pt-2">
-        <button
-          type="button"
-          onClick={() => status !== "uploading" && inputRef.current?.click()}
-          disabled={status === "uploading"}
-          className="px-5 py-2.5 bg-[#18A36C] hover:bg-[#149259] disabled:bg-gray-300 rounded-xl text-sm font-medium text-white transition-colors flex items-center gap-2 shadow-sm"
-        >
-          {status === "uploading" ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Загрузка...
-            </>
-          ) : (
-            <>
-              <Upload className="w-4 h-4" />
-              {preview ? "Заменить фото" : placeholder}
-            </>
-          )}
-        </button>
-
-        <p className="text-xs text-gray-400 mt-3">
-          JPG, PNG, WebP, GIF до {maxSizeMB}MB
-        </p>
       </div>
     </div>
   );

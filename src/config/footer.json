@@ -1,9 +1,9 @@
 {
   "companyInfo": {
     "name": "Doctor Family",
-    "description": "Современная медицинская клиника в Минске. Профессиональная медицина нового уровня.",
+    "description": "Современная медицинская клиника в Новополоцке. Профессиональная медицина нового уровня.",
     "copyright": "© 2025 Doctor Family. Все права защищены.",
-    "license": "Лицензия на медицинскую деятельность от 15.06.2020 г."
+    "license": "Лицензия на медицинскую деятельность от 31.07.2025 г."
   },
   "services": [
     {
@@ -48,7 +48,8 @@
   "contactInfo": {
     "phone": {
       "number": "+375 29 161-01-01",
-      "workingHours": "Ежедневно с 9:00 до 21:00"
+      "workingHours": "Пн-Пт с 08:00 до 21:00",
+      "workingHours2": "Сб-Вс с 09:00 до 18:00"
     },
     "email": {
       "address": "smartmedical.by@gmail.com",
@@ -60,29 +61,20 @@
     },
     "schedule": {
       "title": "Режим работы",
-      "hours": "Пн-Вс: 9:00-21:00"
+      "hours": "Пн-Пт: 08:00-21:00",
+      "hours2": "Сб-Вс: 09:00-18:00"
     }
   },
   "socialMedia": [
     {
-      "name": "VK",
-      "url": "#",
-      "label": "VK"
-    },
-    {
-      "name": "Facebook",
-      "url": "#",
-      "label": "F"
-    },
-    {
       "name": "Instagram",
-      "url": "#",
-      "label": "IG"
+      "url": "https://www.instagram.com/doctorfamily_np?igsh=MWI5Y2ttYjB5N3Niag==",
+      "label": "doctorfamily_np"
     },
     {
-      "name": "YouTube",
-      "url": "#",
-      "label": "YT"
+      "name": "TikTok",
+      "url": "https://www.tiktok.com/@doctor_family_np",
+      "label": "doctorfamily"
     }
   ],
   "newsletter": {

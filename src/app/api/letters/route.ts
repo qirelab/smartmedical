@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(letters);
   } catch (error) {
-    console.error("Error fetching letters:", error);
     return NextResponse.json(
       { error: "Ошибка при получении писем" },
       { status: 500 }
@@ -91,7 +90,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(letter);
   } catch (error) {
-    console.error("Error creating letter:", error);
     return NextResponse.json(
       { error: "Ошибка при отправке письма" },
       { status: 500 }

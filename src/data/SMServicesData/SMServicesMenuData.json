@@ -1,17 +1,6 @@
 {
   "menuData": [
     {
-      "id": "pediatric-dentistry",
-      "title": "Детская стоматология",
-      "icon": "Baby",
-      "children": [
-        { "id": "pediatric-surgeon", "title": "Детский хирург-стоматолог" },
-        { "id": "milk-teeth-treatment", "title": "Лечение молочных зубов" },
-        { "id": "pediatric-orthodontist", "title": "Детский ортодонт" },
-        { "id": "milk-teeth-anesthesia", "title": "Лечение молочных зубов под наркозом в Минске" }
-      ]
-    },
-    {
       "id": "dentistry",
       "title": "Стоматология",
       "icon": "Smile",

@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 400 });
   } catch (error) {
-    console.error("Check unique error:", error);
     return NextResponse.json(
       { error: "Ошибка при проверке уникальности" },
       { status: 500 }

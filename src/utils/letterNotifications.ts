@@ -20,7 +20,6 @@ export function clearLetterNotification(letterId: number): void {
 
     localStorage.setItem(NOTIFIED_LETTERS_KEY, JSON.stringify(updated));
   } catch (error) {
-    console.error('Error clearing letter notification:', error);
   }
 }
 
@@ -38,7 +37,6 @@ export function wasLetterNotified(letterId: number, isThreadMessage = false): bo
     const checkId = isThreadMessage ? letterId + 10000 : letterId;
     return notifiedLetters.includes(checkId);
   } catch (error) {
-    console.error('Error checking letter notification:', error);
     return false;
   }
 }

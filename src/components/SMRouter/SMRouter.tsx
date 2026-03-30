@@ -34,6 +34,14 @@ export function Router({ children }: { children: ReactNode }) {
     setCurrentRoute(route);
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', route);
+      // Dispatch custom event for ScrollToTop and other components
+      window.dispatchEvent(new CustomEvent('routeChange', { detail: { route } }));
+      // Scroll to top on navigation
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant'
+      });
     }
   };
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSession } from 'next-auth/react';
 import { AnimatePresence } from 'framer-motion';
 import { Users, Loader2 } from 'lucide-react';
 import { Pagination } from '@/components/common/SMPagination/SMPagination';
@@ -26,7 +25,8 @@ import { AdminAccessSkeleton, AdminSectionSkeleton } from '@/components/SMAdmin/
 import { ConfirmDialog } from '@/components/SMAdmin/SMConfirmDialog';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useAlert } from '@/components/common/SMAlert';
-import NotFound from '../not-found';
+import { useUrlPagination } from '@/hooks/useUrlPagination';
+import { OperatorWelcome } from '@/components/SMAdmin/OperatorWelcome';
 
 // Types
 interface Specialist {
@@ -39,39 +39,49 @@ interface Specialist {
   image_url: string;
   activity_area: string | null;
   education_details: string | null;
-  conferences: string[];
+  doctor_category: string | null;
+  academic_degree: string | null;
+  additional_education: string[];
   specializations: string[];
   education: string[];
   work_examples: Array<{ title: string; images: string[] }> | null;
-  category_id: number;
-  category: {
+  category_id: number | null; // Теперь необязательное
+  service_category_id: number | null;
+  category?: {
     id: number;
     name: string;
     slug: string;
-  };
+  } | null;
+  serviceCategory?: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
 }
 
-interface Category {
+interface ServiceCategory {
   id: number;
   name: string;
   slug: string;
+  icon: string | null;
 }
 
 export default function AdminPage() {
-  const { status } = useSession();
   const { sessionVerified, isLoading: sessionLoading, verifySession } = useAdminSession();
-  const [hasAdminRole, setHasAdminRole] = useState<boolean | null>(null);
-  const [isCheckingRole, setIsCheckingRole] = useState(true);
   const confirmDialog = useConfirmDialog();
   const { success, error: showError } = useAlert();
 
+  // Check user role
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
+
   // Data states
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
+  // Pagination hook
+  const { currentPage, setPage, paginateData } = useUrlPagination(12);
 
   // Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,40 +96,42 @@ export default function AdminPage() {
     image_url: '',
     activity_area: '',
     education_details: '',
-    conferences: '',
+    doctor_category: '',
+    academic_degree: '',
+    additional_education: '',
     specializations: '',
     education: '',
     category_id: '',
+    service_category_id: '', // Новое поле для категории услуг
   });
 
-  // Check admin role
+  // Check user role when session is verified
   useEffect(() => {
-    if (status === 'authenticated') {
-      checkAdminRole();
-    } else if (status === 'unauthenticated') {
-      setHasAdminRole(false);
-    }
-  }, [status]);
+    const checkRole = async () => {
+      if (sessionVerified) {
+        try {
+          const res = await fetch('/api/admin/auth');
+          const data = await res.json();
+          setUserRole(data.role || null);
+        } catch (error) {
+          setUserRole(null);
+        } finally {
+          setRoleLoading(false);
+        }
+      } else if (sessionVerified === false) {
+        // Если сессия не верифицирована, сбрасываем состояние загрузки
+        setRoleLoading(false);
+      }
+    };
+    checkRole();
+  }, [sessionVerified]);
 
-  // Load data when session is verified
+  // Load data when session is verified and user is not an operator
   useEffect(() => {
-    if (sessionVerified && hasAdminRole) {
+    if (sessionVerified && userRole && userRole !== 'OPERATOR') {
       loadData();
     }
-  }, [sessionVerified, hasAdminRole]);
-
-  const checkAdminRole = async () => {
-    setIsCheckingRole(true);
-    try {
-      const res = await fetch('/api/admin/auth');
-      const data = await res.json();
-      setHasAdminRole(data.isAdmin);
-    } catch (error) {
-      setHasAdminRole(false);
-    } finally {
-      setIsCheckingRole(false);
-    }
-  };
+  }, [sessionVerified, userRole]);
 
   const handleAuthSuccess = () => {
     verifySession();
@@ -130,7 +142,7 @@ export default function AdminPage() {
     try {
       const [specialistsRes, categoriesRes] = await Promise.all([
         fetch('/api/admin/specialists'),
-        fetch('/api/categories'),
+        fetch('/api/service-categories'), // Используем категории услуг
       ]);
 
       if (specialistsRes.ok) {
@@ -143,7 +155,7 @@ export default function AdminPage() {
         setCategories(data);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      // Error loading data
     } finally {
       setLoading(false);
     }
@@ -157,21 +169,21 @@ export default function AdminPage() {
       (s) =>
         s.name.toLowerCase().includes(query) ||
         s.specialization.toLowerCase().includes(query) ||
-        s.category.name.toLowerCase().includes(query)
+        s.category?.name.toLowerCase().includes(query) ||
+        s.serviceCategory?.name.toLowerCase().includes(query)
     );
   }, [specialists, searchQuery]);
 
   // Reset page when search changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    setPage(1);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pagination
-  const totalPages = Math.ceil(filteredSpecialists.length / ITEMS_PER_PAGE);
-  const paginatedSpecialists = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredSpecialists.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredSpecialists, currentPage]);
+  const { paginatedData: paginatedSpecialists, totalPages } = useMemo(
+    () => paginateData(filteredSpecialists),
+    [paginateData, filteredSpecialists]
+  );
 
   // Form handlers
   const resetForm = () => {
@@ -184,10 +196,13 @@ export default function AdminPage() {
       image_url: '',
       activity_area: '',
       education_details: '',
-      conferences: '',
+      doctor_category: '',
+      academic_degree: '',
+      additional_education: '',
       specializations: '',
       education: '',
       category_id: '',
+      service_category_id: '', // Сбрасываем новое поле
     });
     setEditingSpecialist(null);
     setIsModalOpen(false);
@@ -209,10 +224,13 @@ export default function AdminPage() {
       image_url: specialist.image_url,
       activity_area: specialist.activity_area || '',
       education_details: specialist.education_details || '',
-      conferences: specialist.conferences.join('\n'),
+      doctor_category: specialist.doctor_category || '',
+      academic_degree: specialist.academic_degree || '',
+      additional_education: specialist.additional_education.join('\n'),
       specializations: specialist.specializations.join('\n'),
       education: specialist.education.join('\n'),
-      category_id: specialist.category_id.toString(),
+      category_id: specialist.category_id ? specialist.category_id.toString() : '',
+      service_category_id: specialist.service_category_id ? specialist.service_category_id.toString() : '',
     });
     setIsModalOpen(true);
   };
@@ -224,7 +242,7 @@ export default function AdminPage() {
         ...formData,
         specializations: formData.specializations.split('\n').filter((s) => s.trim()),
         education: formData.education.split('\n').filter((e) => e.trim()),
-        conferences: formData.conferences.split('\n').filter((c) => c.trim()),
+        additional_education: formData.additional_education.split('\n').filter((a) => a.trim()),
       };
 
       const url = editingSpecialist
@@ -282,14 +300,9 @@ export default function AdminPage() {
     }
   };
 
-  // Loading state - показываем skeleton с блюром пока проверяем права
-  if (status === 'loading' || hasAdminRole === null || sessionLoading || isCheckingRole) {
+  // Loading state
+  if (sessionLoading || roleLoading) {
     return <AdminAccessSkeleton />;
-  }
-
-  // Not admin - show 404 (только после завершения проверки)
-  if (status === 'unauthenticated' || hasAdminRole === false) {
-    return <NotFound />;
   }
 
   // Admin login form (only if session not verified)
@@ -297,7 +310,19 @@ export default function AdminPage() {
     return <AdminAuthForm onSuccess={handleAuthSuccess} />;
   }
 
-  // Admin panel
+  // Operator welcome page
+  if (userRole === 'OPERATOR') {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminMenu />
+        <div className="flex-1 overflow-auto">
+          <OperatorWelcome />
+        </div>
+      </div>
+    );
+  }
+
+  // Admin panel for ADMIN and CHIEF_DOCTOR
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminMenu />
@@ -343,7 +368,7 @@ export default function AdminPage() {
                             <h3 className="font-semibold text-gray-800 truncate">{specialist.name}</h3>
                             <p className="text-sm text-gray-500 truncate">{specialist.specialization}</p>
                             <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="primary">{specialist.category.name}</Badge>
+                              <Badge variant="primary">{specialist.serviceCategory?.name || specialist.category?.name || 'Без категории'}</Badge>
                               <Badge variant="secondary">{specialist.experience} лет</Badge>
                             </div>
                           </div>
@@ -367,7 +392,7 @@ export default function AdminPage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={setPage}
                     className="mt-6"
                   />
                 )}
@@ -382,7 +407,7 @@ export default function AdminPage() {
             title={editingSpecialist ? 'Редактирование специалиста' : 'Новый специалист'}
             onSubmit={handleSave}
             loading={formLoading}
-            disabled={!formData.name || !formData.specialization || !formData.category_id}
+            disabled={!formData.name || !formData.specialization || !formData.service_category_id}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField label="ФИО" required>
@@ -412,12 +437,30 @@ export default function AdminPage() {
                 />
               </FormField>
 
-              <FormField label="Категория" required>
+              <FormField label="Категория">
+                <FormInput
+                  type="text"
+                  value={formData.doctor_category}
+                  onChange={(e) => setFormData({ ...formData, doctor_category: e.target.value })}
+                  placeholder="Высшая, первая, вторая..."
+                />
+              </FormField>
+
+              <FormField label="Ученая степень, звание">
+                <FormInput
+                  type="text"
+                  value={formData.academic_degree}
+                  onChange={(e) => setFormData({ ...formData, academic_degree: e.target.value })}
+                  placeholder="Кандидат медицинских наук, доктор наук..."
+                />
+              </FormField>
+
+              <FormField label="Категория услуг" required>
                 <FormSelect
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  value={formData.service_category_id}
+                  onChange={(e) => setFormData({ ...formData, service_category_id: e.target.value })}
                 >
-                  <option value="">Выберите категорию</option>
+                  <option value="">Выберите категорию услуг</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -480,12 +523,12 @@ export default function AdminPage() {
               </div>
 
               <div className="md:col-span-2">
-                <FormField label="Конференции (каждая с новой строки)">
+                <FormField label="Дополнительное образование (каждое с новой строки)">
                   <FormTextarea
-                    value={formData.conferences}
-                    onChange={(e) => setFormData({ ...formData, conferences: e.target.value })}
+                    value={formData.additional_education}
+                    onChange={(e) => setFormData({ ...formData, additional_education: e.target.value })}
                     rows={3}
-                    placeholder="Международная конференция стоматологов 2023&#10;DentalTech Summit 2024&#10;European Dental Congress 2024"
+                    placeholder="Курсы повышения квалификации по эндодонтии, 2023&#10;Сертификационный курс по имплантации, 2024&#10;Международная конференция стоматологов, 2024"
                   />
                 </FormField>
               </div>

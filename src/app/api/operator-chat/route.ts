@@ -13,7 +13,14 @@ export async function GET(request: NextRequest) {
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        {
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -28,7 +35,14 @@ export async function GET(request: NextRequest) {
     if (!user || !['OPERATOR', 'ADMIN', 'CHIEF_DOCTOR'].includes(user.role)) {
       return NextResponse.json(
         { error: "Нет доступа" },
-        { status: 403 }
+        {
+          status: 403,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -67,12 +81,27 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    return NextResponse.json({ chats });
+    return NextResponse.json(
+      { chats },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (error) {
-    console.error("Error fetching chats:", error);
     return NextResponse.json(
       { error: "Ошибка при получении чатов" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
     );
   }
 }
@@ -88,7 +117,14 @@ export async function POST(request: NextRequest) {
     if (!token || !token.id) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        {
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -98,7 +134,14 @@ export async function POST(request: NextRequest) {
     if (!message || message.trim().length < 3) {
       return NextResponse.json(
         { error: "Сообщение должно содержать минимум 3 символа" },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -111,7 +154,14 @@ export async function POST(request: NextRequest) {
     if (user?.is_messages_blocked) {
       return NextResponse.json(
         { error: "Вы заблокированы и не можете отправлять сообщения" },
-        { status: 403 }
+        {
+          status: 403,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -126,7 +176,14 @@ export async function POST(request: NextRequest) {
     if (existingChat) {
       return NextResponse.json(
         { error: "У вас уже есть активный чат с оператором", chatId: existingChat.id },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        }
       );
     }
 
@@ -159,12 +216,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ chat }, { status: 201 });
+    return NextResponse.json(
+      { chat },
+      {
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
   } catch (error) {
-    console.error("Error creating chat:", error);
     return NextResponse.json(
       { error: "Ошибка при создании чата" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
     );
   }
 }

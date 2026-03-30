@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ users: blockedUsers });
   } catch (error) {
-    console.error("Error fetching blocked users:", error);
     return NextResponse.json(
       { error: "Ошибка при получении заблокированных пользователей" },
       { status: 500 }
@@ -104,7 +103,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Пользователь разблокирован" });
   } catch (error) {
-    console.error("Error unblocking user:", error);
     return NextResponse.json(
       { error: "Ошибка при разблокировке пользователя" },
       { status: 500 }

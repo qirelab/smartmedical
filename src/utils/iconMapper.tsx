@@ -15,6 +15,18 @@ import {
   Eye,
   Search,
   Building2,
+  Brain,
+  ShieldPlus,
+  Syringe,
+  Pill,
+  Microscope,
+  Hospital,
+  Dna,
+  Bone,
+  Droplet,
+  Waves,
+  Zap,
+  Sparkles,
 } from "lucide-react";
 
 export const iconMap = {
@@ -34,6 +46,18 @@ export const iconMap = {
   Eye,
   Search,
   Building2,
+  Brain,
+  ShieldPlus,
+  Syringe,
+  Pill,
+  Microscope,
+  Hospital,
+  Dna,
+  Bone,
+  Droplet,
+  Waves,
+  Zap,
+  Sparkles,
 };
 
 export type IconName = keyof typeof iconMap;

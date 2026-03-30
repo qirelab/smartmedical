@@ -48,7 +48,6 @@ export const authOptions: NextAuthOptions = {
                         image: user.avatar_url,
                     };
                 } catch (error) {
-                    console.error("Auth error:", error);
                     return null;
                 }
             }
@@ -59,20 +58,32 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+    cookies: {
+        sessionToken: {
+            name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
     },
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                token.role = (user as { role?: string }).role;
+                token.role = user.role;
                 token.picture = user.image;
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user && token.id) {
-                (session.user as { id: string; role?: string }).id = token.id as string;
-                (session.user as { id: string; role?: string }).role = token.role as string;
+                session.user.id = token.id as string;
+                session.user.role = token.role;
                 session.user.image = token.picture as string | null | undefined;
             }
             return session;

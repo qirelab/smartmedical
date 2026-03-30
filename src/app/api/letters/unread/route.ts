@@ -101,7 +101,6 @@ export async function GET(request: NextRequest) {
       letters: allUnreadLetters,
     });
   } catch (error) {
-    console.error("Error fetching unread replies:", error);
     return NextResponse.json(
       { error: "Ошибка при получении непрочитанных ответов" },
       { status: 500 }

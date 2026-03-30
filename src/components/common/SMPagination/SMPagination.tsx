@@ -65,7 +65,7 @@ export function Pagination({
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         variant="outline"
-        className="h-10 w-10 p-0 border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center"
+        className="h-10 w-10 p-0 border-gray-300 hover:bg-gray-50 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed hidden sm:flex items-center justify-center"
       >
         <ChevronLeft className="w-5 h-5" />
       </Button>
@@ -76,7 +76,7 @@ export function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           variant="outline"
-          className="h-10 px-3 border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+          className="h-10 px-3 border-gray-300 hover:bg-gray-50 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
@@ -89,7 +89,7 @@ export function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           variant="outline"
-          className="h-10 px-3 border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+          className="h-10 px-3 border-gray-300 hover:bg-gray-50 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
@@ -117,7 +117,7 @@ export function Pagination({
               key={pageNumber}
               onClick={() => onPageChange(pageNumber)}
               variant={isActive ? "default" : "outline"}
-              className={`h-10 w-10 p-0 ${
+              className={`h-10 w-10 p-0 cursor-pointer ${
                 isActive
                   ? "bg-[#18A36C] hover:bg-[#18A36C]/90 text-white border-[#18A36C]"
                   : "border-gray-300 hover:bg-gray-50 text-gray-700"
@@ -134,7 +134,7 @@ export function Pagination({
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         variant="outline"
-        className="h-10 w-10 p-0 border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center"
+        className="h-10 w-10 p-0 border-gray-300 hover:bg-gray-50 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed hidden sm:flex items-center justify-center"
       >
         <ChevronRight className="w-5 h-5" />
       </Button>

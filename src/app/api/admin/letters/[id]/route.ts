@@ -84,7 +84,6 @@ export async function GET(
 
     return NextResponse.json(letter);
   } catch (error) {
-    console.error("Error fetching letter:", error);
     return NextResponse.json(
       { error: "Ошибка при получении письма" },
       { status: 500 }
@@ -194,7 +193,6 @@ export async function PUT(
 
     return NextResponse.json({ ...letter, newMessage: message });
   } catch (error) {
-    console.error("Error replying to letter:", error);
     return NextResponse.json(
       { error: "Ошибка при отправке ответа" },
       { status: 500 }
@@ -244,7 +242,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting letter:", error);
     return NextResponse.json(
       { error: "Ошибка при удалении письма" },
       { status: 500 }
