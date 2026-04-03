@@ -8,22 +8,22 @@
   "services": [
     {
       "name": "Стоматология",
-      "path": "/services"
+      "path": "/services/dentistry"
     },
     {
       "name": "Гинекология",
-      "path": "/services"
+      "path": "/services/gynecology"
     },
     {
       "name": "УЗИ диагностика",
-      "path": "/services"
+      "path": "/services/ultrasound"
     },
     {
-      "name": "Детская стоматология",
-      "path": "/services"
+      "name": "Кардиология",
+      "path": "/services/cardiology"
     },
     {
-      "name": "Эндокринология",
+      "name": "Неврология",
       "path": "/services"
     }
   ],
