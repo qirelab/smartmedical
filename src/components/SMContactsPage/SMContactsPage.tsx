@@ -4,6 +4,7 @@ import { MapPin, Phone, Clock, Mail, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../common/SMButton/SMButton";
 import contactsPageConfig from "@/config/contactsPage.json";
+import { YANDEX_MAPS_ORG_URL } from "@/config/yandexMaps";
 import { useContacts } from "@/hooks/useContacts";
 import { ContactsPageSkeleton } from "./SMContactsSkeleton";
 
@@ -23,7 +24,7 @@ export function SMContactsPage() {
   // Prepare map URL from coordinates
   const mapUrl = contacts?.map_geo
     ? `https://www.google.com/maps?q=${contacts.map_geo}&output=embed`
-    : contactsPageConfig.map.url;
+    : YANDEX_MAPS_ORG_URL;
 
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12 max-w-7xl">
@@ -64,7 +65,7 @@ export function SMContactsPage() {
                   {contactsPageConfig.contactInfo.address.title}
                 </h3>
                 <a
-                  href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || contactsPageConfig.contactInfo.address.main)}`}
+                  href={YANDEX_MAPS_ORG_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-[#18A36C] transition-colors text-sm leading-relaxed cursor-pointer block"

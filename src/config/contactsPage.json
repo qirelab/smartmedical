@@ -40,7 +40,6 @@
   },
   "map": {
     "title": "Как нас найти",
-    "url": "https://yandex.ru/map-widget/v1/?um=constructor%3Ae6b6b92b5e178d58ea5b9508e45c9bd1c01c0888b4e7098056c9b8da68dd0bb1&source=constructor",
     "description": "Нажмите на карту для увеличения и построения маршрута",
     "altText": "Doctor Family Clinic Location"
   },

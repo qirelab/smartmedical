@@ -13,6 +13,7 @@ import { SearchModal } from "../common/SMSearch/SMSearch";
 import SMBurgerMenu from "../common/SMBurgerMenu/SMBurgerMenu";
 import navigationConfig from "@/config/navigation.json";
 import contactsConfig from "@/config/contacts.json";
+import { YANDEX_MAPS_ORG_URL } from "@/config/yandexMaps";
 import { SMProfileButton } from "../common/SMProfileButton/SMProfileButton";
 import { signIn, useSession } from "next-auth/react";
 import { LoginData, RegisterData } from "../SMAuthModals/SMAuthModals.styles";
@@ -175,7 +176,7 @@ export function Header() {
                   <TextSkeleton className="w-48 lg:w-64 h-4" />
                 ) : (
                   <a
-                    href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts.address)}`}
+                    href={YANDEX_MAPS_ORG_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs lg:text-sm hover:underline transition-colors cursor-pointer inline-block"

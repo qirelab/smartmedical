@@ -6,6 +6,7 @@ import SMLogo from "@/icons/SMLogo";
 import { useRouter, usePathname } from "next/navigation";
 import footerConfig from "@/config/footer.json";
 import { useContacts } from "@/hooks/useContacts";
+import { YANDEX_MAPS_ORG_URL } from "@/config/yandexMaps";
 
 // Компонент скелетона для текста
 function TextSkeleton({ className = '' }: { className?: string }) {
@@ -127,7 +128,7 @@ export function Footer() {
                     <TextSkeleton className="w-48 h-5" />
                   ) : (
                     <a
-                      href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts.address)}`}
+                      href={YANDEX_MAPS_ORG_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#2E2E2E] text-sm lg:text-base hover:text-[#18A36C] transition-colors cursor-pointer"

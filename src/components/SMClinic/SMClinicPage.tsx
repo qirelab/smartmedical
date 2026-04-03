@@ -12,6 +12,7 @@ import { PartnerModal } from './SMPartnerModal';
 import { VacancyModal } from './SMVacancyModal';
 import { LeaveReviewModal } from './LeaveReviewModal';
 import { useContacts } from '@/hooks/useContacts';
+import { YANDEX_MAPS_ORG_URL } from '@/config/yandexMaps';
 import { AskQuestionModal } from '../AskQuestionModal/AskQuestionModal';
 import { useAskQuestionModal } from '@/hooks/useAskQuestionModal';
 import { useUrlPagination } from '@/hooks/useUrlPagination';
@@ -999,7 +1000,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                         <TextSkeleton className="w-64 h-5" />
                       ) : (
                         <a
-                          href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                          href={YANDEX_MAPS_ORG_URL}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer"
@@ -1014,7 +1015,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                         <TextSkeleton className="w-64 h-5" />
                       ) : (
                         <a
-                          href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                          href={YANDEX_MAPS_ORG_URL}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer"
@@ -1058,7 +1059,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
                           <TextSkeleton className="w-64 h-5" />
                         ) : (
                           <a
-                            href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр-т Победителей, д. 119, пом. 504')}`}
+                            href={YANDEX_MAPS_ORG_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#212121] hover:text-[#18A36C] transition-colors cursor-pointer block"

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ImageWithFallback } from '../SMImage/ImageWithFallback';
 import { SpecialistCardSkeleton } from './SMDoctorSkeleton';
 import { useContacts } from '@/hooks/useContacts';
+import { YANDEX_MAPS_ORG_URL } from '@/config/yandexMaps';
 
 interface Specialist {
   id: number;
@@ -229,7 +230,7 @@ export function DoctorsContent() {
                 </div>
               </a>
               <a
-                href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts?.address || 'г. Минск, пр. Победителей, д. 119, пом. 504')}`}
+                href={YANDEX_MAPS_ORG_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group bg-white border border-[#E8E6E3] rounded-xl p-4 hover:border-[#18A36C] hover:shadow-lg transition-all duration-300 cursor-pointer"

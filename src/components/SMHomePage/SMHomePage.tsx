@@ -9,6 +9,7 @@ import { ImageWithFallback } from "../SMImage/ImageWithFallback";
 import homePageConfig from "@/config/homePage.json";
 import { iconMap, IconName } from "@/utils/iconMapper";
 import { useContacts } from "@/hooks/useContacts";
+import { YANDEX_MAPS_ORG_URL } from "@/config/yandexMaps";
 import { useFeedbacks } from "@/hooks/useFeedbacks";
 
 // Компонент скелетона для текста
@@ -466,7 +467,7 @@ export function SMHomePage() {
                     </p>
                   ) : (
                     <a
-                      href={`https://yandex.ru/maps/?text=${encodeURIComponent(contacts.address)}`}
+                      href={YANDEX_MAPS_ORG_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#2E2E2E] hover:text-[#18A36C] transition-colors cursor-pointer block mb-2"
@@ -542,7 +543,7 @@ export function SMHomePage() {
                 <Button
                   variant="outline"
                   className="border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 cursor-pointer"
-                  onClick={() => window.open("https://maps.google.com", "_blank")}
+                  onClick={() => window.open(YANDEX_MAPS_ORG_URL, "_blank")}
                 >
                   {homePageConfig.contactSection.location.mapButtonText}
                   <ArrowRight className="w-5 h-5 ml-[2.5px]" />
