@@ -26,6 +26,53 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+/** Не показывать в меню услуг (требования клиента). Старые записи в БД скрываются без миграции. */
+const HIDDEN_SERVICE_MENU_SLUGS = new Set([
+  'pediatric-dentistry',
+  'pediatric-urology',
+  'endocrinology',
+  'oncology',
+  'day-hospital',
+  'anesthesia-treatment',
+  'microscope-treatment',
+  // устаревшие пункты (до обновления сидов)
+  'sinus-lift',
+  'tooth-extraction',
+  'crowns',
+  'aligners',
+  // старая структура гинекологии
+  'cervical-conization',
+  'tube-patency-check',
+  'diagnostic-curettage',
+  'culdocentesis',
+  'polyp-removal',
+  'holter-monitoring',
+  'fetal-ultrasound',
+  'gender-party',
+]);
+
+function menuItemRootSlug(id: string): string {
+  const i = id.indexOf('/');
+  return i === -1 ? id : id.slice(0, i);
+}
+
+function filterHiddenMenuItems(items: MenuItem[]): MenuItem[] {
+  return items
+    .filter((item) => !HIDDEN_SERVICE_MENU_SLUGS.has(menuItemRootSlug(item.id)))
+    .map((item) => {
+      const children = item.children?.length
+        ? filterHiddenMenuItems(item.children)
+        : undefined;
+      const next: MenuItem = { ...item };
+      if (children?.length) {
+        next.children = children;
+      } else {
+        delete next.children;
+      }
+      return next;
+    });
+}
+
 // Функция для построения меню с подкатегориями и услугами
 function buildMenuWithServices(categories: ServiceCategory[]): MenuItem[] {
   return categories.map((category) => {
@@ -112,7 +159,9 @@ export async function getServicesMenuFromDB(): Promise<MenuItem[]> {
     // Загружаем корневые категории с их подкатегориями и услугами
     const categories = await loadCategoryTreeWithServices(null);
 
-    return buildMenuWithServices(categories as ServiceCategory[]);
+    return filterHiddenMenuItems(
+      buildMenuWithServices(categories as ServiceCategory[])
+    );
   } catch (error) {
     console.error('Error fetching services menu from DB:', error);
     return [];

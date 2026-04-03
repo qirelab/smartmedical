@@ -10,10 +10,6 @@
           "path": "/services"
         },
         {
-          "name": "Детская стоматология",
-          "path": "/services/pediatric-dentistry"
-        },
-        {
           "name": "Стоматология",
           "path": "/services/dentistry"
         },
@@ -22,16 +18,24 @@
           "path": "/services/gynecology"
         },
         {
-          "name": "Детская гинекология",
-          "path": "/services/pediatric-gynecology"
-        },
-        {
-          "name": "Детская урология",
-          "path": "/services/pediatric-urology"
+          "name": "Дерматология",
+          "path": "/services/dermatology"
         },
         {
           "name": "УЗИ",
           "path": "/services/ultrasound"
+        },
+        {
+          "name": "Кардиология",
+          "path": "/services/cardiology"
+        },
+        {
+          "name": "Неврология",
+          "path": "/services/neurology"
+        },
+        {
+          "name": "Урология",
+          "path": "/services/urology"
         },
         {
           "name": "Анализы",

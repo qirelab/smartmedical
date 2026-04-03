@@ -9,54 +9,66 @@
           "id": "therapeutic-dentistry",
           "title": "Терапевтическая стоматология",
           "children": [
-            { "id": "teeth-whitening", "title": "Отбеливание зубов Beyond Polus" },
-            { "id": "professional-cleaning", "title": "Профессиональная чистка зубов Air Flow" },
-            { "id": "ultrasonic-cleaning", "title": "Чистка зубов в Минске — ультразвуковая и профессиональная" },
-            { "id": "pulpitis-treatment", "title": "Лечение пульпита в Минске — стоимость" },
-            { "id": "oral-hygiene", "title": "Профессиональная гигиена полости рта" },
-            { "id": "caries-treatment", "title": "Лечение кариеса в Минске" }
+            { "id": "dental-therapist-consultation", "title": "Консультация стоматолога-терапевта" },
+            { "id": "caries-treatment", "title": "Лечение кариеса" },
+            { "id": "professional-cleaning", "title": "Профессиональная чистка зубов" },
+            { "id": "tooth-restoration", "title": "Реставрация зубов" },
+            { "id": "teeth-treatment-microscope", "title": "Лечение зубов под микроскопом" },
+            { "id": "pulpitis-treatment", "title": "Лечение пульпита" }
           ]
         },
         {
           "id": "implantation",
           "title": "Имплантация",
           "children": [
-            { "id": "straumann-implants", "title": "Имплантация зубов Straumann в Минске" },
-            { "id": "total-implantation", "title": "Тотальная (полная) имплантация зубов в Минске" },
-            { "id": "immediate-implantation", "title": "Одномоментная имплантация зубов в Минске" },
-            { "id": "osstem-implants", "title": "Имплантация зубов Osstem в Минске" },
-            { "id": "all-on-4-6", "title": "Имплантация зубов All-on-4 и All-on-6 в Минске" },
-            { "id": "two-stage-implantation", "title": "Двухэтапная имплантация зубов в Минске" },
-            { "id": "implantation-prices", "title": "Имплантация зубов в Минске — цены и виды" }
+            { "id": "implantation-general", "title": "Имплантация" },
+            { "id": "immediate-dental-implantation", "title": "Одномоментная дентальная имплантация" },
+            { "id": "all-on-4-6", "title": "Имплантация по протоколу All-on-4/6" },
+            { "id": "sinus-lift-implantation", "title": "Синус-лифтинг" },
+            { "id": "straumann-implants", "title": "Имплантация зубов системой Straumann" },
+            { "id": "neodent-implants", "title": "Имплантация зубов системой Neodent" },
+            { "id": "osstem-implants", "title": "Имплантация зубов системой Osstem Implant" },
+            { "id": "megagen-anyone-implants", "title": "Имплантация зубов системой MegaGen AnyOne" },
+            { "id": "megagen-implants", "title": "Имплантация зубов системой MegaGen AnyRidge" }
           ]
         },
         {
           "id": "orthopedics",
           "title": "Ортопедия",
           "children": [
-            { "id": "veneers", "title": "Виниры в Минске — цены и установка" },
-            { "id": "crowns", "title": "Коронки на зубы в Минске — цены и виды" }
+            { "id": "prosthetics-general", "title": "Протезирование" },
+            { "id": "temporary-crowns", "title": "Временные коронки" },
+            { "id": "digital-prosthetics", "title": "Цифровое протезирование" },
+            { "id": "metal-ceramic-crowns", "title": "Металлокерамические коронки" },
+            { "id": "veneers", "title": "Виниры" },
+            { "id": "zirconia-crowns", "title": "Коронки из диоксида циркония" },
+            { "id": "dental-bridges", "title": "Мостовидные протезы" },
+            { "id": "dental-onlays", "title": "Накладки" },
+            { "id": "implant-supported-prosthetics", "title": "Протезирование на имплантах" }
           ]
         },
         {
           "id": "orthodontics",
           "title": "Ортодонтия",
           "children": [
-            { "id": "braces-installation", "title": "Установка брекетов в Минске" },
-            { "id": "orthodontist-consultation", "title": "Ортодонт в Минске — консультация врача и лечение прикуса" },
-            { "id": "aligners", "title": "Элайнеры в Минске — цены на выравнивание зубов без брекетов" }
+            { "id": "orthodontist-consultation", "title": "Консультация стоматолога-ортодонта" },
+            { "id": "orthodontic-diagnostics", "title": "Ортодонтическая диагностика" },
+            { "id": "braces-installation", "title": "Установка брекетов" },
+            { "id": "orthodontic-retention-period", "title": "Ретенционный период" },
+            { "id": "pediatric-orthodontics", "title": "Детская ортодонтия" }
           ]
         },
         {
           "id": "surgery",
           "title": "Хирургия",
           "children": [
-            { "id": "tooth-extraction", "title": "Удаление зубов в Минске — удаление зуба мудрости и другие сложные случаи" },
-            { "id": "sinus-lift", "title": "Синус-лифтинг в Минске — цены и виды операции" }
+            { "id": "oral-surgery-general", "title": "Хирургия" },
+            { "id": "single-tooth-extraction", "title": "Удаление зуба" },
+            { "id": "wisdom-tooth-extraction", "title": "Удаление зуба мудрости" },
+            { "id": "gingival-plasty", "title": "Пластика десны" },
+            { "id": "periostotomy-pericoronotomy", "title": "Периостотомия, перикоронаротомия" }
           ]
-        },
-        { "id": "anesthesia-treatment", "title": "Лечение зубов под наркозом в Минске" },
-        { "id": "microscope-treatment", "title": "Лечение зубов под микроскопом в Минске" }
+        }
       ]
     },
     {
@@ -64,50 +76,30 @@
       "title": "Гинекология",
       "icon": "Heart",
       "children": [
-        { "id": "gynecologist-appointment", "title": "Приём гинеколога" },
-        { "id": "diagnostic-studies", "title": "Диагностические исследования" },
-        { "id": "intrauterine-device", "title": "Внутриматочная спираль" },
-        { "id": "cervical-conization", "title": "Конизация шейки матки" },
+        { "id": "gynecologist-appointment", "title": "Приём врача-гинеколога" },
         { "id": "colposcopy", "title": "Кольпоскопия шейки матки" },
-        { "id": "tube-patency-check", "title": "Проверка проходимости маточных труб (соногистероскопия) с помощью ExEm-геля" },
-        { "id": "polyp-removal", "title": "Удаление полипов | Полипэктомия" },
-        { "id": "diagnostic-curettage", "title": "Раздельное диагностическое выскабливание" },
-        { "id": "culdocentesis", "title": "Кульдоцентез" }
+        { "id": "vulvoscopy", "title": "Вульвоскопия" },
+        { "id": "diagnostic-studies", "title": "Диагностические исследования" },
+        { "id": "prp-plasma-therapy", "title": "Плазмотерапия или PRP-терапия" },
+        { "id": "intimate-contouring", "title": "Интимная контурная пластика" },
+        { "id": "radiofrequency-cervical-conization", "title": "Радиоволновая конизация шейки матки" },
+        { "id": "radiofrequency-cervical-coagulation", "title": "Радиоволновая коагуляция шейки матки" },
+        { "id": "cervical-canal-polypectomy", "title": "Полипэктомия цервикального канала" },
+        { "id": "intrauterine-device", "title": "Внутриматочная спираль" },
+        { "id": "aspiration-cervical-biopsy", "title": "Аспирационная биопсия шейки матки" },
+        { "id": "targeted-cervical-biopsy", "title": "Прицельная биопсия шейки матки" },
+        { "id": "gynecology-pelvic-ultrasound", "title": "УЗИ органов малого таза" },
+        { "id": "gynecology-breast-ultrasound", "title": "УЗИ молочных желез" },
+        { "id": "pediatric-gynecology", "title": "Детская гинекология" }
       ]
     },
     {
-      "id": "pediatric-gynecology",
-      "title": "Детская гинекология",
-      "icon": "Baby",
+      "id": "dermatology",
+      "title": "Дерматология",
+      "icon": "Sparkles",
       "children": [
-        { "id": "pelvic-ultrasound-girls", "title": "УЗИ органов малого таза для девочек" },
-        { "id": "adolescent-gynecologist", "title": "Подростковый гинеколог" },
-        { "id": "pediatric-gynecologist", "title": "Детский гинеколог" }
-      ]
-    },
-    {
-      "id": "pediatric-urology",
-      "title": "Детская урология",
-      "icon": "Stethoscope",
-      "children": [
-        { "id": "varicocele-treatment", "title": "Лечение варикоцеле" },
-        { "id": "pediatric-urologist-appointment", "title": "Приём детского уролога" }
-      ]
-    },
-    {
-      "id": "endocrinology",
-      "title": "Эндокринология",
-      "icon": "Activity",
-      "children": [
-        { "id": "endocrinologist-consultation", "title": "Консультация врача-эндокринолога" }
-      ]
-    },
-    {
-      "id": "oncology",
-      "title": "Онкология",
-      "icon": "Stethoscope",
-      "children": [
-        { "id": "oncologist-appointment", "title": "Приём врача онколога" }
+        { "id": "dermatovenerologist-appointment", "title": "Приём врача-дерматовенеролога" },
+        { "id": "skin-dermoscopy", "title": "Дермоскопия кожи" }
       ]
     },
     {
@@ -115,12 +107,22 @@
       "title": "УЗИ",
       "icon": "Eye",
       "children": [
-        { "id": "pelvic-ultrasound", "title": "УЗИ органов малого таза" },
-        { "id": "breast-ultrasound", "title": "УЗИ молочных желез" },
         { "id": "thyroid-ultrasound", "title": "УЗИ щитовидной железы" },
-        { "id": "abdominal-ultrasound", "title": "УЗИ брюшной полости" },
-        { "id": "fetal-ultrasound", "title": "УЗИ плода" },
-        { "id": "gender-party", "title": "Гендер пати" }
+        { "id": "abdominal-ultrasound", "title": "УЗИ органов брюшной полости" },
+        { "id": "breast-ultrasound", "title": "УЗИ молочных желез" },
+        { "id": "pelvic-ultrasound", "title": "УЗИ органов малого таза" },
+        { "id": "ultrasound-heart", "title": "УЗИ сердца" },
+        { "id": "ultrasound-bc-arteries", "title": "УЗИ БЦА" },
+        {
+          "id": "ultrasound-kidneys-adrenals-bladder",
+          "title": "УЗИ почек, надпочечников, мочевого пузыря"
+        },
+        { "id": "ultrasound-prostate", "title": "УЗИ предстательной железы" },
+        {
+          "id": "ultrasound-scrotum-penis",
+          "title": "УЗИ мошонки, полового члена"
+        },
+        { "id": "ultrasound-transrectal", "title": "Трансректальное УЗИ" }
       ]
     },
     {
@@ -128,10 +130,65 @@
       "title": "Кардиология",
       "icon": "Heart",
       "children": [
-        { "id": "echo-kg", "title": "ЭХО-КГ (УЗИ сердца)" },
-        { "id": "ecg", "title": "ЭКГ (электрокардиография)" },
-        { "id": "holter-monitoring", "title": "Холтеровское мониторирование" },
-        { "id": "cardiologist-appointment", "title": "Приём кардиолога" }
+        { "id": "cardiologist-appointment", "title": "Приём врача-кардиолога" },
+        { "id": "ecg", "title": "Электрокардиография (ЭКГ)" },
+        { "id": "echo-kg", "title": "Эхокардиография (УЗИ сердца)" }
+      ]
+    },
+    {
+      "id": "neurology",
+      "title": "Неврология",
+      "icon": "Brain",
+      "children": [
+        { "id": "neurologist-appointment", "title": "Приём врача-невролога" },
+        { "id": "therapeutic-nerve-blocks", "title": "Лечебные блокады" },
+        { "id": "brachiocephalic-artery-ultrasound", "title": "УЗИ БЦА" }
+      ]
+    },
+    {
+      "id": "urology",
+      "title": "Урология",
+      "icon": "Droplet",
+      "children": [
+        { "id": "urologist-appointment", "title": "Приём врача-уролога" },
+        {
+          "id": "urology-diagnostic-manipulations",
+          "title": "Манипуляции и исследования для диагностики и лечения урологических заболеваний",
+          "children": [
+            { "id": "prostate-rectal-examination", "title": "Ректальный осмотр простаты" },
+            { "id": "prostate-massage", "title": "Массаж предстательной железы" },
+            { "id": "prostatic-secretion-collection", "title": "Получение секрета" },
+            { "id": "therapeutic-prostate-massage", "title": "Лечебный массаж предстательной железы" }
+          ]
+        },
+        {
+          "id": "urological-surgery",
+          "title": "Урологические операции",
+          "children": [
+            { "id": "hydrocele-puncture", "title": "Пункция гидроцеле" },
+            { "id": "urethral-polyp-electroresection", "title": "Электрорезекция полипа уретры" },
+            { "id": "condyloma-electroresection", "title": "Электрорезекция остроконечных кондилом" },
+            { "id": "frenulotomy", "title": "Рассечение короткой уздечки" }
+          ]
+        },
+        {
+          "id": "urology-ultrasound",
+          "title": "УЗИ",
+          "children": [
+            { "id": "urology-us-kidneys-adrenals", "title": "Почки, надпочечники" },
+            {
+              "id": "urology-us-bladder-residual",
+              "title": "Мочевой пузырь (в т.ч. с определением остаточной мочи)"
+            },
+            {
+              "id": "urology-us-prostate-bladder-transabdominal",
+              "title": "Предстательная железа с мочевым пузырем и остаточной мочью (трансабдоминально)"
+            },
+            { "id": "urology-us-scrotum", "title": "Мошонка" },
+            { "id": "urology-us-penis", "title": "Половой член" },
+            { "id": "urology-us-transrectal", "title": "Трансректальное УЗИ" }
+          ]
+        }
       ]
     },
     {
@@ -144,14 +201,6 @@
         { "id": "tooth-xray", "title": "Снимок зуба" },
         { "id": "3d-dental-scan", "title": "3D снимок зубов" },
         { "id": "panoramic-dental-scan", "title": "Панорамный снимок зубок" }
-      ]
-    },
-    {
-      "id": "day-hospital",
-      "title": "Дневной стационар",
-      "icon": "Building2",
-      "children": [
-        { "id": "procedure-room", "title": "Процедурный кабинет" }
       ]
     }
   ]
