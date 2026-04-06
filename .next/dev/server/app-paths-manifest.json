@@ -3,9 +3,16 @@
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/clinic-reviews/route": "app/api/clinic-reviews/route.js",
   "/api/contacts/route": "app/api/contacts/route.js",
-  "/api/service-categories/[slug]/route": "app/api/service-categories/[slug]/route.js",
+  "/api/partners/route": "app/api/partners/route.js",
+  "/api/question-categories/route": "app/api/question-categories/route.js",
+  "/api/service-categories/route": "app/api/service-categories/route.js",
   "/api/services-menu/route": "app/api/services-menu/route.js",
+  "/api/specialists/route": "app/api/specialists/route.js",
+  "/clinic/[...slug]/page": "app/clinic/[...slug]/page.js",
+  "/clinic/page": "app/clinic/page.js",
+  "/doctors/[...slug]/page": "app/doctors/[...slug]/page.js",
+  "/doctors/page": "app/doctors/page.js",
   "/page": "app/page.js",
-  "/services/[categorySlug]/page": "app/services/[categorySlug]/page.js",
+  "/patient/page": "app/patient/page.js",
   "/services/page": "app/services/page.js"
 }

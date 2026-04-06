@@ -100,10 +100,12 @@ export default function AdminPartnersPage() {
       const res = await fetch('/api/categories');
       if (res.ok) {
         const data = await res.json();
-        // Фильтруем только категории партнёров
-        const partnerCategories = data.filter((cat: { slug: string }) =>
-          ['medical-labs', 'insurance', 'dental-labs'].includes(cat.slug)
-        );
+        // Категории партнёров в том же порядке, что в меню клиники
+        const partnerSlugOrder = ['medical-labs', 'insurance', 'dental-labs', 'medical-institutions',];
+        const partnerCategories = data.filter((cat: { slug: string }) => partnerSlugOrder.includes(cat.slug)).sort(
+            (a: { slug: string }, b: { slug: string }) =>
+              partnerSlugOrder.indexOf(a.slug) - partnerSlugOrder.indexOf(b.slug)
+          );
         setCategories(partnerCategories);
       }
     } catch (error) {

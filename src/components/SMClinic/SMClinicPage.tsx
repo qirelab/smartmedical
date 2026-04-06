@@ -79,6 +79,13 @@ const REVIEWS_PER_PAGE = 10;
 const VACANCIES_PER_PAGE = 6;
 const PARTNERS_PER_PAGE = 6;
 
+const PARTNER_CATEGORY_SLUGS = [
+  'medical-labs',
+  'insurance',
+  'dental-labs',
+  'medical-institutions',
+] as const;
+
 // Компонент скелетона для текста
 function TextSkeleton({ className = '' }: { className?: string }) {
   return <span className={`inline-block animate-pulse bg-gray-200 rounded ${className}`}>&nbsp;</span>;
@@ -136,7 +143,9 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
   // Load partners for partner category pages (NOT for main partners page)
   useEffect(() => {
-    const isPartnerCategoryPage = ['medical-labs', 'insurance', 'dental-labs'].includes(itemId);
+    const isPartnerCategoryPage = PARTNER_CATEGORY_SLUGS.includes(
+      itemId as (typeof PARTNER_CATEGORY_SLUGS)[number]
+    );
     if (isPartnerCategoryPage) {
       setLoading(true);
       fetch(`/api/partners?category=${itemId}`)
@@ -236,7 +245,7 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   ];
 
   // Handle partners page
-  if (itemId === 'medical-labs' || itemId === 'insurance' || itemId === 'dental-labs') {
+  if (PARTNER_CATEGORY_SLUGS.includes(itemId as (typeof PARTNER_CATEGORY_SLUGS)[number])) {
     return (
       <>
         <div className="p-4 lg:p-8">
@@ -368,7 +377,10 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
   }
 
   // Handle individual partner page
-  if (currentRoute.includes('/clinic/partners/') && !['medical-labs', 'insurance', 'dental-labs'].includes(itemId)) {
+  if (
+    currentRoute.includes('/clinic/partners/') &&
+    !PARTNER_CATEGORY_SLUGS.includes(itemId as (typeof PARTNER_CATEGORY_SLUGS)[number])
+  ) {
     if (loading) {
       return <SinglePartnerSkeleton />;
     }

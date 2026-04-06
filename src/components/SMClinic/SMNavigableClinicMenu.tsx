@@ -31,7 +31,8 @@ const menuData: MenuItem[] = [
     children: [
       { id: 'medical-labs', title: 'Медицинские лаборатории' },
       { id: 'insurance', title: 'Страховые компании' },
-      { id: 'dental-labs', title: 'Зуботехнические лаборатории' }
+      { id: 'dental-labs', title: 'Зуботехнические лаборатории' },
+      { id: 'medical-institutions', title: 'Медицинские учреждения' },
     ]
   },
   {

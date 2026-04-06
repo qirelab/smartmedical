@@ -16,7 +16,6 @@ import {
   Download,
   ExternalLink,
   Heart,
-  TestTube,
   Activity,
   Zap,
   ArrowRight,
@@ -118,7 +117,7 @@ export function SMPatientContent() {
           >
             <span className="hidden sm:inline">{patientContentConfig.tabs.preparation.label}</span>
             <span className="sm:hidden">{patientContentConfig.tabs.preparation.labelShort}</span>
-            <TestTube className="w-5 h-5 ml-[2.5px]" />
+            <Activity className="w-5 h-5 ml-[2.5px]" />
           </TabsTrigger>
           <TabsTrigger
             value="documents"
@@ -303,7 +302,7 @@ export function SMPatientContent() {
           </motion.div>
         </TabsContent>
 
-        {/* Подготовка к анализам */}
+        {/* Подготовка к обследованиям */}
         <TabsContent value="preparation" className="space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -312,57 +311,6 @@ export function SMPatientContent() {
             className="space-y-8"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Анализ крови */}
-              <Card className="border border-gray-200 rounded-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <TestTube className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.preparation.bloodTestTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.preparation.bloodTestSubtitle}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5">
-                  {patientContentConfig.preparation.bloodTestPeriods.map((period, index) => (
-                    <div key={index}>
-                      <h4 className="text-[#2E2E2E] mb-3 text-lg">{period.title}:</h4>
-                      <ul className="space-y-2">
-                        {period.rules.map((rule, ruleIndex) => (
-                          <li key={ruleIndex} className="flex items-start gap-3 text-gray-600 leading-relaxed">
-                            <CheckCircle className="w-5 h-5 text-[#18A36C] mt-0.5 flex-shrink-0" />
-                            {rule}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Анализ мочи */}
-              <Card className="border border-gray-200 rounded-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <TestTube className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.preparation.urineTestTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.preparation.urineTestSubtitle}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-4">
-                    {patientContentConfig.preparation.urineTestRules.map((rule, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-600 leading-relaxed">
-                        <CheckCircle className="w-5 h-5 text-[#18A36C] mt-0.5 flex-shrink-0" />
-                        {rule}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
               {/* ЭКГ */}
               <Card className="border border-gray-200 rounded-lg">
                 <CardHeader>

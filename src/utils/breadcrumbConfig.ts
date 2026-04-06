@@ -133,6 +133,7 @@ export const breadcrumbLabels: Record<string, string> = {
 
   // Партнеры (используются как /clinic/partners/medical-labs)
   'medical-labs': 'Медицинские лаборатории',
+  'medical-institutions': 'Медицинские учреждения',
   'insurance': 'Страховые компании',
   'dental-labs': 'Зуботехнические лаборатории',
 
