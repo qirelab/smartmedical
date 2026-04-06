@@ -52,3 +52,4 @@ https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCT
 [00:27:23.326] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
 [00:27:23.356] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./src/config/onboardingConfig.json (json) changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
 [00:27:24.463] Server  LOG      ✓ Compiled in 843ms
+{"timestamp":"03:38:59.857","source":"Server","level":"LOG","message":"✓ Compiled in 1758ms"}
