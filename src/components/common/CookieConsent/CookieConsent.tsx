@@ -117,10 +117,10 @@ export function CookieConsent() {
             setView('banner');
             setIsVisible(true);
           }}
-          className="fixed bottom-6 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#18A36C] text-white shadow-lg transition hover:bg-[#15905f] md:left-6"
+          className="fixed bottom-6 left-4 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-2xl transition-all duration-300 hover:shadow-[#18A36C]/50 md:left-6"
           aria-label="Открыть настройки cookie"
         >
-          <Cookie className="h-6 w-6" />
+          <Cookie className="h-8 w-8" />
         </button>
       )}
 

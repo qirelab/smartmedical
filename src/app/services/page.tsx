@@ -174,7 +174,7 @@ interface ServicePageProps {
   categoryId: string;
 }
 
-export function ServicePage({ serviceId, categoryId }: ServicePageProps) {
+function ServicePage({ serviceId, categoryId }: ServicePageProps) {
   const router = useRouter();
   const [serviceData, setServiceData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);

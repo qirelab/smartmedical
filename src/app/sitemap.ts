@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/patient",
   ];
 
-  const baseEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
+  const baseEntries: MetadataRoute.Sitemap = staticRoutes.map((route: string) => ({
     url: `${SITE_URL}${route}`,
     lastModified: now,
     changeFrequency: route === "" ? "daily" : "weekly",
@@ -62,25 +62,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const dynamicRoutes = new Set<string>();
 
-    services.forEach((service) => {
+    services.forEach((service: (typeof services)[number]) => {
       const categorySlug = service.serviceCategory?.slug || service.category?.slug;
       if (!categorySlug) return;
       dynamicRoutes.add(`/services/${categorySlug}/${service.id}`);
     });
 
-    specialists.forEach((specialist) => {
+    specialists.forEach((specialist: (typeof specialists)[number]) => {
       const categorySlug = specialist.category?.slug;
       if (!categorySlug) return;
       dynamicRoutes.add(`/doctors/${categorySlug}/${specialist.id}`);
     });
 
-    questionCategories.forEach((category) => {
+    questionCategories.forEach((category: (typeof questionCategories)[number]) => {
       if (!category.slug) return;
       dynamicRoutes.add(`/clinic/questions/${category.slug}`);
     });
 
     const dynamicEntries: MetadataRoute.Sitemap = Array.from(dynamicRoutes).map(
-      (route) => ({
+      (route: string) => ({
         url: `${SITE_URL}${route}`,
         lastModified: now,
         changeFrequency: "weekly",

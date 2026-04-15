@@ -30,9 +30,9 @@ export async function GET(request: Request) {
     });
 
     // Transform data to match expected format
-    const transformedServices = services.map(service => ({
+    const transformedServices = services.map((service: (typeof services)[number]) => ({
       ...service,
-      specialists: service.specialists.map(ss => ss.specialist),
+      specialists: service.specialists.map((ss: (typeof service.specialists)[number]) => ss.specialist),
     }));
 
     return NextResponse.json(transformedServices);
