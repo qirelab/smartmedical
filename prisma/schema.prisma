@@ -104,6 +104,9 @@ model Specialist {
   image_url            String
   activity_area        String?
   education_details    String?              @db.Text
+  doctor_category      String?
+  academic_degree      String?
+  additional_education String[]             @default([])
   conferences          String[]             @default([])
   // Поля для структуры about
   specializations      String[]             @default([])

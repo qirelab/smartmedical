@@ -60,7 +60,7 @@ export async function GET(
     // Transform data to match expected format
     const transformedService = {
       ...service,
-      specialists: service.specialists.map(ss => ss.specialist),
+      specialists: service.specialists.map((ss: (typeof service.specialists)[number]) => ss.specialist),
     };
 
     return NextResponse.json(transformedService);
@@ -154,7 +154,7 @@ export async function PUT(
     // Transform data to match expected format
     const transformedService = {
       ...service,
-      specialists: service.specialists.map(ss => ss.specialist),
+      specialists: service.specialists.map((ss: (typeof service.specialists)[number]) => ss.specialist),
     };
 
     return NextResponse.json(transformedService);

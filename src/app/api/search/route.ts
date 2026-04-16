@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
     const results: SearchResult[] = [];
 
     // Форматируем услуги
-    services.forEach((service) => {
+    services.forEach((service: (typeof services)[number]) => {
       const categorySlug = service.serviceCategory?.slug || service.category?.slug || 'services';
       const categoryName = service.serviceCategory?.name || service.category?.name || 'Услуги';
 
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем специалистов
-    specialists.forEach((specialist) => {
+    specialists.forEach((specialist: (typeof specialists)[number]) => {
       const categorySlug = specialist.category?.slug || 'doctors';
       const categoryName = specialist.category?.name || 'Специалисты';
 
@@ -221,7 +221,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем вакансии
-    vacancies.forEach((vacancy) => {
+    vacancies.forEach((vacancy: (typeof vacancies)[number]) => {
       results.push({
         id: `vacancy-${vacancy.id}`,
         title: vacancy.name,
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем FAQ
-    faqs.forEach((faq) => {
+    faqs.forEach((faq: (typeof faqs)[number]) => {
       // Если есть категория - используем новый формат URL
       const categorySlug = faq.questionCategory?.slug;
       const categoryName = faq.questionCategory?.name || "Общие вопросы";
@@ -252,7 +252,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем материалы
-    materials.forEach((material) => {
+    materials.forEach((material: (typeof materials)[number]) => {
       results.push({
         id: `material-${material.id}`,
         title: material.title,
@@ -264,7 +264,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем партнёров
-    partners.forEach((partner) => {
+    partners.forEach((partner: (typeof partners)[number]) => {
       results.push({
         id: `partner-${partner.id}`,
         title: partner.name,
@@ -276,7 +276,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Форматируем контакты
-    contacts.forEach((contact) => {
+    contacts.forEach((contact: (typeof contacts)[number]) => {
       results.push({
         id: `contact-${contact.id}`,
         title: "Контакты клиники",
@@ -311,8 +311,8 @@ export async function GET(request: NextRequest) {
       },
     ];
 
-    patientPageKeywords.forEach((item, index) => {
-      const matches = item.keywords.some((keyword) =>
+    patientPageKeywords.forEach((item: (typeof patientPageKeywords)[number], index: number) => {
+      const matches = item.keywords.some((keyword: string) =>
         keyword.includes(searchTerm.toLowerCase()) ||
         searchTerm.toLowerCase().includes(keyword)
       );

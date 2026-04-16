@@ -18,21 +18,39 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Пароль", type: "password" },
       },
       async authorize(credentials) {
+<<<<<<< HEAD
         if (!credentials?.login || !credentials?.password) return null;
+=======
+        if (!credentials?.login || !credentials?.password) {
+          return null;
+        }
+>>>>>>> 4c50c3ded93983ffddcd8228122d821e674dc054
 
         try {
           const user = await prisma.patient.findFirst({
             where: { login: credentials.login },
           });
 
+<<<<<<< HEAD
           if (!user) return null;
+=======
+          if (!user) {
+            return null;
+          }
+>>>>>>> 4c50c3ded93983ffddcd8228122d821e674dc054
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           );
 
+<<<<<<< HEAD
           if (!isPasswordValid) return null;
+=======
+          if (!isPasswordValid) {
+            return null;
+          }
+>>>>>>> 4c50c3ded93983ffddcd8228122d821e674dc054
 
           return {
             id: user.id.toString(),
@@ -41,7 +59,11 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             image: user.avatar_url,
           };
+<<<<<<< HEAD
         } catch {
+=======
+        } catch (error) {
+>>>>>>> 4c50c3ded93983ffddcd8228122d821e674dc054
           return null;
         }
       },
@@ -84,4 +106,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4c50c3ded93983ffddcd8228122d821e674dc054
