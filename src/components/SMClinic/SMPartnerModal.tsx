@@ -116,7 +116,7 @@ export function PartnerModal({ partner, open, onOpenChange }: PartnerModalProps)
                   </h3>
                   <div className="space-y-3">
                     <a
-                      href={partner.website_url}
+                      href={/^https?:\/\//i.test(partner.website_url) ? partner.website_url : `https://${partner.website_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 text-[#18A36C] hover:text-[#18A36C]/80 transition-all duration-200 group bg-gradient-to-br from-[#18A36C]/5 to-transparent p-4 rounded-xl border border-[#18A36C]/10 hover:border-[#18A36C]/30"
@@ -124,9 +124,11 @@ export function PartnerModal({ partner, open, onOpenChange }: PartnerModalProps)
                       <div className="w-12 h-12 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
                         <Globe className="w-6 h-6 text-white" />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="text-sm text-gray-600">Веб-сайт</div>
-                        <div className="font-semibold">{partner.website_url}</div>
+                        <div className="font-semibold truncate" title={partner.website_url}>
+                          {partner.website_url}
+                        </div>
                       </div>
                       <ExternalLink className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </a>
@@ -142,7 +144,12 @@ export function PartnerModal({ partner, open, onOpenChange }: PartnerModalProps)
                 className="pt-4 border-t border-gray-100"
               >
                 <button
-                  onClick={() => window.open(partner.website_url, '_blank')}
+                  onClick={() =>
+                    window.open(
+                      /^https?:\/\//i.test(partner.website_url) ? partner.website_url : `https://${partner.website_url}`,
+                      '_blank'
+                    )
+                  }
                   className="w-full bg-gradient-to-r from-[#18A36C] to-[#15905f] hover:from-[#15905f] hover:to-[#18A36C] text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Перейти на сайт партнёра

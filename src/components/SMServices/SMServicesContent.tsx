@@ -6,9 +6,85 @@ import { Card } from '../common/SMCard/SMCard';
 import servicesContentConfig from '@/config/servicesContent.json';
 import { iconMap, IconName } from '@/utils/iconMapper';
 import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+
+type MenuItem = {
+  id: string;
+  title: string;
+  children?: MenuItem[];
+};
 
 export function ServicesContent() {
   const router = useRouter();
+  const [menuData, setMenuData] = useState<MenuItem[]>([]);
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await fetch('/api/services-menu');
+        if (!res.ok) return;
+        const data = await res.json();
+        setMenuData(Array.isArray(data?.menuData) ? data.menuData : []);
+      } catch {
+        // ignore (fallback: cards still render, just won't deep-link)
+      }
+    };
+
+    fetchMenu();
+  }, []);
+
+  const titleToId = useMemo(() => {
+    const map = new Map<string, string>();
+
+    const walk = (items: MenuItem[]) => {
+      for (const item of items) {
+        if (item?.title && item?.id) {
+          map.set(item.title.trim().toLowerCase(), item.id);
+        }
+        if (item?.children?.length) walk(item.children);
+      }
+    };
+
+    if (menuData.length) walk(menuData);
+    return map;
+  }, [menuData]);
+
+  const navigateToCategory = (serviceName: string) => {
+    const key = serviceName.trim().toLowerCase();
+
+    // Hard routes for specific cards -> known slugs
+    if (key === "узи диагностика") {
+      router.push("/services/ultrasound");
+      return;
+    }
+
+    // Aliases for cards -> menu titles
+    const aliases: Record<string, string[]> = {
+      // card: "УЗИ диагностика" -> menu item: "УЗИ"
+      "узи диагностика": ["узи"],
+    };
+
+    const tryKeys = [key, ...(aliases[key] ?? [])];
+
+    for (const k of tryKeys) {
+      const id = titleToId.get(k);
+      if (id) {
+        router.push(`/services/${id}`);
+        return;
+      }
+    }
+
+    // Fallback: fuzzy match (useful if menu has e.g. "УЗИ" vs "УЗИ-диагностика")
+    if (key.includes("узи")) {
+      const id = titleToId.get("узи");
+      if (id) {
+        router.push(`/services/${id}`);
+        return;
+      }
+    }
+
+    router.push("/services");
+  };
 
   return (
     <div className="p-4 lg:p-8">
@@ -37,7 +113,16 @@ export function ServicesContent() {
             return (
               <Card
                 key={index}
-                className="border border-[#E8E6E3] rounded-lg"
+                className="border border-[#E8E6E3] rounded-lg cursor-pointer hover:border-[#18A36C] hover:shadow-lg hover:shadow-[#18A36C]/10 transition-all duration-300"
+                role="button"
+                tabIndex={0}
+                onClick={() => navigateToCategory(service.name)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigateToCategory(service.name);
+                  }
+                }}
               >
                 <div className="p-6">
                   <div className="flex items-start gap-4">

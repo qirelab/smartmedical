@@ -7,8 +7,10 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
+    "build:deploy": "prisma generate && prisma migrate deploy && next build --webpack",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "eslint",
     "prisma:migrate": "npx dotenv-cli -e .env -- npx prisma migrate dev",
     "prisma:generate": "npx dotenv-cli -e .env -- npx prisma generate",

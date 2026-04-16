@@ -75,6 +75,13 @@ interface ClinicPageProps {
   categoryId: string;
 }
 
+const normalizeWebsiteUrl = (url: string) => {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+
 const REVIEWS_PER_PAGE = 10;
 const VACANCIES_PER_PAGE = 6;
 const PARTNERS_PER_PAGE = 6;
@@ -303,10 +310,18 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
                           <div className="space-y-2 mb-4">
                             {partner.website_url && (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Globe className="w-4 h-4" />
-                                {partner.website_url}
-                              </div>
+                              <a
+                                href={normalizeWebsiteUrl(partner.website_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group/link flex items-center gap-2 text-sm text-gray-600 min-w-0 hover:text-[#18A36C] transition-colors"
+                                title={partner.website_url}
+                              >
+                                <Globe className="w-4 h-4 text-gray-600 group-hover/link:text-[#18A36C] transition-colors" />
+                                <span className="min-w-0 flex-1 truncate">
+                                  {partner.website_url}
+                                </span>
+                              </a>
                             )}
                           </div>
 
@@ -416,17 +431,18 @@ export function ClinicPage({ itemId, categoryId }: ClinicPageProps) {
 
                   <div className="space-y-3">
                     {singlePartner.website_url && (
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-5 h-5 text-[#18A36C]" />
-                        <a
-                          href={singlePartner.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-[#18A36C] hover:text-[#18A36C]/80 hover:underline"
-                        >
+                      <a
+                        href={normalizeWebsiteUrl(singlePartner.website_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/link flex items-center gap-3 min-w-0 text-sm text-[#18A36C] hover:text-[#18A36C]/80 hover:underline"
+                        title={singlePartner.website_url}
+                      >
+                        <Globe className="w-5 h-5 text-[#18A36C] group-hover/link:text-[#18A36C]/80 transition-colors" />
+                        <span className="min-w-0 flex-1 truncate">
                           {singlePartner.website_url}
-                        </a>
-                      </div>
+                        </span>
+                      </a>
                     )}
                   </div>
                 </Card>
