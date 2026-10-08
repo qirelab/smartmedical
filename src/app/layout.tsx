@@ -10,6 +10,7 @@ import { AnalyticsLoader, CookieConsent } from "@/components/common/CookieConsen
 import { LetterNotifications } from "@/components/LetterNotifications/LetterNotifications";
 import { ChatNotifications } from "@/components/ChatNotifications/ChatNotifications";
 import { Onboarding } from "@/components/Onboarding";
+import { StickyDisclaimer } from "@/components/common/StickyDisclaimer/StickyDisclaimer";
 import { ScrollToTop } from "@/components/common/ScrollToTop/ScrollToTop";
 
 export const metadata: Metadata = {
@@ -65,6 +66,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               <Header />
               <main>{children}</main>
               <Footer />
+              <StickyDisclaimer />
               <AIAssistant />
               <CookieConsent />
               <LetterNotifications />

@@ -117,7 +117,7 @@ export function CookieConsent() {
             setView('banner');
             setIsVisible(true);
           }}
-          className="fixed bottom-6 left-4 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-2xl transition hover:shadow-[#18A36C]/50 md:left-6"
+          className="fixed bottom-[calc(var(--sticky-bar-h)+1rem)] left-4 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#18A36C] to-[#15905f] text-white shadow-2xl transition hover:shadow-[#18A36C]/50 md:left-6"
           aria-label="Открыть настройки cookie"
         >
           <Cookie className="h-7 w-7" />
@@ -215,16 +215,14 @@ export function CookieConsent() {
                       Политика в отношении файлов cookie
                     </Link>{' '}
                     и{' '}
-                    <Link
-                      href="/privacy-policy"
-                      onClick={() => {
-                        setView('banner');
-                        setIsVisible(true);
-                      }}
+                    <a
+                      href="/documents/personal-data-policy.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-[#18A36C] underline-offset-2 hover:underline"
                     >
                       Политика по обработке персональных данных
-                    </Link>
+                    </a>
                     .
                   </p>
 

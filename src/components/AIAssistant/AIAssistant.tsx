@@ -451,7 +451,7 @@ export function AIAssistant() {
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: 20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="fixed bottom-24 right-6 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-lg:!z-30 lg:!z-50"
+            className="fixed bottom-[calc(var(--sticky-bar-h)+5.5rem)] right-6 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-lg:!z-30 lg:!z-50"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#18A36C] to-[#15905f] p-4 relative">
@@ -531,7 +531,7 @@ export function AIAssistant() {
               setIsOpen(true);
               if (showHint) handleDismissHint();
             }}
-            className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-[#18A36C]/50 transition-all duration-300 cursor-pointer max-lg:!z-40 lg:!z-50"
+            className="fixed bottom-[calc(var(--sticky-bar-h)+1rem)] right-6 w-16 h-16 bg-gradient-to-br from-[#18A36C] to-[#15905f] rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-[#18A36C]/50 transition-all duration-300 cursor-pointer max-lg:!z-40 lg:!z-50"
           >
             <MessageCircle className="w-7 h-7" />
             {hasUnreadChat && (

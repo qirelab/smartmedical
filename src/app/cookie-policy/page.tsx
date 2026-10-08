@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { Cookie } from "lucide-react";
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Политика в отношении файлов cookie",
@@ -8,7 +10,28 @@ export const metadata: Metadata = {
     "Политика в отношении файлов cookie сайта медицинского центра Doctor Family: категории cookie, цели, сроки хранения и порядок управления согласием.",
 };
 
-export default function CookiePolicyPage() {
+async function getContacts() {
+  const fallback = {
+    address: "Витебская обл., г. Новополоцк, ул. Парковая, д. 16А, пом.1",
+    phone: "+375(29)631-07-07",
+    email: "info@doctorfamily.by",
+  };
+  try {
+    const contacts = await prisma.contacts.findFirst();
+    if (!contacts) return fallback;
+    return {
+      address: contacts.address || fallback.address,
+      phone: contacts.phone_number || fallback.phone,
+      email: contacts.email || fallback.email,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export default async function CookiePolicyPage() {
+  const contacts = await getContacts();
+
   return (
     <section className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <h1 className="mb-6 text-3xl font-semibold text-[#2E2E2E] md:text-4xl">
@@ -66,9 +89,9 @@ export default function CookiePolicyPage() {
               <p className="mb-1 font-semibold">Контактные данные Оператора:</p>
               <ul className="list-disc space-y-1 pl-5 marker:text-[#18A36C]">
                 <li>наименование: ООО "Доктор Фемели";</li>
-                <li>юридический и почтовый адрес: г. Минск, пр. Победителей, д. 119, пом. 504;</li>
-                <li>телефон: +375 29 161-01-01;</li>
-                <li>адрес электронной почты: smartmedical.by@gmail.com;</li>
+                <li>юридический и почтовый адрес: {contacts.address};</li>
+                <li>телефон: {contacts.phone};</li>
+                <li>адрес электронной почты: {contacts.email};</li>
                 <li>интернет-сайт: doctorfamily.by.</li>
               </ul>
             </div>
@@ -205,9 +228,9 @@ export default function CookiePolicyPage() {
             Перечень прав субъектов персональных данных, а также их содержание и порядок их реализации
             определены в
             {" "}
-            <Link href="/privacy-policy" className="text-[#18A36C] underline-offset-2 hover:underline">
+            <a href="/documents/personal-data-policy.pdf" target="_blank" rel="noopener noreferrer" className="text-[#18A36C] underline-offset-2 hover:underline">
               Политике по обработке персональных данных
-            </Link>
+            </a>
             . При этом право на отзыв согласия на обработку персональных данных (в рамках обработки файлов cookie)
             может быть реализовано Пользователем также в порядке, предусмотренном пунктом 12 настоящей Политики.
           </span>

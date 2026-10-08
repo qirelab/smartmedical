@@ -192,12 +192,14 @@ export function Footer() {
           {/* Copyright - Right */}
           <div className="text-center lg:text-right">
             <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-xs lg:text-sm">
-              <button
-                onClick={() => handleNavigation('/privacy-policy')}
+              <a
+                href="/documents/personal-data-policy.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-500 hover:text-[#18A36C] transition-colors"
               >
                 Политика персональных данных
-              </button>
+              </a>
               <button
                 onClick={() => handleNavigation('/cookie-policy')}
                 className="text-gray-500 hover:text-[#18A36C] transition-colors"
@@ -212,7 +214,7 @@ export function Footer() {
               </button>
             </div>
             <div className="text-gray-500 text-xs lg:text-sm">
-              {footerConfig.companyInfo.copyright}
+              {footerConfig.companyInfo.copyright.replace("{year}", String(new Date().getFullYear()))}
             </div>
             <div className="text-gray-400 text-xs mt-1 whitespace-pre-line">
               {footerConfig.companyInfo.license}

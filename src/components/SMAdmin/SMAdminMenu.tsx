@@ -259,7 +259,7 @@ export function AdminMenu({ onNavigate }: AdminMenuProps) {
           </span>
         </button>
         <p className="text-xs text-gray-500 text-center font-medium">
-          Doctor Family © 2025
+          Doctor Family © {new Date().getFullYear()}
         </p>
       </div>
     </div>

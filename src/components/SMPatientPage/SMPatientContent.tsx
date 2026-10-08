@@ -18,8 +18,7 @@ import {
   Heart,
   Activity,
   Zap,
-  ArrowRight,
-  Eye
+  ArrowRight
 } from "lucide-react";
 import { Button } from "../common/SMButton/SMButton";
 import { useRouter as useSMRouter } from "../SMRouter/SMRouter";
@@ -28,7 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../common/SMTabs/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../common/SMCard/card";
 import { Alert, AlertDescription } from "../common/SMAlert/alert";
 import patientContentConfig from "@/config/patientContent.json";
-import { DocumentModal } from "./SMDocumentModal";
 
 interface ContactData {
   phone_number: string;
@@ -45,10 +43,6 @@ export function SMPatientContent() {
   const router = useRouter();
   const [contacts, setContacts] = useState<ContactData | null>(null);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
-  const [documentModal, setDocumentModal] = useState<{
-    isOpen: boolean;
-    type: 'contract' | 'privacy' | 'consent' | null;
-  }>({ isOpen: false, type: null });
 
   // Load contacts from API
   useEffect(() => {
@@ -380,102 +374,29 @@ export function SMPatientContent() {
             transition={{ duration: 0.6 }}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="border border-gray-200 rounded-lg flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <FileText className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.documentsTab.contractTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.documentsTab.contractDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 flex flex-col flex-1">
-                  <p className="text-gray-600 leading-relaxed">
-                    {patientContentConfig.documentsTab.contractText}
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
-                    onClick={() => setDocumentModal({ isOpen: true, type: 'contract' })}
-                  >
-                    {patientContentConfig.documentsTab.contractButton}
-                    <Eye className="w-5 h-5 ml-[2.5px]" />
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-200 rounded-lg flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <Shield className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.documentsTab.privacyPolicyTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.documentsTab.privacyPolicyDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 flex flex-col flex-1">
-                  <p className="text-gray-600 leading-relaxed">
-                    {patientContentConfig.documentsTab.privacyPolicyText}
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
-                    onClick={() => setDocumentModal({ isOpen: true, type: 'privacy' })}
-                  >
-                    {patientContentConfig.documentsTab.privacyPolicyButton}
-                    <Eye className="w-5 h-5 ml-[2.5px]" />
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-200 rounded-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <Shield className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.documentsTab.dataProtectionTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.documentsTab.dataProtectionDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-gray-600">
-                    {patientContentConfig.documentsTab.dataProtectionRules.map((rule, index) => (
-                      <li key={index} className="flex items-start gap-3 leading-relaxed">
-                        <CheckCircle className="w-5 h-5 text-[#18A36C] mt-0.5 flex-shrink-0" />
-                        {rule}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-200 rounded-lg flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
-                    <FileText className="w-6 h-6 text-[#18A36C]" />
-                    {patientContentConfig.documentsTab.consentTitle}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-base">
-                    {patientContentConfig.documentsTab.consentDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 flex flex-col flex-1">
-                  <p className="text-gray-600 leading-relaxed">
-                    {patientContentConfig.documentsTab.consentText}
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
-                    onClick={() => setDocumentModal({ isOpen: true, type: 'consent' })}
-                  >
-                    {patientContentConfig.documentsTab.consentButton}
-                    <Eye className="w-5 h-5 ml-[2.5px]" />
-                  </Button>
-                </CardContent>
-              </Card>
+              {patientContentConfig.documentsTab.documents.map((doc) => (
+                <Card key={doc.file} className="border border-gray-200 rounded-lg flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-[#2E2E2E] text-xl">
+                      <FileText className="w-6 h-6 text-[#18A36C] flex-shrink-0" />
+                      {doc.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600 text-base">
+                      {doc.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full border-[#18A36C] text-[#18A36C] px-8 py-4 h-auto text-lg rounded-lg hover:shadow-xl hover:shadow-[#18A36C]/20 mt-auto"
+                      onClick={() => window.open(doc.file, '_blank', 'noopener,noreferrer')}
+                    >
+                      {patientContentConfig.documentsTab.openButton}
+                      <ExternalLink className="w-5 h-5 ml-[2.5px]" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </motion.div>
         </TabsContent>
@@ -572,13 +493,6 @@ export function SMPatientContent() {
       </Tabs>
 
       {/* Document Modal */}
-      {documentModal.type && (
-        <DocumentModal
-          isOpen={documentModal.isOpen}
-          onClose={() => setDocumentModal({ isOpen: false, type: null })}
-          documentType={documentModal.type}
-        />
-      )}
     </div>
   );
 }

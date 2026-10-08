@@ -233,7 +233,7 @@ export function NavigableAccountMenu() {
       {/* Footer */}
       <div className="p-4 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <p className="text-xs text-gray-500 text-center font-medium">
-          Doctor Family © 2025
+          Doctor Family © {new Date().getFullYear()}
         </p>
       </div>
     </div>
