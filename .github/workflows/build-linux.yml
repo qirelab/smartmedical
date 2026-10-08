@@ -1,0 +1,41 @@
+name: Build for Linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Весь .env целиком кладётся в секрет репозитория BUILD_ENV
+      - name: Create .env
+        env:
+          BUILD_ENV: ${{ secrets.BUILD_ENV }}
+        run: printf '%s\n' "$BUILD_ENV" > .env
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx next build --webpack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          include-hidden-files: true
+          path: |
+            .next
+            public
+            prisma
+            prisma.config.ts
+            package.json
+            package-lock.json
+            next.config.ts
+          retention-days: 7
